@@ -99,3 +99,15 @@ export type DriverProfile = {
 export type DriverRaceRow = { round: number; race_name: string; country: string | null; date_utc: string; grid: number | null; finish: number; points: number; status: string; fastest_lap: boolean; classified: boolean; team: string | null };
 export type DriverSearchRow = { driver_id: string; name: string; first_season: number; last_season: number; wins: number; titles: number; team: string | null; team_color: string | null };
 export type HeadToHead = { season: number; team: string; races: number; a_ahead: number; b_ahead: number; a_points: number; b_points: number };
+
+export type TeamSeasonStat = { season: number; position: number | null; champ_points: number | null; races: number; wins: number; podiums: number; poles: number; dnfs: number; champion: boolean; drivers: string | null };
+export type TeamBestDriver = { driver_id: string; name: string; first_season: number; last_season: number; races: number; wins: number; podiums: number; poles: number; points: number; titles: number; headshot_url: string | null };
+export type TeamProfile = {
+  team: { name: string; color: string | null; drivers: { driver_id: string; name: string; code: string; number: number | null; headshot_url: string | null }[] | null };
+  career: { first_season: number; last_season: number; seasons: number; races: number; entries: number; wins: number; podiums: number; poles: number; fastest_laps: number; dnfs: number; points: number; one_twos: number; titles: number; driver_titles: number };
+  ranks: { wins_rank: number; podiums_rank: number; titles_rank: number; points_rank: number; poles_rank: number; races_rank: number; total_teams: number };
+  seasons: TeamSeasonStat[];
+  best_drivers: TeamBestDriver[];
+};
+export type TeamSearchRow = { team: string; first_season: number; last_season: number; wins: number; titles: number; team_color: string | null };
+export type TeamHeadToHead = { season: number; a_position: number | null; b_position: number | null; a_points: number; b_points: number; a_wins: number; b_wins: number };

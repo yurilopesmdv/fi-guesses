@@ -6,6 +6,7 @@ import { Image } from 'expo-image';
 import { BarChart, HBars, ResultStrip } from '@/components/driver/charts';
 import { DriverSearch } from '@/components/driver/DriverSearch';
 import { flag } from '@/lib/format';
+import { openTeam } from '@/lib/nav';
 import { getDriverProfile, headToHead, listDriverSeasonRaces } from '@/lib/repo';
 import type { DriverProfile, DriverRaceRow, DriverSearchRow, HeadToHead } from '@/lib/types';
 import { Button, Card, H2, Loading, Muted, P, Pill, Row, Screen } from '@/ui/primitives';
@@ -89,13 +90,14 @@ export default function DriverScreen() {
           <H2 style={{ marginTop: space(1) }}>🏎️ Equipes na carreira</H2>
           <Card>
             {p.by_team.map((t) => (
-              <View key={t.team} style={{ marginBottom: space(1.5) }}>
+              <Pressable key={t.team} onPress={() => openTeam(t.team)} style={{ marginBottom: space(1.5) }}>
                 <Row>
                   <View style={{ width: 5, alignSelf: 'stretch', borderRadius: 3, backgroundColor: t.team_color ?? colors.border }} />
                   <View style={{ flex: 1 }}>
                     <P style={{ fontWeight: '800' }}>{t.team}{t.titles > 0 ? `  🏆 ${t.titles > 1 ? `×${t.titles}` : ''}` : ''}</P>
                     <Muted>{t.first_season === t.last_season ? t.first_season : `${t.first_season}–${t.last_season}`} · {t.seasons} temporada{t.seasons > 1 ? 's' : ''} · {t.races} corridas</Muted>
                   </View>
+                  <Text style={{ color: colors.muted }}>›</Text>
                 </Row>
                 <Row style={{ marginTop: 6, flexWrap: 'wrap' }}>
                   <Pill color={colors.card2}>Vitórias {t.wins}</Pill>
@@ -104,7 +106,7 @@ export default function DriverScreen() {
                   <Pill color={colors.card2}>Pontos {n(t.points, 1)}</Pill>
                   <Pill color={colors.card2}>Abandonos {t.dnfs}</Pill>
                 </Row>
-              </View>
+              </Pressable>
             ))}
           </Card>
         </>

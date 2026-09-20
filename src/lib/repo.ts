@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 import { fetchRaceResult, fetchSeasonBundle } from './f1api';
-import type { Answer, ConstructorStanding, DriverProfile, DriverRaceRow, DriverSearchRow, HeadToHead, OpenPool, PoolSummary, Series, Driver, DriverStanding, Pool, Prediction, Question, Race, RaceResult, Result, Standing } from './types';
+import type { Answer, ConstructorStanding, DriverProfile, DriverRaceRow, DriverSearchRow, HeadToHead, OpenPool, TeamHeadToHead, TeamProfile, TeamSearchRow, PoolSummary, Series, Driver, DriverStanding, Pool, Prediction, Question, Race, RaceResult, Result, Standing } from './types';
 
 const throwIf = <T>(r: { data: T; error: { message: string } | null }) => {
   if (r.error) throw new Error(r.error.message);
@@ -118,3 +118,8 @@ export const searchDrivers = async (q: string) =>
   throwIf(await supabase.rpc('driver_search', { p_q: q })) as DriverSearchRow[];
 export const headToHead = async (a: string, b: string) =>
   throwIf(await supabase.rpc('driver_head_to_head', { p_a: a, p_b: b })) as HeadToHead[];
+
+// ---------- equipe ----------
+export const getTeamProfile = async (team: string) => throwIf(await supabase.rpc('team_profile', { p_team: team })) as TeamProfile;
+export const searchTeams = async (q: string) => throwIf(await supabase.rpc('team_search', { p_q: q })) as TeamSearchRow[];
+export const teamHeadToHead = async (a: string, b: string) => throwIf(await supabase.rpc('team_head_to_head', { p_a: a, p_b: b })) as TeamHeadToHead[];
