@@ -21,7 +21,7 @@ export async function fetchF2F3Bundle(series: 'f2' | 'f3', season: number) {
   const drivers = (ds.standings ?? []).map((d: any) => {
     const m = new RegExp(`\\|${esc(d.driverFirstName)}\\|${esc(d.driverLastName)}\\|([^|]+)\\|Flag of`).exec(drText);
     const team = m?.[1]?.trim() ?? null;
-    return { series, season, code: d.driverTLA as string, name: `${d.driverFirstName} ${d.driverLastName}`, number: null, team, team_color: team ? teamColor[team] ?? '#888' : '#888' };
+    return { series, season, code: d.driverTLA as string, driver_id: d.driverTLA as string, name: `${d.driverFirstName} ${d.driverLastName}`, number: null, team, team_color: team ? teamColor[team] ?? '#888' : '#888' };
   });
   const driver_standings = (ds.standings ?? []).map((d: any, i: number) => ({
     series, season, position: Number(d.displayPosition) || i + 1, driver_code: d.driverTLA as string, team: drivers[i].team, points: d.championshipPoints,

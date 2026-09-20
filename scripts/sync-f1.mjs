@@ -25,6 +25,7 @@ const upsert = (table, rows, conflict) => {
 
 const b = await fetchSeasonBundle(season);
 const withSeries = (rows) => rows.map((r) => ({ series: 'f1', ...r }));
+// drivers já vêm com driver_id do bundle
 await sql([
   upsert('races', withSeries(b.races), ['series', 'season', 'round']),
   upsert('drivers', withSeries(b.drivers), ['series', 'season', 'code']),

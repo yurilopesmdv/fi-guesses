@@ -20,7 +20,7 @@ const TEAM_NAMES: Record<string, string> = {
 };
 // Pilotos antigos não têm "code" na API: gera sigla única por temporada (dois "Hill" → HIL / PHI)
 const clean = (t: string) => String(t).normalize('NFD').replace(/[^A-Za-z]/g, '').toUpperCase();
-function makeCodeBook(drivers: any[]) {
+export function makeCodeBook(drivers: any[]) {
   const book = new Map<string, string>(); const used = new Set<string>();
   for (const d of drivers) {
     if (book.has(d.driverId)) continue;
@@ -80,7 +80,7 @@ export async function fetchDriverStandings(season: number) {
     const team = s.Constructors[s.Constructors.length - 1]?.constructorId as string | undefined;
     return {
       driver: {
-        series: 'f1' as const, season, code: driverCode(s.Driver),
+        series: 'f1' as const, season, code: driverCode(s.Driver), driver_id: s.Driver.driverId as string,
         name: `${s.Driver.givenName} ${s.Driver.familyName}`,
         number: s.Driver.permanentNumber ? Number(s.Driver.permanentNumber) : null,
         team: teamName(team), team_color: teamColor(team),
@@ -103,14 +103,14 @@ export async function fetchConstructorStandings(season: number) {
 
 /** Todos os resultados da temporada (paginado). */
 export async function fetchSeasonResults(season: number) {
-  const rows: { series: 'f1'; session: 'race'; season: number; round: number; position: number; driver_code: string; team: string | null; grid: number | null; points: number; status: string; fastest_lap: boolean }[] = [];
+  const rows: { series: 'f1'; session: 'race'; season: number; round: number; position: number; driver_code: string; team: string | null; team_color: string; grid: number | null; points: number; status: string; fastest_lap: boolean }[] = [];
   for (let offset = 0; ; offset += 100) {
     const data = await get(`${season}/results.json`, offset);
     for (const race of data.RaceTable.Races as any[]) {
       for (const r of race.Results as any[]) {
         rows.push({
           series: 'f1', session: 'race', season, round: Number(race.round), position: Number(r.position), driver_code: driverCode(r.Driver),
-          team: teamName(r.Constructor.constructorId), grid: Number(r.grid) || null,
+          team: teamName(r.Constructor.constructorId), team_color: teamColor(r.Constructor.constructorId), grid: Number(r.grid) || null,
           points: Number(r.points), status: r.status, fastest_lap: r.FastestLap?.rank === '1',
         });
       }
@@ -131,18 +131,41 @@ export async function fetchRaceResult(season: number, round: number) {
 }
 
 /** Baixa tudo da temporada de uma vez, no formato das tabelas do banco. */
+/** Lista completa de pilotos da temporada (paginada — 1952/1953 passam de 100). */
+export async function fetchSeasonDriverList(season: number) {
+  const out: any[] = [];
+  for (let offset = 0; ; offset += 100) {
+    const data = await get(`${season}/drivers.json`, offset);
+    out.push(...(data.DriverTable?.Drivers ?? []));
+    if (offset + 100 >= Number(data.total)) break;
+  }
+  return out;
+}
+
 export async function fetchSeasonBundle(season: number) {
-  const all = await get(`${season}/drivers.json`);
-  codeBook = makeCodeBook(all.DriverTable?.Drivers ?? []);
+  const list = await fetchSeasonDriverList(season);
+  codeBook = makeCodeBook(list);
   const [races, drivers, constructors, results] = await Promise.all([
     fetchSeasonRaces(season), fetchDriverStandings(season), fetchConstructorStandings(season), fetchSeasonResults(season),
   ]);
+  // tabela de pilotos = lista completa da temporada (há quem corra sem entrar na classificação)
+  const fromStandings = new Map(drivers.map((d) => [d.driver.code, d.driver]));
+  const teamFromResults = new Map<string, { team: string | null; color: string }>();
+  for (const r of results) teamFromResults.set(r.driver_code, { team: r.team, color: r.team_color });
+  const allDrivers = list.map((d: any) => {
+    const code = driverCode(d);
+    const st = fromStandings.get(code), rs = teamFromResults.get(code);
+    return st ?? {
+      series: 'f1' as const, season, code, driver_id: d.driverId as string, name: `${d.givenName} ${d.familyName}`,
+      number: d.permanentNumber ? Number(d.permanentNumber) : null, team: rs?.team ?? null, team_color: rs?.color ?? '#888',
+    };
+  });
   return {
     races,
-    drivers: drivers.map((d) => d.driver),
+    drivers: allDrivers,
     driver_standings: drivers.map((d) => d.standing),
     constructor_standings: constructors,
-    race_results: results,
+    race_results: results.map(({ team_color: _c, ...r }) => r),
     last_round_with_results: results.reduce((m, r) => Math.max(m, r.round), 0),
   };
 }

@@ -42,7 +42,7 @@ const teamColor = Object.fromEntries((cs.standings ?? []).map((t) => [t.teamName
 const drivers = (ds.standings ?? []).map((d) => {
   const m = new RegExp(`\\|${d.driverFirstName.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\$&')}\\|${d.driverLastName.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\$&')}\\|([^|]+)\\|Flag of`).exec(drText);
   const team = m?.[1]?.trim() ?? null;
-  return { series, season, code: d.driverTLA, name: `${d.driverFirstName} ${d.driverLastName}`, number: null, team, team_color: team ? teamColor[team] ?? '#888' : '#888' };
+  return { series, season, code: d.driverTLA, driver_id: d.driverTLA, name: `${d.driverFirstName} ${d.driverLastName}`, number: null, team, team_color: team ? teamColor[team] ?? '#888' : '#888' };
 });
 const driver_standings = (ds.standings ?? []).map((d, i) => ({
   series, season, position: Number(d.displayPosition) || i + 1, driver_code: d.driverTLA, team: drivers[i].team, points: d.championshipPoints,
