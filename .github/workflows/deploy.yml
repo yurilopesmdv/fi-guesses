@@ -35,7 +35,7 @@ jobs:
         run: |
           npx expo export --platform web
           cp site/entrar.html dist/
-          sed -i "s#__APK_URL__#${{ vars.APK_URL }}#" dist/entrar.html
+          sed -i "s#__APK_URL__#${{ vars.APK_URL || 'https://tqbftaqkqtjouovyvrkq.supabase.co/storage/v1/object/public/site/bolao-f1.apk' }}#" dist/entrar.html
           npx eas-cli deploy --prod --non-interactive
 
   supabase:
@@ -43,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-      SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+      SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF || 'tqbftaqkqtjouovyvrkq' }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
