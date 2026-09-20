@@ -45,3 +45,4 @@ example
 # env (segredos)
 .env
 !.env.example
+.vscode/
