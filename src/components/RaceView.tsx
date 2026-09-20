@@ -7,7 +7,7 @@ import { Schedule } from './Schedule';
 import { QuestionField, answerLabel } from './QuestionField';
 import { useUserId } from '@/lib/auth';
 import { flag, fmtCountdown, fmtDate, lockTime } from '@/lib/format';
-import { listPredictions, listQuestions, listRaceResults, listResults, listStandings, raceParticipation, savePrediction } from '@/lib/repo';
+import { listPredictions, listQuestions, listRaceResults, listResults, listStandings, listSupportRaces, raceParticipation, savePrediction } from '@/lib/repo';
 import type { Answer, Prediction, Question, Race, RaceResult, Result, Standing } from '@/lib/types';
 import { usePool } from '@/lib/usePool';
 import { Button, Card, H2, Loading, Muted, P, Pill, Row, Screen } from '@/ui/primitives';
@@ -22,6 +22,7 @@ export function RaceView({ race }: { race: Race }) {
   const [members, setMembers] = useState<Standing[]>([]);
   const [participation, setParticipation] = useState<Record<string, boolean>>({});
   const [official, setOfficial] = useState<RaceResult[]>([]);
+  const [support, setSupport] = useState<Race[]>([]);
   const [now, setNow] = useState(Date.now());
   const [saved, setSaved] = useState<'idle' | 'saving' | 'ok'>('idle');
 
@@ -34,10 +35,10 @@ export function RaceView({ race }: { race: Race }) {
     (async () => {
       const qs = await listQuestions(pool.id, race.id);
       const ids = qs.map((q) => q.id);
-      const [ps, rs, ms, part, off] = await Promise.all([
-        listPredictions(ids), listResults(ids), listStandings(pool.id), raceParticipation(pool.id, race.id), listRaceResults(race.season, race.round),
+      const [ps, rs, ms, part, off, sup] = await Promise.all([
+        listPredictions(ids), listResults(ids), listStandings(pool.id), raceParticipation(pool.id, race.id), listRaceResults(race.season, race.round), listSupportRaces(race),
       ]);
-      setQuestions(qs); setPredictions(ps); setResults(rs); setMembers(ms); setOfficial(off);
+      setQuestions(qs); setPredictions(ps); setResults(rs); setMembers(ms); setOfficial(off); setSupport(sup);
       setParticipation(Object.fromEntries(part.map((p) => [p.user_id, p.has_prediction])));
     })().catch((e) => Alert.alert('Erro', e.message));
   }, [pool, race.id]);
@@ -98,7 +99,7 @@ export function RaceView({ race }: { race: Race }) {
 
       {open ? (
         <>
-          <Schedule race={race} />
+          <Schedule race={race} support={support} />
           {podiumQ && (
             <Card>
               <H2>🏆 Pódio <Muted>3 pts exato · 1 pt piloto certo</Muted></H2>

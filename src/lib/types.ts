@@ -1,3 +1,6 @@
+export type Series = 'f1' | 'f2' | 'f3';
+export const SERIES_LABEL: Record<Series, string> = { f1: 'F1', f2: 'F2', f3: 'F3' };
+
 export type QuestionKind = 'podium' | 'driver' | 'position_of_driver' | 'yesno' | 'text';
 
 export type Profile = { id: string; name: string; avatar: string };
@@ -15,6 +18,7 @@ export type Pool = {
 
 export type Race = {
   id: string;
+  series: Series;
   season: number;
   round: number;
   name: string;
@@ -31,6 +35,7 @@ export type Race = {
 };
 
 export type Driver = {
+  series: Series;
   season: number;
   code: string;
   name: string;
@@ -71,9 +76,9 @@ export type Standing = {
   races_scored: number;
 };
 
-export type DriverStanding = { season: number; position: number; driver_code: string; team: string | null; points: number; wins: number };
-export type ConstructorStanding = { season: number; position: number; team: string; team_color: string | null; points: number; wins: number };
-export type RaceResult = { season: number; round: number; position: number; driver_code: string; team: string | null; grid: number | null; points: number; status: string; fastest_lap: boolean };
+export type DriverStanding = { series: Series; season: number; position: number; driver_code: string; team: string | null; points: number; wins: number };
+export type ConstructorStanding = { series: Series; season: number; position: number; team: string; team_color: string | null; points: number; wins: number };
+export type RaceResult = { series: Series; session: 'race' | 'sprint' | 'feature'; season: number; round: number; position: number; driver_code: string; team: string | null; grid: number | null; points: number; status: string; fastest_lap: boolean };
 
 export type PoolSummary = { pool_id: string; members: number; next_race_name: string | null; next_race_date: string | null; my_total: number; my_rank: number };
 

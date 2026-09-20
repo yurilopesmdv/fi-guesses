@@ -5,8 +5,11 @@ export const fmtDate = (iso: string) =>
 export const fmtDay = (iso: string) => new Date(iso).toLocaleDateString('pt-BR', { timeZone: TZ, weekday: 'long', day: '2-digit', month: '2-digit' });
 export const fmtTime = (iso: string) => new Date(iso).toLocaleTimeString('pt-BR', { timeZone: TZ, hour: '2-digit', minute: '2-digit' });
 
-export const raceSessions = (r: { fp1_utc: string | null; fp2_utc: string | null; fp3_utc: string | null; sprint_quali_utc: string | null; sprint_utc: string | null; quali_utc: string | null; date_utc: string }) =>
-  ([
+type SessionRace = { series?: string; fp1_utc: string | null; fp2_utc: string | null; fp3_utc: string | null; sprint_quali_utc: string | null; sprint_utc: string | null; quali_utc: string | null; date_utc: string };
+export const raceSessions = (r: SessionRace) =>
+  (r.series && r.series !== 'f1' ? [
+    ['Treino', r.fp1_utc], ['Classificação', r.quali_utc], ['Sprint Race', r.sprint_utc], ['Feature Race', r.date_utc],
+  ] as [string, string | null][] : [
     ['Treino Livre 1', r.fp1_utc], ['Treino Livre 2', r.fp2_utc], ['Treino Livre 3', r.fp3_utc],
     ['Sprint Quali', r.sprint_quali_utc], ['Sprint', r.sprint_utc], ['Classificação', r.quali_utc], ['Corrida', r.date_utc],
   ] as [string, string | null][])

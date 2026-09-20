@@ -59,6 +59,7 @@ function get(path: string, offset = 0): Promise<any> {
 export async function fetchSeasonRaces(season: number) {
   const data = await get(`${season}.json`);
   return (data.RaceTable.Races as any[]).map((r) => ({
+    series: 'f1' as const,
     season,
     round: Number(r.round),
     name: r.raceName.replace(' Grand Prix', ' GP'),
@@ -78,13 +79,13 @@ export async function fetchDriverStandings(season: number) {
     const team = s.Constructors[s.Constructors.length - 1]?.constructorId as string | undefined;
     return {
       driver: {
-        season, code: driverCode(s.Driver),
+        series: 'f1' as const, season, code: driverCode(s.Driver),
         name: `${s.Driver.givenName} ${s.Driver.familyName}`,
         number: s.Driver.permanentNumber ? Number(s.Driver.permanentNumber) : null,
         team: teamName(team), team_color: teamColor(team),
       },
       // sem posição ('-') → ordem da lista
-      standing: { season, position: Number(s.position) || i + 1, driver_code: driverCode(s.Driver), team: teamName(team), points: Number(s.points), wins: Number(s.wins) },
+      standing: { series: 'f1' as const, season, position: Number(s.position) || i + 1, driver_code: driverCode(s.Driver), team: teamName(team), points: Number(s.points), wins: Number(s.wins) },
     };
   });
 }
@@ -93,7 +94,7 @@ export async function fetchConstructorStandings(season: number) {
   const data = await get(`${season}/constructorStandings.json`);
   const list = (data.StandingsTable.StandingsLists[0]?.ConstructorStandings ?? []) as any[];
   return list.map((s, i) => ({
-    season, position: Number(s.position) || i + 1,
+    series: 'f1' as const, season, position: Number(s.position) || i + 1,
     team: teamName(s.Constructor.constructorId)!, team_color: teamColor(s.Constructor.constructorId),
     points: Number(s.points), wins: Number(s.wins),
   }));
@@ -101,13 +102,13 @@ export async function fetchConstructorStandings(season: number) {
 
 /** Todos os resultados da temporada (paginado). */
 export async function fetchSeasonResults(season: number) {
-  const rows: { season: number; round: number; position: number; driver_code: string; team: string | null; grid: number | null; points: number; status: string; fastest_lap: boolean }[] = [];
+  const rows: { series: 'f1'; session: 'race'; season: number; round: number; position: number; driver_code: string; team: string | null; grid: number | null; points: number; status: string; fastest_lap: boolean }[] = [];
   for (let offset = 0; ; offset += 100) {
     const data = await get(`${season}/results.json`, offset);
     for (const race of data.RaceTable.Races as any[]) {
       for (const r of race.Results as any[]) {
         rows.push({
-          season, round: Number(race.round), position: Number(r.position), driver_code: driverCode(r.Driver),
+          series: 'f1', session: 'race', season, round: Number(race.round), position: Number(r.position), driver_code: driverCode(r.Driver),
           team: teamName(r.Constructor.constructorId), grid: Number(r.grid) || null,
           points: Number(r.points), status: r.status, fastest_lap: r.FastestLap?.rank === '1',
         });

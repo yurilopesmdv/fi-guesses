@@ -23,12 +23,13 @@ const upsert = (table, rows, conflict) => {
 };
 
 const b = await fetchSeasonBundle(season);
+const withSeries = (rows) => rows.map((r) => ({ series: 'f1', ...r }));
 await sql([
-  upsert('races', b.races, ['season', 'round']),
-  upsert('drivers', b.drivers, ['season', 'code']),
-  upsert('driver_standings', b.driver_standings, ['season', 'driver_code']),
-  upsert('constructor_standings', b.constructor_standings, ['season', 'team']),
-  upsert('race_results', b.race_results, ['season', 'round', 'position', 'driver_code']),
-  upsert('f1_sync', [{ season, last_round_with_results: b.last_round_with_results, synced_at: new Date().toISOString() }], ['season']),
+  upsert('races', withSeries(b.races), ['series', 'season', 'round']),
+  upsert('drivers', withSeries(b.drivers), ['series', 'season', 'code']),
+  upsert('driver_standings', withSeries(b.driver_standings), ['series', 'season', 'driver_code']),
+  upsert('constructor_standings', withSeries(b.constructor_standings), ['series', 'season', 'team']),
+  upsert('race_results', withSeries(b.race_results.map((r) => ({ session: 'race', ...r }))), ['series', 'season', 'round', 'session', 'position', 'driver_code']),
+  upsert('f1_sync', [{ series: 'f1', season, last_round_with_results: b.last_round_with_results, synced_at: new Date().toISOString() }], ['series', 'season']),
 ].join('\n'));
 console.log(`✓ ${season}: ${b.races.length} corridas, ${b.drivers.length} pilotos, ${b.race_results.length} resultados (até a rodada ${b.last_round_with_results}), ${b.constructor_standings.length} equipes`);

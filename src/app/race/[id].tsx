@@ -3,8 +3,8 @@ import { Text, View } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { Schedule } from '@/components/Schedule';
 import { flag, fmtDate } from '@/lib/format';
-import { getRace, listDrivers, listRaceResults } from '@/lib/repo';
-import type { Driver, Race, RaceResult } from '@/lib/types';
+import { getRace, listDrivers, listRaceResults, listSupportRaces } from '@/lib/repo';
+import { SERIES_LABEL, type Driver, type Race, type RaceResult } from '@/lib/types';
 import { Card, H2, Loading, Muted, P, Row, Screen } from '@/ui/primitives';
 import { colors } from '@/ui/theme';
 
@@ -14,11 +14,12 @@ export default function RaceScreen() {
   const [race, setRace] = useState<Race | null>(null);
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [results, setResults] = useState<RaceResult[] | null>(null);
+  const [support, setSupport] = useState<Race[]>([]);
   useEffect(() => {
     getRace(id).then(async (r) => {
       setRace(r);
-      const [d, res] = await Promise.all([listDrivers(r.season), listRaceResults(r.season, r.round)]);
-      setDrivers(d); setResults(res);
+      const [d, res, sup] = await Promise.all([listDrivers(r.season, r.series), listRaceResults(r.season, r.round, r.series), r.series === 'f1' ? listSupportRaces(r) : Promise.resolve([])]);
+      setDrivers(d); setResults(res); setSupport(sup);
     });
   }, [id]);
 
@@ -29,14 +30,14 @@ export default function RaceScreen() {
     <Screen>
       <Stack.Screen options={{ title: race.name }} />
       <Card>
-        <Text style={{ color: colors.text, fontSize: 22, fontWeight: '800' }}>{flag(race.country)} {race.name}</Text>
+        <Text style={{ color: colors.text, fontSize: 22, fontWeight: '800' }}>{flag(race.country)} {race.series !== 'f1' ? `${SERIES_LABEL[race.series]} · ` : ''}{race.name}</Text>
         <Muted>{race.circuit} · Rodada {race.round}{race.has_sprint ? ' · fim de semana com Sprint ⚡' : ''}</Muted>
-        <Muted>Largada: {fmtDate(race.date_utc)}</Muted>
+        <Muted>{race.series === 'f1' ? 'Largada' : 'Feature Race'}: {fmtDate(race.date_utc)}</Muted>
       </Card>
-      <Schedule race={race} />
+      <Schedule race={race} support={support} />
       {results && results.length > 0 && (
         <Card>
-          <H2>🏁 Classificação</H2>
+          <H2>🏁 {race.series === 'f1' ? 'Classificação' : 'Feature Race · top 5'}</H2>
           {results.map((r) => {
             const d = byCode[r.driver_code];
             return (
