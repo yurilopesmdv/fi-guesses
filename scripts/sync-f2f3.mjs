@@ -20,6 +20,7 @@ const sql = async (query) => {
 };
 const lit = (v) => (v == null ? 'null' : typeof v === 'number' || typeof v === 'boolean' ? String(v) : `'${String(v).replace(/'/g, "''")}'`);
 const upsert = (table, rows, conflict) => {
+  rows = [...new Map(rows.map((r) => [conflict.map((c) => r[c]).join('|'), r])).values()]; // dedupe pela chave
   if (!rows.length) return '';
   const cols = Object.keys(rows[0]);
   const set = cols.filter((c) => !conflict.includes(c)).map((c) => `${c}=excluded.${c}`).join(',');

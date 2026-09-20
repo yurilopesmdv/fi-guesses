@@ -5,7 +5,9 @@ import { fetchSeasonBundle } from '../_shared/f1api.ts';
 import { fetchF2F3Bundle } from '../_shared/f2f3.ts';
 
 const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
-const up = async (table: string, rows: unknown[], onConflict: string) => {
+const up = async (table: string, rows: any[], onConflict: string) => {
+  const keys = onConflict.split(',');
+  rows = [...new Map(rows.map((r) => [keys.map((k) => r[k]).join('|'), r])).values()]; // dedupe pela chave
   if (!rows.length) return;
   const { error } = await db.from(table).upsert(rows, { onConflict });
   if (error) throw new Error(`${table}: ${error.message}`);
