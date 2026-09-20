@@ -1,7 +1,7 @@
 // Sincroniza F1 (Jolpica), F2 e F3 (site/API oficiais) no banco e apura o pódio dos bolões de F1 automaticamente.
 // Chamada pelo pg_cron (agendado) e pelo botão "Atualizar" do app. Body: { series?: 'f1'|'f2'|'f3'|'all', season?: number }
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { fetchSeasonBundle } from '../_shared/f1api.ts';
+import { fetchHeadshots, fetchSeasonBundle } from '../_shared/f1api.ts';
 import { fetchF2F3Bundle } from '../_shared/f2f3.ts';
 
 const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
@@ -21,6 +21,10 @@ async function syncOne(series: 'f1' | 'f2' | 'f3', season: number) {
   await up('constructor_standings', b.constructor_standings, 'series,season,team');
   await up('race_results', b.race_results, 'series,season,round,session,position,driver_code');
   await up('f1_sync', [{ series, season, last_round_with_results: b.last_round_with_results, synced_at: new Date().toISOString() }], 'series,season');
+  if (series === 'f1' && season === new Date().getFullYear()) {
+    const photos = await fetchHeadshots().catch(() => ({}));
+    for (const [code, url] of Object.entries(photos)) await db.from('drivers').update({ headshot_url: url }).match({ series: 'f1', season, code });
+  }
   return { races: b.races.length, results: b.race_results.length, last_round: b.last_round_with_results };
 }
 

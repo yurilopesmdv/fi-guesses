@@ -15,7 +15,7 @@ export function BarChart({ data, height = 120, max, invert = false, format = (v:
         return (
           <View key={i} style={[s.col, { width: wide ? 26 : undefined, flex: wide ? undefined : 1 }]}>
             <Text style={s.val} numberOfLines={1}>{format(d.value)}</Text>
-            <View style={{ flex: 1, justifyContent: 'flex-end' }}>
+            <View style={{ flex: 1, justifyContent: 'flex-end', alignSelf: 'stretch', paddingHorizontal: 2 }}>
               <View style={{ height: h, borderRadius: 4, backgroundColor: d.color ?? colors.red }} />
             </View>
             <Text style={s.lbl} numberOfLines={1}>{d.label}</Text>

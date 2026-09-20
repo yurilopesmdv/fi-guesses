@@ -1,6 +1,6 @@
 // Seed/atualização dos dados da F1 direto no banco (via Management API). Uso: node scripts/sync-f1.mjs [season]
 import { readFileSync } from 'node:fs';
-import { fetchSeasonBundle } from '../src/lib/f1api.ts';
+import { fetchHeadshots, fetchSeasonBundle } from '../src/lib/f1api.ts';
 
 const env = Object.fromEntries(readFileSync('.env', 'utf8').split('\n').filter((l) => l.includes('=')).map((l) => l.split(/=(.*)/s).slice(0, 2).map((x) => x.trim())));
 const ref = new URL(env.EXPO_PUBLIC_SUPABASE_URL).hostname.split('.')[0];
@@ -34,4 +34,10 @@ await sql([
   upsert('race_results', withSeries(b.race_results.map((r) => ({ session: 'race', ...r }))), ['series', 'season', 'round', 'session', 'position', 'driver_code']),
   upsert('f1_sync', [{ series: 'f1', season, last_round_with_results: b.last_round_with_results, synced_at: new Date().toISOString() }], ['series', 'season']),
 ].join('\n'));
+if (season === new Date().getFullYear()) {
+  const photos = await fetchHeadshots().catch(() => ({}));
+  const vals = Object.entries(photos).map(([c, u]) => `('${c}','${u}')`).join(',');
+  if (vals) await sql(`update drivers d set headshot_url = v.url from (values ${vals}) as v(code, url) where d.series='f1' and d.season=${season} and d.code=v.code`);
+  console.log(`✓ fotos: ${Object.keys(photos).length}`);
+}
 console.log(`✓ ${season}: ${b.races.length} corridas, ${b.drivers.length} pilotos, ${b.race_results.length} resultados (até a rodada ${b.last_round_with_results}), ${b.constructor_standings.length} equipes`);

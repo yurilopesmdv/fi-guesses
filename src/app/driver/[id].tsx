@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
+import { Image } from 'expo-image';
 import { BarChart, HBars, ResultStrip } from '@/components/driver/charts';
 import { DriverSearch } from '@/components/driver/DriverSearch';
 import { flag } from '@/lib/format';
@@ -46,6 +47,9 @@ export default function DriverScreen() {
       {/* Cabeçalho */}
       <Card style={{ borderLeftWidth: 6, borderLeftColor: color }}>
         <Row style={{ justifyContent: 'space-between' }}>
+          {driver.headshot_url && (
+            <Image source={{ uri: driver.headshot_url }} style={{ width: 84, height: 84, borderRadius: 42, backgroundColor: colors.card2, borderWidth: 2, borderColor: color }} contentFit="cover" transition={200} />
+          )}
           <View style={{ flex: 1 }}>
             <Text style={s.name}>{driver.name}</Text>
             <Muted>{driver.team ?? '—'}{driver.number ? ` · #${driver.number}` : ''} · {driver.code}</Muted>
@@ -72,6 +76,34 @@ export default function DriverScreen() {
         <Tile label="Vitórias / corrida" value={`${Math.round((career.wins / Math.max(1, career.races)) * 100)}%`} />
         <Tile label="Pódios / corrida" value={`${Math.round((career.podiums / Math.max(1, career.races)) * 100)}%`} />
       </View>
+
+      {/* Equipes */}
+      {p.by_team.length > 0 && (
+        <>
+          <H2 style={{ marginTop: space(1) }}>🏎️ Equipes na carreira</H2>
+          <Card>
+            {p.by_team.map((t) => (
+              <View key={t.team} style={{ marginBottom: space(1.5) }}>
+                <Row>
+                  <View style={{ width: 5, alignSelf: 'stretch', borderRadius: 3, backgroundColor: t.team_color ?? colors.border }} />
+                  <View style={{ flex: 1 }}>
+                    <P style={{ fontWeight: '800' }}>{t.team}{t.titles > 0 ? ` ${'🏆'.repeat(Math.min(t.titles, 3))}${t.titles > 3 ? `×${t.titles}` : ''}` : ''}</P>
+                    <Muted>{t.first_season === t.last_season ? t.first_season : `${t.first_season}–${t.last_season}`} · {t.seasons} temporada{t.seasons > 1 ? 's' : ''} · {t.races} corridas</Muted>
+                  </View>
+                </Row>
+                <Row style={{ marginTop: 6, flexWrap: 'wrap' }}>
+                  <Pill color={colors.card2}>🏆 {t.wins} vit.</Pill>
+                  <Pill color={colors.card2}>🥇🥈🥉 {t.podiums}</Pill>
+                  <Pill color={colors.card2}>P {t.poles}</Pill>
+                  <Pill color={colors.card2}>⭐ {n(t.points, 1)} pts</Pill>
+                  <Pill color={colors.card2}>💥 {t.dnfs} DNF</Pill>
+                  <Pill color={colors.card2}>{Math.round((t.podiums / Math.max(1, t.races)) * 100)}% pódio</Pill>
+                </Row>
+              </View>
+            ))}
+          </Card>
+        </>
+      )}
 
       {/* Temporada */}
       <H2 style={{ marginTop: space(1) }}>📅 Temporada</H2>

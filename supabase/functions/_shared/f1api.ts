@@ -169,3 +169,11 @@ export async function fetchSeasonBundle(season: number) {
     last_round_with_results: results.reduce((m, r) => Math.max(m, r.round), 0),
   };
 }
+
+/** Fotos oficiais do grid atual (OpenF1 → formula1.com), por sigla. */
+export async function fetchHeadshots(): Promise<Record<string, string>> {
+  const res = await fetch('https://api.openf1.org/v1/drivers?session_key=latest');
+  if (!res.ok) return {};
+  const list = (await res.json()) as { name_acronym: string; headshot_url: string | null }[];
+  return Object.fromEntries(list.filter((d) => d.headshot_url).map((d) => [d.name_acronym, d.headshot_url!.replace('/1col/', '/2col/')]));
+}

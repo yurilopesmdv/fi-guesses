@@ -87,11 +87,13 @@ export type PoolSummary = { pool_id: string; members: number; next_race_name: st
 export type OpenPool = { id: string; name: string; season: number; race_id: string | null; race_name: string | null; stake_label: string | null; owner_name: string; members: number; next_race_date: string | null; is_member: boolean };
 
 export type DriverSeasonStat = { season: number; team: string | null; position: number | null; champ_points: number | null; races: number; wins: number; podiums: number; poles: number; fastest_laps: number; dnfs: number; best: number | null; avg_finish: number | null; avg_grid: number | null; champion: boolean };
+export type DriverTeamStat = { team: string; first_season: number; last_season: number; seasons: number; races: number; wins: number; podiums: number; poles: number; points: number; dnfs: number; team_color: string | null; titles: number };
 export type DriverProfile = {
-  driver: { driver_id: string; name: string; code: string; number: number | null; team: string | null; team_color: string | null; season: number };
+  driver: { driver_id: string; name: string; code: string; number: number | null; team: string | null; team_color: string | null; season: number; headshot_url: string | null };
   career: { first_season: number; last_season: number; seasons: number; races: number; wins: number; podiums: number; poles: number; fastest_laps: number; dnfs: number; points: number; best_finish: number | null; avg_finish: number | null; titles: number };
   ranks: { wins_rank: number; podiums_rank: number; titles_rank: number; points_rank: number; poles_rank: number; races_rank: number; total_drivers: number };
   teams: string | null;
+  by_team: DriverTeamStat[];
   seasons: DriverSeasonStat[];
 };
 export type DriverRaceRow = { round: number; race_name: string; country: string | null; date_utc: string; grid: number | null; finish: number; points: number; status: string; fastest_lap: boolean; classified: boolean; team: string | null };
