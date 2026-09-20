@@ -56,7 +56,7 @@ export default function Races() {
                     <Text style={{ fontSize: 26 }}>{flag(r.country)}</Text>
                     <View style={{ flex: 1 }}>
                       <P style={{ fontWeight: '800' }}>R{r.round} · {r.name}{r.has_sprint && series === 'f1' ? ' ⚡' : ''}</P>
-                      <Muted>{r.circuit} · {fmtDate(r.date_utc)}</Muted>
+                      <Muted>{r.circuit} · {r.times_tbc ? `${fmtDate(r.date_utc).split(',')[0]} · horários a confirmar` : fmtDate(r.date_utc)}</Muted>
                     </View>
                     {isNext ? <Pill color={colors.red}>próxima</Pill> : <Text style={{ color: colors.muted }}>›</Text>}
                   </Row>

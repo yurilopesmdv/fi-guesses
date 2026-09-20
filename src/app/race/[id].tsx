@@ -32,7 +32,7 @@ export default function RaceScreen() {
       <Card>
         <Text style={{ color: colors.text, fontSize: 22, fontWeight: '800' }}>{flag(race.country)} {race.series !== 'f1' ? `${SERIES_LABEL[race.series]} · ` : ''}{race.name}</Text>
         <Muted>{race.circuit} · Rodada {race.round}{race.has_sprint ? ' · fim de semana com Sprint ⚡' : ''}</Muted>
-        <Muted>{race.series === 'f1' ? 'Largada' : 'Feature Race'}: {fmtDate(race.date_utc)}</Muted>
+        {!race.times_tbc && <Muted>{race.series === 'f1' ? 'Largada' : 'Feature Race'}: {fmtDate(race.date_utc)}</Muted>}
       </Card>
       <Schedule race={race} support={support} />
       {results && results.length > 0 && (

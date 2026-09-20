@@ -59,11 +59,13 @@ for (const [i, m] of meetings.entries()) {
   const racesEv = ev.filter((e) => e.kind === 'Race' && dur(e) <= 180);
   const quali = ev.filter((e) => e.kind === 'Qualifying').at(-1), practice = ev.find((e) => e.kind === 'Practice');
   const sprint = racesEv.length > 1 ? racesEv[0] : null, feature = racesEv.at(-1);
+  // placeholder do site: treino e quali no mesmo instante (etapa futura sem horários divulgados)
+  const tbc = !practice || !quali || practice.start === quali.start;
   const fallback = `${m.meetingEndDate}T12:00:00Z`;
   races.push({
     series, season, round: i + 1, name: `${m.meetingCountryName} · ${m.meetingLocation}`.replace(' · ' + m.meetingCountryName, ''), circuit: m.meetingLocation, country: m.meetingCountryName,
-    date_utc: feature?.start ?? fallback, has_sprint: Boolean(sprint),
-    fp1_utc: practice?.start ?? null, fp2_utc: null, fp3_utc: null, sprint_quali_utc: null, sprint_utc: sprint?.start ?? null, quali_utc: quali?.start ?? null,
+    date_utc: tbc ? fallback : feature?.start ?? fallback, has_sprint: true, times_tbc: tbc,
+    fp1_utc: tbc ? null : practice?.start ?? null, fp2_utc: null, fp3_utc: null, sprint_quali_utc: null, sprint_utc: tbc ? null : sprint?.start ?? null, quali_utc: tbc ? null : quali?.start ?? null,
   });
   // top 5 da feature race (única tabela na página)
   const t = strip(page); const at = t.indexOf('Pos.|Driver|Time|Points');

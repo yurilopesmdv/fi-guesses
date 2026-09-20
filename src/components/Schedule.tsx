@@ -1,4 +1,5 @@
-import { Text, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, Text, View } from 'react-native';
 import { fmtDay, fmtTime, raceSessions } from '@/lib/format';
 import { SERIES_LABEL, type Race } from '@/lib/types';
 import { Card, H2, Muted, P, Row } from '@/ui/primitives';
@@ -6,9 +7,19 @@ import { colors } from '@/ui/theme';
 
 /** Programação do fim de semana em horário de Brasília, agrupada por dia. */
 export function Schedule({ race, support = [] }: { race: Race; support?: Race[] }) {
+  const [showSupport, setShowSupport] = useState(false);
   const own = raceSessions(race).map(([n, iso]) => [race.series === 'f1' ? n : `${SERIES_LABEL[race.series]} · ${n}`, iso] as [string, string]);
-  const extra = support.flatMap((r) => raceSessions(r).map(([n, iso]) => [`${SERIES_LABEL[r.series]} · ${n}`, iso] as [string, string]));
+  const usable = support.filter((r) => !r.times_tbc);
+  const extra = showSupport ? usable.flatMap((r) => raceSessions(r).map(([n, iso]) => [`${SERIES_LABEL[r.series]} · ${n}`, iso] as [string, string])) : [];
   const sessions = [...own, ...extra].sort((a, b) => a[1].localeCompare(b[1]));
+  if (race.times_tbc) {
+    return (
+      <Card>
+        <H2>📺 Programação</H2>
+        <Muted>Horários ainda não divulgados pela categoria. Fim de semana: {fmtDay(race.date_utc)}.</Muted>
+      </Card>
+    );
+  }
   const now = Date.now();
   const days = [...new Set(sessions.map(([, iso]) => fmtDay(iso)))];
   return (
@@ -30,6 +41,11 @@ export function Schedule({ race, support = [] }: { race: Race; support?: Race[] 
           })}
         </View>
       ))}
+      {race.series === 'f1' && usable.length > 0 && (
+        <Pressable onPress={() => setShowSupport(!showSupport)} style={{ marginTop: 6 }}>
+          <Text style={{ color: colors.red, fontWeight: '700' }}>{showSupport ? '– Esconder F2/F3' : `+ Mostrar ${usable.map((r) => SERIES_LABEL[r.series]).join('/')} do fim de semana`}</Text>
+        </Pressable>
+      )}
       <Muted style={{ marginTop: 4 }}>Transmissão: F1 TV · SporTV / Band</Muted>
     </Card>
   );

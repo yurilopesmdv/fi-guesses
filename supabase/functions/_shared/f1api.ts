@@ -67,6 +67,7 @@ export async function fetchSeasonRaces(season: number) {
     country: r.Circuit.Location.country,
     date_utc: `${r.date}T${r.time ?? '12:00:00Z'}`,
     has_sprint: Boolean(r.Sprint),
+    times_tbc: false,
     fp1_utc: at(r.FirstPractice), fp2_utc: at(r.SecondPractice), fp3_utc: at(r.ThirdPractice),
     sprint_quali_utc: at(r.SprintQualifying), sprint_utc: at(r.Sprint), quali_utc: at(r.Qualifying),
   }));

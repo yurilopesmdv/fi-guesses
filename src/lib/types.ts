@@ -32,6 +32,7 @@ export type Race = {
   sprint_quali_utc: string | null;
   sprint_utc: string | null;
   quali_utc: string | null;
+  times_tbc: boolean;
 };
 
 export type Driver = {

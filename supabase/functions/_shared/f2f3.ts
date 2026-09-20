@@ -38,10 +38,12 @@ export async function fetchF2F3Bundle(series: 'f2' | 'f3', season: number) {
     const racesEv = ev.filter((e) => e.kind === 'Race' && dur(e) <= 180);
     const quali = ev.filter((e) => e.kind === 'Qualifying').at(-1), practice = ev.find((e) => e.kind === 'Practice');
     const sprint = racesEv.length > 1 ? racesEv[0] : null, feature = racesEv.at(-1);
+    // placeholder do site: treino e quali no mesmo instante (etapa futura sem horários divulgados)
+    const tbc = !practice || !quali || practice.start === quali.start;
     races.push({
       series, season, round: i + 1, name: `${m.meetingCountryName} · ${m.meetingLocation}`, circuit: m.meetingLocation, country: m.meetingCountryName,
-      date_utc: feature?.start ?? `${m.meetingEndDate}T12:00:00Z`, has_sprint: Boolean(sprint),
-      fp1_utc: practice?.start ?? null, fp2_utc: null, fp3_utc: null, sprint_quali_utc: null, sprint_utc: sprint?.start ?? null, quali_utc: quali?.start ?? null,
+      date_utc: tbc ? `${m.meetingEndDate}T12:00:00Z` : feature?.start ?? `${m.meetingEndDate}T12:00:00Z`, has_sprint: true, times_tbc: tbc,
+      fp1_utc: tbc ? null : practice?.start ?? null, fp2_utc: null, fp3_utc: null, sprint_quali_utc: null, sprint_utc: tbc ? null : sprint?.start ?? null, quali_utc: tbc ? null : quali?.start ?? null,
     });
     const t = strip(page); const at = t.indexOf('Pos.|Driver|Time|Points');
     if (at > 0) for (const r of t.slice(at, at + 1500).matchAll(/\|(\d{1,2})\|[^|]+\|[^|]*\|[^|]+\|([A-Z]{3})\|([^|]*)\|(\d+)\|/g)) {
