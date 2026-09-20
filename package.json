@@ -33,14 +33,23 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
-    "typescript": "~6.0.3"
+    "typescript": "~6.0.3",
+    "tsx": "^4.19.0",
+    "eas-cli": "^16.0.0"
   },
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "db:migrate": "node scripts/setup-supabase.mjs",
+    "db:sql": "node scripts/sql.mjs",
+    "sync:f1": "tsx scripts/sync-f1.mjs",
+    "sync:f2f3": "node scripts/sync-f2f3.mjs",
+    "publish": "eas update --channel preview --environment preview --platform all",
+    "web:deploy": "expo export --platform web && cp site/entrar.html dist/ && eas deploy --prod"
   },
   "private": true
 }

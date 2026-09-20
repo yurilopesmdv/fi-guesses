@@ -1,0 +1,64 @@
+name: Deploy
+
+# Tudo que entra na main vai pro ar:
+#  - app (JS) via EAS Update no canal "preview" (é o canal que o APK e o Expo Go da família usam)
+#  - versão web + página de convite via EAS Hosting
+#  - banco (migrations) e Edge Function, só quando a pasta supabase/ muda
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-main
+  cancel-in-progress: false
+
+jobs:
+  app:
+    name: App (EAS Update + Web)
+    runs-on: ubuntu-latest
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+      EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - name: Publicar JS (EAS Update)
+        run: npx eas-cli update --channel preview --environment preview --platform all --non-interactive --message "${{ github.event.head_commit.message || 'manual' }}"
+      - name: Publicar web + página de convite (EAS Hosting)
+        run: |
+          npx expo export --platform web
+          cp site/entrar.html dist/
+          sed -i "s#__APK_URL__#${{ vars.APK_URL }}#" dist/entrar.html
+          npx eas-cli deploy --prod --non-interactive
+
+  supabase:
+    name: Banco + Edge Function
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            supabase:
+              - 'supabase/**'
+      - uses: actions/setup-node@v4
+        if: steps.changes.outputs.supabase == 'true' || github.event_name == 'workflow_dispatch'
+        with:
+          node-version: 20
+      - name: Migrations
+        if: steps.changes.outputs.supabase == 'true' || github.event_name == 'workflow_dispatch'
+        run: node scripts/setup-supabase.mjs "$SUPABASE_PROJECT_REF"
+      - name: Edge Function
+        if: steps.changes.outputs.supabase == 'true' || github.event_name == 'workflow_dispatch'
+        run: npx supabase@latest functions deploy sync-series --project-ref "$SUPABASE_PROJECT_REF"

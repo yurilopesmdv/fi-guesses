@@ -5,7 +5,7 @@ import { readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
 const env = Object.fromEntries(
   (existsSync('.env') ? readFileSync('.env', 'utf8') : '').split('\n').filter((l) => l.includes('=')).map((l) => l.split(/=(.*)/s).slice(0, 2).map((x) => x.trim())),
 );
-const token = env.SUPABASE_ACCESS_TOKEN;
+const token = process.env.SUPABASE_ACCESS_TOKEN ?? env.SUPABASE_ACCESS_TOKEN;
 if (!token) { console.error('SUPABASE_ACCESS_TOKEN ausente no .env'); process.exit(1); }
 
 const api = async (path, init = {}) => {
@@ -44,7 +44,9 @@ console.log('✓ auth: confirmação de e-mail desligada');
 const keys = await api(`/projects/${project.ref}/api-keys?reveal=true`);
 const anon = keys.find((k) => k.name === 'anon')?.api_key ?? keys.find((k) => k.type === 'publishable')?.api_key;
 if (!anon) throw new Error('anon key não encontrada: ' + JSON.stringify(keys.map((k) => k.name)));
-const lines = readFileSync('.env', 'utf8').split('\n').filter((l) => !l.startsWith('EXPO_PUBLIC_SUPABASE_'));
-lines.push(`EXPO_PUBLIC_SUPABASE_URL=https://${project.ref}.supabase.co`, `EXPO_PUBLIC_SUPABASE_ANON_KEY=${anon}`);
-writeFileSync('.env', lines.filter(Boolean).join('\n') + '\n');
-console.log('✓ .env atualizado com URL e anon key');
+if (process.env.CI) { console.log('✓ CI: .env não é gravado'); } else {
+  const lines = (existsSync('.env') ? readFileSync('.env', 'utf8') : '').split('\n').filter((l) => !l.startsWith('EXPO_PUBLIC_SUPABASE_'));
+  lines.push(`EXPO_PUBLIC_SUPABASE_URL=https://${project.ref}.supabase.co`, `EXPO_PUBLIC_SUPABASE_ANON_KEY=${anon}`);
+  writeFileSync('.env', lines.filter(Boolean).join('\n') + '\n');
+  console.log('✓ .env atualizado com URL e anon key');
+}
