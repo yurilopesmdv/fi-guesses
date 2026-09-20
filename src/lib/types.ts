@@ -39,6 +39,7 @@ export type Driver = {
   series: Series;
   season: number;
   code: string;
+  driver_id: string | null;
   name: string;
   number: number | null;
   team: string | null;
@@ -84,3 +85,15 @@ export type RaceResult = { series: Series; session: 'race' | 'sprint' | 'feature
 export type PoolSummary = { pool_id: string; members: number; next_race_name: string | null; next_race_date: string | null; my_total: number; my_rank: number };
 
 export type OpenPool = { id: string; name: string; season: number; race_id: string | null; race_name: string | null; stake_label: string | null; owner_name: string; members: number; next_race_date: string | null; is_member: boolean };
+
+export type DriverSeasonStat = { season: number; team: string | null; position: number | null; champ_points: number | null; races: number; wins: number; podiums: number; poles: number; fastest_laps: number; dnfs: number; best: number | null; avg_finish: number | null; avg_grid: number | null; champion: boolean };
+export type DriverProfile = {
+  driver: { driver_id: string; name: string; code: string; number: number | null; team: string | null; team_color: string | null; season: number };
+  career: { first_season: number; last_season: number; seasons: number; races: number; wins: number; podiums: number; poles: number; fastest_laps: number; dnfs: number; points: number; best_finish: number | null; avg_finish: number | null; titles: number };
+  ranks: { wins_rank: number; podiums_rank: number; titles_rank: number; points_rank: number; poles_rank: number; races_rank: number; total_drivers: number };
+  teams: string | null;
+  seasons: DriverSeasonStat[];
+};
+export type DriverRaceRow = { round: number; race_name: string; country: string | null; date_utc: string; grid: number | null; finish: number; points: number; status: string; fastest_lap: boolean; classified: boolean; team: string | null };
+export type DriverSearchRow = { driver_id: string; name: string; first_season: number; last_season: number; wins: number; titles: number; team: string | null; team_color: string | null };
+export type HeadToHead = { season: number; team: string; races: number; a_ahead: number; b_ahead: number; a_points: number; b_points: number };
