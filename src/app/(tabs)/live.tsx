@@ -3,6 +3,8 @@ import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'r
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COMPOUND, fmtLap, projectChampionship, type Standing } from '@/lib/openf1';
 import { useLive } from '@/lib/useLive';
+import { openDriver } from '@/lib/nav';
+import { useSeason } from '@/lib/useSeason';
 import { Card, H2, Loading, Muted, P, Pill, Row } from '@/ui/primitives';
 import { colors, radius, space } from '@/ui/theme';
 
@@ -13,6 +15,7 @@ export default function Live() {
   const [sel, setSel] = useState<number | null>(null);
   const [proj, setProj] = useState<'off' | 'drivers' | 'teams'>('off');
   const live = useLive(sel);
+  const { drivers: seasonDrivers } = useSeason();
   const { session, isLive, hasAccess, standings, raceControl, weather, loading, error, car } = live;
 
   if (loading) return <Loading />;
@@ -73,7 +76,7 @@ export default function Live() {
           <Text style={[s.th, { width: 66, textAlign: 'right' }]}>Última</Text>
         </Row>
         {standings.map((st) => (
-          <DriverRow key={st.driver.driver_number} st={st} best={best} selected={sel === st.driver.driver_number} onPress={() => setSel(sel === st.driver.driver_number ? null : st.driver.driver_number)} car={sel === st.driver.driver_number ? car : null} isLive={isLive} />
+          <DriverRow key={st.driver.driver_number} st={st} best={best} selected={sel === st.driver.driver_number} onPress={() => setSel(sel === st.driver.driver_number ? null : st.driver.driver_number)} car={sel === st.driver.driver_number ? car : null} isLive={isLive} onProfile={() => openDriver(seasonDrivers.find((d) => d.code === st.driver.name_acronym))} />
         ))}
       </Card>
       {isPointsSession && live.champ.length > 0 && (
@@ -124,7 +127,7 @@ export default function Live() {
   );
 }
 
-function DriverRow({ st, best, selected, onPress, car, isLive }: { st: Standing; best: number | null; selected: boolean; onPress: () => void; car: any; isLive: boolean }) {
+function DriverRow({ st, best, selected, onPress, car, isLive, onProfile }: { st: Standing; best: number | null; selected: boolean; onPress: () => void; car: any; isLive: boolean; onProfile: () => void }) {
   const c = st.compound ? COMPOUND[st.compound] : null;
   const isBest = st.bestLap != null && st.bestLap === best;
   return (
@@ -146,7 +149,7 @@ function DriverRow({ st, best, selected, onPress, car, isLive }: { st: Standing;
       {selected && (
         <View style={s.detail}>
           <Row style={{ justifyContent: 'space-between' }}>
-            <Muted>{st.driver.full_name} · {st.driver.team_name}</Muted>
+            <Pressable onPress={onProfile}><Text style={{ color: colors.red, fontWeight: '700' }}>{st.driver.full_name} · perfil ›</Text></Pressable>
             <Muted>{st.pits} pit{st.pits === 1 ? '' : 's'} · {st.lapCount} voltas</Muted>
           </Row>
           <Row style={{ marginTop: 6, justifyContent: 'space-between' }}>

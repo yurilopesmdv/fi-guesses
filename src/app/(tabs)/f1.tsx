@@ -6,6 +6,7 @@ import { SERIES_LABEL, type Series } from '@/lib/types';
 import { getSyncInfo } from '@/lib/repo';
 import { SEASON } from '@/lib/useSeason';
 import { useYear } from '@/lib/useYear';
+import { openDriver } from '@/lib/nav';
 import { Button, Card, Loading, Muted, P, Row, Screen } from '@/ui/primitives';
 import { colors, space } from '@/ui/theme';
 import { useEffect } from 'react';
@@ -53,7 +54,8 @@ export default function F1() {
       {loading ? <Loading /> : tab === 'drivers' ? ds.map((s) => {
         const d = byCode[s.driver_code];
         return (
-          <Card key={s.driver_code} style={{ padding: space(1.5) }}>
+          <Pressable key={s.driver_code} onPress={() => openDriver(d)} disabled={series !== 'f1'}>
+          <Card style={{ padding: space(1.5) }}>
             <Row>
               <Text style={{ color: colors.muted, fontWeight: '800', width: 28 }}>{s.position}</Text>
               <View style={{ width: 5, alignSelf: 'stretch', borderRadius: 3, backgroundColor: d?.team_color ?? colors.border }} />
@@ -62,8 +64,10 @@ export default function F1() {
                 <Muted>{s.team ?? ''}{s.wins ? ` · ${s.wins} vitória${s.wins > 1 ? 's' : ''}` : ''}</Muted>
               </View>
               <Text style={{ color: colors.text, fontWeight: '900', fontSize: 18 }}>{s.points}</Text>
+              {series === 'f1' && <Text style={{ color: colors.muted }}>›</Text>}
             </Row>
           </Card>
+          </Pressable>
         );
       }) : cs.map((s) => (
         <Card key={s.team} style={{ padding: space(1.5) }}>

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Driver } from '@/lib/types';
+import { canOpenDriver, openDriver } from '@/lib/nav';
 import { Button, Input, Muted } from '@/ui/primitives';
 import { colors, radius, space } from '@/ui/theme';
 
@@ -43,7 +44,7 @@ export function DriverPicker({ visible, drivers, title = 'Escolha o piloto', onS
   );
 }
 
-export function DriverRow({ d, onPress }: { d: Driver; onPress?: () => void }) {
+export function DriverRow({ d, onPress, info = true }: { d: Driver; onPress?: () => void; info?: boolean }) {
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [s.row, pressed && { opacity: 0.7 }]}>
       <View style={[s.stripe, { backgroundColor: d.team_color ?? colors.muted }]} />
@@ -53,6 +54,9 @@ export function DriverRow({ d, onPress }: { d: Driver; onPress?: () => void }) {
         <Muted>{d.team ?? ''}</Muted>
       </View>
       <Text style={s.code}>{d.code}</Text>
+      {info && canOpenDriver(d) && (
+        <Pressable hitSlop={10} onPress={() => openDriver(d)} style={s.info}><Text style={{ color: colors.text, fontWeight: '900', fontSize: 12 }}>i</Text></Pressable>
+      )}
     </Pressable>
   );
 }
@@ -65,4 +69,5 @@ const s = StyleSheet.create({
   num: { color: colors.muted, fontWeight: '800', width: 28, textAlign: 'center' },
   name: { color: colors.text, fontSize: 16, fontWeight: '600' },
   code: { color: colors.muted, fontWeight: '700' },
+  info: { width: 24, height: 24, borderRadius: 12, borderWidth: 1, borderColor: colors.muted, alignItems: 'center', justifyContent: 'center' },
 });

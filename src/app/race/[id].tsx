@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
+import { openDriver } from '@/lib/nav';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { Schedule } from '@/components/Schedule';
 import { flag, fmtDate } from '@/lib/format';
@@ -41,7 +42,8 @@ export default function RaceScreen() {
           {results.map((r) => {
             const d = byCode[r.driver_code];
             return (
-              <Row key={r.position} style={{ marginBottom: 6 }}>
+              <Pressable key={`${r.session}-${r.position}-${r.driver_code}`} onPress={() => openDriver(d)}>
+              <Row style={{ marginBottom: 6 }}>
                 <Text style={{ color: colors.muted, fontWeight: '800', width: 28 }}>{r.position}</Text>
                 <View style={{ width: 4, alignSelf: 'stretch', borderRadius: 2, backgroundColor: d?.team_color ?? colors.border }} />
                 <View style={{ flex: 1 }}>
@@ -50,6 +52,7 @@ export default function RaceScreen() {
                 </View>
                 <Muted>{r.status !== 'Finished' && !/^\+\d/.test(r.status) ? r.status : `${r.points} pts`}</Muted>
               </Row>
+              </Pressable>
             );
           })}
         </Card>

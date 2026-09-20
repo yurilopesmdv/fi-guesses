@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { answerLabel } from './QuestionField';
+import { openDriver } from '@/lib/nav';
 import type { Driver, Prediction, Question, Result, Standing } from '@/lib/types';
 import { Card, H2, Muted, Row } from '@/ui/primitives';
 import { colors, radius, space } from '@/ui/theme';
@@ -45,10 +46,10 @@ export function PicksBoard({ questions, predictions, results, members, drivers, 
   const short = (code?: string) => (code ? byCode[code]?.name.split(' ').pop() ?? code : '—');
 
   const Chip = ({ code, hit, dim }: { code?: string; hit?: boolean; dim?: boolean }) => (
-    <View style={[s.chip, hit && { backgroundColor: '#14532d' }, dim && { opacity: 0.5 }]}>
+    <Pressable onPress={() => openDriver(code ? byCode[code] : null)} style={[s.chip, hit && { backgroundColor: '#14532d' }, dim && { opacity: 0.5 }]}>
       <View style={{ width: 3, alignSelf: 'stretch', borderRadius: 2, backgroundColor: code ? byCode[code]?.team_color ?? colors.muted : colors.border }} />
       <Text style={s.chipTxt}>{code ?? '—'}</Text>
-    </View>
+    </Pressable>
   );
 
   return (
@@ -92,11 +93,13 @@ export function PicksBoard({ questions, predictions, results, members, drivers, 
                   const r = res(podiumQ.id);
                   const hit = r ? code && code === r[sl.k] : !me && code && code === mine[sl.k];
                   return (
-                    <Row key={sl.k} style={{ marginTop: 6 }}>
+                    <Pressable key={sl.k} onPress={() => openDriver(code ? byCode[code] : null)}>
+                    <Row style={{ marginTop: 6 }}>
                       <Text style={{ color: sl.c, fontWeight: '900', width: 22 }}>{sl.l}</Text>
                       <View style={{ width: 4, height: 18, borderRadius: 2, backgroundColor: code ? byCode[code]?.team_color ?? colors.muted : colors.border }} />
                       <Text style={[s.pick, hit && { color: colors.green }]} numberOfLines={1}>{short(code)}{hit ? ' ✓' : ''}</Text>
                     </Row>
+                    </Pressable>
                   );
                 })}
                 {!pod && <Muted style={{ marginTop: 6 }}>ainda não palpitou</Muted>}
