@@ -35,9 +35,9 @@ export default function F1() {
         <Row style={{ justifyContent: 'space-between' }}>
           <View style={{ flex: 1 }}>
             <P style={{ fontWeight: '800' }}>{SERIES_LABEL[series]} · Campeonato {year}</P>
-            <Muted>{sync ? `Até a rodada ${sync.last_round_with_results} · atualizado ${new Date(sync.synced_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}` : importing ? 'Importando da API…' : 'Sem dados ainda'}</Muted>
+            <Muted>{sync ? `Até a rodada ${sync.last_round_with_results} · atualizado ${new Date(sync.synced_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}` : importing ? 'Importando da API…' : 'Sem dados ainda'}{year === SEASON ? ' · automático a cada hora' : ''}</Muted>
           </View>
-          {year === SEASON && series === 'f1' && <Button title={busy ? '' : '↻ Atualizar'} variant="ghost" onPress={update} loading={busy} style={{ marginTop: 0, paddingVertical: 10 }} />}
+          {year === SEASON && <Button title={busy ? '' : '↻ Atualizar'} variant="ghost" onPress={update} loading={busy} style={{ marginTop: 0, paddingVertical: 10 }} />}
         </Row>
       </Card>
       <Row style={{ marginBottom: space(1.5) }}>

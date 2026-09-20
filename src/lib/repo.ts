@@ -60,6 +60,12 @@ export const importSeason = async (season: number) => {
   return b;
 };
 
+/** Sincroniza no servidor (Edge Function): F1/F2/F3 da temporada atual + apuração automática dos bolões. */
+export const syncSeries = async (series: Series | 'all' = 'all') => {
+  const { data, error } = await supabase.functions.invoke('sync-series', { body: { series } });
+  if (error) throw new Error(error.message);
+  return data as { ok: boolean; settled?: number };
+};
 export const getSyncInfo = async (season: number, series: Series = 'f1') =>
   (await supabase.from('f1_sync').select('*').eq('series', series).eq('season', season).maybeSingle()).data as { last_round_with_results: number | null; synced_at: string } | null;
 export const listDriverStandings = async (season: number, series: Series = 'f1') =>

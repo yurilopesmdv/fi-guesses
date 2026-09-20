@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { importSeason, listConstructorStandings, listDriverStandings, listDrivers, listRaces } from './repo';
+import { importSeason, listConstructorStandings, listDriverStandings, listDrivers, listRaces, syncSeries } from './repo';
 import type { ConstructorStanding, Driver, DriverStanding, Race, Series } from './types';
 
 export const YEARS = Array.from({ length: new Date().getFullYear() - 1949 }, (_, i) => new Date().getFullYear() - i); // atual … 1950
@@ -30,5 +30,6 @@ export function useYear(year: number, series: Series = 'f1') {
     return () => { alive = false; };
   }, [year, series, tick]);
 
-  return { ...data, loading, importing, refresh: async () => { if (series === 'f1') await importSeason(year); setTick((t) => t + 1); } };
+  const current = year === new Date().getFullYear();
+  return { ...data, loading, importing, refresh: async () => { if (current) await syncSeries(series); else if (series === 'f1') await importSeason(year); setTick((t) => t + 1); } };
 }
