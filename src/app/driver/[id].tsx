@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Redirect, Stack, useLocalSearchParams } from 'expo-router';
+import { useAuth } from '@/lib/auth';
 import { Image } from 'expo-image';
 import { BarChart, HBars, ResultStrip } from '@/components/driver/charts';
 import { DriverSearch } from '@/components/driver/DriverSearch';
@@ -15,6 +16,7 @@ const ord = (v: number | null | undefined) => (v == null ? '—' : `${v}º`);
 
 export default function DriverScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const auth = useAuth();
   const [p, setP] = useState<DriverProfile | null>(null);
   const [season, setSeason] = useState<number | null>(null);
   const [races, setRaces] = useState<DriverRaceRow[]>([]);
@@ -24,8 +26,9 @@ export default function DriverScreen() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    getDriverProfile(id).then((prof) => { setP(prof); setSeason(prof.career.last_season); }).catch((e) => setError(e.message));
-  }, [id]);
+    if (!auth.session) return;
+    getDriverProfile(id).then((prof) => { if (!prof?.driver) throw new Error('Piloto não encontrado'); setP(prof); setSeason(prof.career.last_season); }).catch((e) => setError(e.message));
+  }, [id, auth.session]);
   useEffect(() => { if (season) listDriverSeasonRaces(id, season).then(setRaces); }, [id, season]);
 
   const pick = async (d: DriverSearchRow) => {
@@ -33,6 +36,7 @@ export default function DriverScreen() {
     setOther(prof); setH2h(hh);
   };
 
+  if (!auth.loading && !auth.session) return <Redirect href="/login" />;
   if (error) return <Screen><Muted>{error}</Muted></Screen>;
   if (!p || !p.driver) return <Screen scroll={false}><Loading /></Screen>;
   const { driver, career, ranks, seasons } = p;
@@ -46,18 +50,20 @@ export default function DriverScreen() {
 
       {/* Cabeçalho */}
       <Card style={{ borderLeftWidth: 6, borderLeftColor: color }}>
-        <Row style={{ justifyContent: 'space-between' }}>
+        <Row style={{ alignItems: 'center', gap: space(1.5) }}>
           {driver.headshot_url && (
-            <Image source={{ uri: driver.headshot_url }} style={{ width: 84, height: 84, borderRadius: 42, backgroundColor: colors.card2, borderWidth: 2, borderColor: color }} contentFit="cover" transition={200} />
+            <Image source={{ uri: driver.headshot_url }} style={{ width: 76, height: 76, borderRadius: 38, backgroundColor: colors.card2, borderWidth: 2, borderColor: color }} contentFit="cover" transition={200} />
           )}
           <View style={{ flex: 1 }}>
             <Text style={s.name}>{driver.name}</Text>
             <Muted>{driver.team ?? '—'}{driver.number ? ` · #${driver.number}` : ''} · {driver.code}</Muted>
             <Muted>{career.first_season}–{career.last_season} · {career.seasons} temporada{career.seasons > 1 ? 's' : ''}</Muted>
           </View>
-          {career.titles > 0 && <Text style={{ fontSize: 34 }}>{'🏆'.repeat(Math.min(career.titles, 3))}{career.titles > 3 ? `×${career.titles}` : ''}</Text>}
         </Row>
-        {p.teams && <Muted style={{ marginTop: 6 }}>Equipes: {p.teams}</Muted>}
+        <Row style={{ marginTop: space(1), flexWrap: 'wrap' }}>
+          {career.titles > 0 && <Pill color="#3b2f00">🏆 {career.titles}× campeão mundial</Pill>}
+          {p.teams && <Muted>{p.teams}</Muted>}
+        </Row>
       </Card>
 
       {/* Carreira */}
@@ -87,17 +93,16 @@ export default function DriverScreen() {
                 <Row>
                   <View style={{ width: 5, alignSelf: 'stretch', borderRadius: 3, backgroundColor: t.team_color ?? colors.border }} />
                   <View style={{ flex: 1 }}>
-                    <P style={{ fontWeight: '800' }}>{t.team}{t.titles > 0 ? ` ${'🏆'.repeat(Math.min(t.titles, 3))}${t.titles > 3 ? `×${t.titles}` : ''}` : ''}</P>
+                    <P style={{ fontWeight: '800' }}>{t.team}{t.titles > 0 ? `  🏆 ${t.titles > 1 ? `×${t.titles}` : ''}` : ''}</P>
                     <Muted>{t.first_season === t.last_season ? t.first_season : `${t.first_season}–${t.last_season}`} · {t.seasons} temporada{t.seasons > 1 ? 's' : ''} · {t.races} corridas</Muted>
                   </View>
                 </Row>
                 <Row style={{ marginTop: 6, flexWrap: 'wrap' }}>
-                  <Pill color={colors.card2}>🏆 {t.wins} vit.</Pill>
-                  <Pill color={colors.card2}>🥇🥈🥉 {t.podiums}</Pill>
-                  <Pill color={colors.card2}>P {t.poles}</Pill>
-                  <Pill color={colors.card2}>⭐ {n(t.points, 1)} pts</Pill>
-                  <Pill color={colors.card2}>💥 {t.dnfs} DNF</Pill>
-                  <Pill color={colors.card2}>{Math.round((t.podiums / Math.max(1, t.races)) * 100)}% pódio</Pill>
+                  <Pill color={colors.card2}>Vitórias {t.wins}</Pill>
+                  <Pill color={colors.card2}>Pódios {t.podiums} ({Math.round((t.podiums / Math.max(1, t.races)) * 100)}%)</Pill>
+                  <Pill color={colors.card2}>Poles {t.poles}</Pill>
+                  <Pill color={colors.card2}>Pontos {n(t.points, 1)}</Pill>
+                  <Pill color={colors.card2}>Abandonos {t.dnfs}</Pill>
                 </Row>
               </View>
             ))}
@@ -125,22 +130,22 @@ export default function DriverScreen() {
             <Tile small label="Vitórias" value={n(cur.wins)} />
             <Tile small label="Pódios" value={n(cur.podiums)} />
             <Tile small label="Poles" value={n(cur.poles)} />
-            <Tile small label="Média chegada" value={n(cur.avg_finish, 1)} />
-            <Tile small label="Média grid" value={n(cur.avg_grid, 1)} />
+            <Tile small label="Méd. chegada" value={n(cur.avg_finish, 1)} />
+            <Tile small label="Méd. grid" value={n(cur.avg_grid, 1)} />
             <Tile small label="Terminou" value={`${Math.round(((cur.races - cur.dnfs) / Math.max(1, cur.races)) * 100)}%`} />
-            <Tile small label="Pos. ganhas/corrida" value={finished.length ? n(finished.reduce((t, r) => t + ((r.grid ?? r.finish) - r.finish), 0) / finished.length, 1) : '—'} />
+            <Tile small label="Ganhou/largada" value={finished.length ? n(finished.reduce((t, r) => t + ((r.grid ?? r.finish) - r.finish), 0) / finished.length, 1) : '—'} />
           </View>
           {races.length > 0 && (
             <>
               <Muted style={{ marginTop: space(1), marginBottom: 4 }}>Resultado por corrida</Muted>
               <ResultStrip results={races.map((r) => ({ finish: r.finish, classified: r.classified, points: r.points, label: r.country?.slice(0, 3).toUpperCase() ?? String(r.round) }))} />
               <View style={{ marginTop: space(1) }}>
-                <Row style={s.tr}><Text style={[s.th, { flex: 1 }]}>GP</Text><Text style={[s.th, { width: 60 }]}>Grid → Cheg.</Text><Text style={[s.th, { width: 40, textAlign: 'right' }]}>Pts</Text></Row>
+                <Row style={s.tr}><Text style={[s.th, { flex: 1 }]}>GP</Text><Text style={[s.th, { width: 76 }]}>Grid → Cheg.</Text><Text style={[s.th, { width: 36, textAlign: 'right' }]}>Pts</Text></Row>
                 {races.map((r) => (
                   <Row key={r.round} style={s.tr}>
                     <Text style={[s.td, { flex: 1 }]} numberOfLines={1}>{flag(r.country)} {r.race_name}{r.fastest_lap ? ' ⏱️' : ''}</Text>
-                    <Text style={[s.td, { width: 60 }, r.finish === 1 && { color: colors.gold, fontWeight: '900' }, !r.classified && { color: colors.red }]}>{r.grid || '–'} → {r.classified ? r.finish : 'DNF'}</Text>
-                    <Text style={[s.td, { width: 40, textAlign: 'right', fontWeight: '700' }]}>{n(r.points, 1)}</Text>
+                    <Text style={[s.td, { width: 76 }, r.finish === 1 && { color: colors.gold, fontWeight: '900' }, !r.classified && { color: colors.red }]}>{r.grid || '–'} → {r.classified ? r.finish : 'DNF'}</Text>
+                    <Text style={[s.td, { width: 36, textAlign: 'right', fontWeight: '700' }]}>{n(r.points, 1)}</Text>
                   </Row>
                 ))}
               </View>
@@ -155,7 +160,7 @@ export default function DriverScreen() {
         <Muted style={{ marginBottom: 6 }}>Pontos por temporada</Muted>
         <BarChart data={seasons.map((sd) => ({ label: String(sd.season).slice(2), value: Number(sd.champ_points ?? 0), color: sd.champion ? colors.gold : color }))} format={(v) => n(v)} />
         <Muted style={{ marginTop: space(1.5), marginBottom: 6 }}>Posição no campeonato (barra maior = melhor)</Muted>
-        <BarChart data={seasons.map((sd) => ({ label: String(sd.season).slice(2), value: sd.position ?? 25, color: sd.position === 1 ? colors.gold : sd.position && sd.position <= 3 ? colors.silver : colors.card2 }))} invert max={25} height={80} format={(v) => (v >= 25 ? '' : `${v}º`)} />
+        <BarChart data={seasons.map((sd) => ({ label: String(sd.season).slice(2), value: sd.position ?? 25, color: sd.position === 1 ? colors.gold : sd.position && sd.position <= 3 ? colors.silver : sd.position && sd.position <= 10 ? '#4B5563' : '#2A2A36' }))} invert max={25} height={80} format={(v) => (v >= 25 ? '' : `${v}º`)} />
         <Muted style={{ marginTop: space(1.5), marginBottom: 6 }}>Distribuição dos resultados na carreira</Muted>
         <HBars data={[
           { label: 'Vitórias', value: career.wins, color: colors.gold },
@@ -187,7 +192,7 @@ function Tile({ label, value, rank, total, show, small }: { label: string; value
     <View style={[s.tile, small && { width: '23%', padding: 8 }]}>
       <Text style={[s.tileVal, small && { fontSize: 16 }]}>{value}</Text>
       <Text style={s.tileLbl} numberOfLines={1}>{label}</Text>
-      {show && rank != null && rank <= 50 && <Text style={s.rank}>#{rank} de todos os tempos</Text>}
+      {show && rank != null && rank <= 50 && <Text style={s.rank}>#{rank} histórico</Text>}
     </View>
   );
 }
@@ -259,11 +264,11 @@ function Compare({ a, b, h2h, onChange }: { a: DriverProfile; b: DriverProfile; 
 }
 
 const s = StyleSheet.create({
-  name: { color: colors.text, fontSize: 24, fontWeight: '900' },
+  name: { color: colors.text, fontSize: 21, fontWeight: '900' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   tile: { width: '31.5%', backgroundColor: colors.card, borderRadius: radius, padding: 10, borderWidth: 1, borderColor: colors.border },
   tileVal: { color: colors.text, fontSize: 20, fontWeight: '900', fontVariant: ['tabular-nums'] },
-  tileLbl: { color: colors.muted, fontSize: 11 },
+  tileLbl: { color: colors.muted, fontSize: 10 },
   rank: { color: colors.gold, fontSize: 10, fontWeight: '700', marginTop: 2 },
   chip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, backgroundColor: colors.card2 },
   tr: { borderBottomWidth: 1, borderBottomColor: colors.border, paddingVertical: 6, gap: 6, alignItems: 'center' },
