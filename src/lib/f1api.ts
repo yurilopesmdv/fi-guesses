@@ -18,17 +18,42 @@ const TEAM_NAMES: Record<string, string> = {
   renault: 'Renault', force_india: 'Force India', lotus_f1: 'Lotus', manor: 'Manor', caterham: 'Caterham',
   marussia: 'Marussia', brawn: 'Brawn', toyota: 'Toyota', bmw_sauber: 'BMW Sauber', honda: 'Honda',
 };
-// pilotos antigos podem não ter "code" na API
-const driverCode = (d: any): string => d.code ?? String(d.familyName).replace(/[^A-Za-z]/g, '').slice(0, 3).toUpperCase();
+// Pilotos antigos não têm "code" na API: gera sigla única por temporada (dois "Hill" → HIL / PHI)
+const clean = (t: string) => String(t).normalize('NFD').replace(/[^A-Za-z]/g, '').toUpperCase();
+function makeCodeBook(drivers: any[]) {
+  const book = new Map<string, string>(); const used = new Set<string>();
+  for (const d of drivers) {
+    if (book.has(d.driverId)) continue;
+    const fam = clean(d.familyName), giv = clean(d.givenName);
+    const cands = [d.code, fam.slice(0, 3), giv[0] + fam.slice(0, 2), giv.slice(0, 2) + fam[0], clean(d.driverId).slice(0, 3)];
+    let code = cands.find((c) => c && c.length === 3 && !used.has(c)) ?? (fam.slice(0, 2) + String(book.size % 10));
+    while (used.has(code)) code = code.slice(0, 2) + String.fromCharCode(65 + Math.floor(Math.random() * 26));
+    used.add(code); book.set(d.driverId, code);
+  }
+  return book;
+}
+let codeBook = new Map<string, string>();
+const driverCode = (d: any): string => codeBook.get(d.driverId) ?? d.code ?? clean(d.familyName).slice(0, 3);
 const teamName = (id?: string) => (id ? TEAM_NAMES[id] ?? id.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : null);
 const teamColor = (id?: string) => (id ? TEAM_COLORS[id] ?? '#888' : '#888');
 
 const at = (s?: { date: string; time?: string }) => (s ? `${s.date}T${s.time ?? '12:00:00Z'}` : null);
 
-async function get(path: string, offset = 0) {
-  const res = await fetch(`${BASE}/${path}?limit=100&offset=${offset}`);
-  if (!res.ok) throw new Error(`F1 API ${res.status}`);
-  return (await res.json()).MRData;
+// Jolpica: ~4 req/s e 500 req/h — espaça as chamadas e refaz em 429
+let chain: Promise<unknown> = Promise.resolve();
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+function get(path: string, offset = 0): Promise<any> {
+  const run = async () => {
+    for (let tent = 0; ; tent++) {
+      const res = await fetch(`${BASE}/${path}?limit=100&offset=${offset}`);
+      if (res.status === 429 && tent < 6) { await sleep(Number(res.headers.get('retry-after') ?? 0) * 1000 || 3000 * (tent + 1)); continue; }
+      if (!res.ok) throw new Error(`F1 API ${res.status} em ${path}`);
+      return (await res.json()).MRData;
+    }
+  };
+  const p = chain.then(() => sleep(350)).then(run);
+  chain = p.catch(() => {});
+  return p;
 }
 
 export async function fetchSeasonRaces(season: number) {
@@ -49,7 +74,7 @@ export async function fetchSeasonRaces(season: number) {
 export async function fetchDriverStandings(season: number) {
   const data = await get(`${season}/driverStandings.json`);
   const list = (data.StandingsTable.StandingsLists[0]?.DriverStandings ?? []) as any[];
-  return list.map((s) => {
+  return list.map((s, i) => {
     const team = s.Constructors[s.Constructors.length - 1]?.constructorId as string | undefined;
     return {
       driver: {
@@ -58,7 +83,8 @@ export async function fetchDriverStandings(season: number) {
         number: s.Driver.permanentNumber ? Number(s.Driver.permanentNumber) : null,
         team: teamName(team), team_color: teamColor(team),
       },
-      standing: { season, position: Number(s.position), driver_code: driverCode(s.Driver), team: teamName(team), points: Number(s.points), wins: Number(s.wins) },
+      // sem posição ('-') → ordem da lista
+      standing: { season, position: Number(s.position) || i + 1, driver_code: driverCode(s.Driver), team: teamName(team), points: Number(s.points), wins: Number(s.wins) },
     };
   });
 }
@@ -66,8 +92,8 @@ export async function fetchDriverStandings(season: number) {
 export async function fetchConstructorStandings(season: number) {
   const data = await get(`${season}/constructorStandings.json`);
   const list = (data.StandingsTable.StandingsLists[0]?.ConstructorStandings ?? []) as any[];
-  return list.map((s) => ({
-    season, position: Number(s.position),
+  return list.map((s, i) => ({
+    season, position: Number(s.position) || i + 1,
     team: teamName(s.Constructor.constructorId)!, team_color: teamColor(s.Constructor.constructorId),
     points: Number(s.points), wins: Number(s.wins),
   }));
@@ -82,7 +108,7 @@ export async function fetchSeasonResults(season: number) {
       for (const r of race.Results as any[]) {
         rows.push({
           season, round: Number(race.round), position: Number(r.position), driver_code: driverCode(r.Driver),
-          team: teamName(r.Constructor.constructorId), grid: r.grid ? Number(r.grid) : null,
+          team: teamName(r.Constructor.constructorId), grid: Number(r.grid) || null,
           points: Number(r.points), status: r.status, fastest_lap: r.FastestLap?.rank === '1',
         });
       }
@@ -104,6 +130,8 @@ export async function fetchRaceResult(season: number, round: number) {
 
 /** Baixa tudo da temporada de uma vez, no formato das tabelas do banco. */
 export async function fetchSeasonBundle(season: number) {
+  const all = await get(`${season}/drivers.json`);
+  codeBook = makeCodeBook(all.DriverTable?.Drivers ?? []);
   const [races, drivers, constructors, results] = await Promise.all([
     fetchSeasonRaces(season), fetchDriverStandings(season), fetchConstructorStandings(season), fetchSeasonResults(season),
   ]);

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { importSeason, listConstructorStandings, listDriverStandings, listDrivers, listRaces } from './repo';
 import type { ConstructorStanding, Driver, DriverStanding, Race } from './types';
 
-export const YEARS = Array.from({ length: new Date().getFullYear() - 2009 }, (_, i) => new Date().getFullYear() - i); // atual … 2010
+export const YEARS = Array.from({ length: new Date().getFullYear() - 1949 }, (_, i) => new Date().getFullYear() - i); // atual … 1950
 
 /** Dados de qualquer temporada; se ainda não estiver no banco, importa da API (uma vez — histórico não muda). */
 export function useYear(year: number) {

@@ -28,7 +28,7 @@ await sql([
   upsert('drivers', b.drivers, ['season', 'code']),
   upsert('driver_standings', b.driver_standings, ['season', 'driver_code']),
   upsert('constructor_standings', b.constructor_standings, ['season', 'team']),
-  upsert('race_results', b.race_results, ['season', 'round', 'position']),
+  upsert('race_results', b.race_results, ['season', 'round', 'position', 'driver_code']),
   upsert('f1_sync', [{ season, last_round_with_results: b.last_round_with_results, synced_at: new Date().toISOString() }], ['season']),
 ].join('\n'));
 console.log(`✓ ${season}: ${b.races.length} corridas, ${b.drivers.length} pilotos, ${b.race_results.length} resultados (até a rodada ${b.last_round_with_results}), ${b.constructor_standings.length} equipes`);

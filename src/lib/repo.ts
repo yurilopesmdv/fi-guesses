@@ -55,7 +55,7 @@ export const importSeason = async (season: number) => {
   throwIf(await supabase.from('drivers').upsert(b.drivers, { onConflict: 'season,code' }));
   throwIf(await supabase.from('driver_standings').upsert(b.driver_standings, { onConflict: 'season,driver_code' }));
   throwIf(await supabase.from('constructor_standings').upsert(b.constructor_standings, { onConflict: 'season,team' }));
-  if (b.race_results.length) throwIf(await supabase.from('race_results').upsert(b.race_results, { onConflict: 'season,round,position' }));
+  if (b.race_results.length) throwIf(await supabase.from('race_results').upsert(b.race_results, { onConflict: 'season,round,position,driver_code' }));
   throwIf(await supabase.from('f1_sync').upsert({ season, last_round_with_results: b.last_round_with_results, synced_at: new Date().toISOString() }));
   return b;
 };
