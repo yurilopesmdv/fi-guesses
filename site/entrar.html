@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bolão F1 — convite</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; background: #0B0B0F; color: #F4F4F6; font-family: -apple-system, system-ui, Segoe UI, Roboto, sans-serif; padding: 24px 16px; }
+  .wrap { max-width: 420px; margin: 0 auto; text-align: center; }
+  h1 { font-size: 26px; margin: 8px 0 4px; }
+  p { color: #9A9AAB; margin: 0 0 20px; }
+  .code { font-size: 34px; font-weight: 900; letter-spacing: 6px; background: #16161D; border: 1px solid #2A2A36; border-radius: 14px; padding: 14px; margin: 16px 0; }
+  a.btn { display: block; background: #E10600; color: #fff; text-decoration: none; font-weight: 800; padding: 16px; border-radius: 14px; margin: 10px 0; font-size: 17px; }
+  a.ghost { background: #1F1F29; }
+  small { color: #9A9AAB; display: block; margin-top: 18px; line-height: 1.5; }
+  .hide { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div style="font-size:56px">🏎️</div>
+  <h1>Você foi convidado pro Bolão F1</h1>
+  <p>Palpite o pódio, responda as perguntas e dispute o ranking.</p>
+  <div class="code" id="code">------</div>
+
+  <div id="android">
+    <a class="btn" id="open-android" href="#">Abrir no app</a>
+    <a class="btn ghost" id="apk" href="#">Ainda não tenho o app (baixar APK)</a>
+  </div>
+  <div id="ios" class="hide">
+    <a class="btn" id="open-ios" href="#">Abrir no Expo Go</a>
+    <a class="btn ghost" href="https://apps.apple.com/app/expo-go/id982107779">Ainda não tenho o Expo Go (App Store)</a>
+  </div>
+  <a class="btn ghost" id="web" href="#">Abrir no navegador (sem instalar)</a>
+  <a class="btn ghost" id="copy" href="#">Copiar código</a>
+
+  <small>Se o app não abrir sozinho: abra o Bolão F1 → <b>Tenho um código</b> → digite o código acima.</small>
+</div>
+<script>
+  const code = (new URLSearchParams(location.search).get('c') || '').toUpperCase();
+  document.getElementById('code').textContent = code || '------';
+  const ios = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  document.getElementById(ios ? 'ios' : 'android').classList.remove('hide');
+  document.getElementById(ios ? 'android' : 'ios').classList.add('hide');
+  document.getElementById('open-android').href = 'bolaof1://join/' + code;
+  document.getElementById('open-ios').href = 'exp://u.expo.dev/7efe543a-c812-4af7-9e7b-bc998f3b2f4c/--/join/' + code + '?channel-name=preview&runtime-version=exposdk:57.0.0';
+  document.getElementById('apk').href = '__APK_URL__';
+  document.getElementById('web').href = '/join/' + code;
+  document.getElementById('copy').onclick = (e) => { e.preventDefault(); navigator.clipboard?.writeText(code); e.target.textContent = 'Copiado ✓'; };
+</script>
+</body>
+</html>
