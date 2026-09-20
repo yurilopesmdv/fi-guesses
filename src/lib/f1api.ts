@@ -5,13 +5,22 @@ const TEAM_COLORS: Record<string, string> = {
   mercedes: '#27F4D2', red_bull: '#3671C6', ferrari: '#E80020', mclaren: '#FF8000',
   aston_martin: '#229971', alpine: '#0093CC', williams: '#64C4FF', rb: '#6692FF',
   audi: '#F50537', haas: '#B6BABD', cadillac: '#C8A96B',
+  // temporadas anteriores
+  sauber: '#52E252', alphatauri: '#5E8FAA', alfa: '#C92D4B', toro_rosso: '#469BFF', racing_point: '#F596C8',
+  renault: '#FFF500', force_india: '#F596C8', lotus_f1: '#FFB800', manor: '#F40000', caterham: '#0B361F',
+  marussia: '#6E0000', brawn: '#B8FD6E', toyota: '#CC0000', bmw_sauber: '#0066B3', honda: '#F0F0F0',
 };
 const TEAM_NAMES: Record<string, string> = {
   mercedes: 'Mercedes', red_bull: 'Red Bull', ferrari: 'Ferrari', mclaren: 'McLaren',
   aston_martin: 'Aston Martin', alpine: 'Alpine', williams: 'Williams', rb: 'Racing Bulls',
   audi: 'Audi', haas: 'Haas', cadillac: 'Cadillac',
+  sauber: 'Sauber', alphatauri: 'AlphaTauri', alfa: 'Alfa Romeo', toro_rosso: 'Toro Rosso', racing_point: 'Racing Point',
+  renault: 'Renault', force_india: 'Force India', lotus_f1: 'Lotus', manor: 'Manor', caterham: 'Caterham',
+  marussia: 'Marussia', brawn: 'Brawn', toyota: 'Toyota', bmw_sauber: 'BMW Sauber', honda: 'Honda',
 };
-const teamName = (id?: string) => (id ? TEAM_NAMES[id] ?? id : null);
+// pilotos antigos podem não ter "code" na API
+const driverCode = (d: any): string => d.code ?? String(d.familyName).replace(/[^A-Za-z]/g, '').slice(0, 3).toUpperCase();
+const teamName = (id?: string) => (id ? TEAM_NAMES[id] ?? id.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : null);
 const teamColor = (id?: string) => (id ? TEAM_COLORS[id] ?? '#888' : '#888');
 
 const at = (s?: { date: string; time?: string }) => (s ? `${s.date}T${s.time ?? '12:00:00Z'}` : null);
@@ -44,12 +53,12 @@ export async function fetchDriverStandings(season: number) {
     const team = s.Constructors[s.Constructors.length - 1]?.constructorId as string | undefined;
     return {
       driver: {
-        season, code: s.Driver.code as string,
+        season, code: driverCode(s.Driver),
         name: `${s.Driver.givenName} ${s.Driver.familyName}`,
         number: s.Driver.permanentNumber ? Number(s.Driver.permanentNumber) : null,
         team: teamName(team), team_color: teamColor(team),
       },
-      standing: { season, position: Number(s.position), driver_code: s.Driver.code as string, team: teamName(team), points: Number(s.points), wins: Number(s.wins) },
+      standing: { season, position: Number(s.position), driver_code: driverCode(s.Driver), team: teamName(team), points: Number(s.points), wins: Number(s.wins) },
     };
   });
 }
@@ -72,7 +81,7 @@ export async function fetchSeasonResults(season: number) {
     for (const race of data.RaceTable.Races as any[]) {
       for (const r of race.Results as any[]) {
         rows.push({
-          season, round: Number(race.round), position: Number(r.position), driver_code: r.Driver.code,
+          season, round: Number(race.round), position: Number(r.position), driver_code: driverCode(r.Driver),
           team: teamName(r.Constructor.constructorId), grid: r.grid ? Number(r.grid) : null,
           points: Number(r.points), status: r.status, fastest_lap: r.FastestLap?.rank === '1',
         });
@@ -89,7 +98,7 @@ export async function fetchRaceResult(season: number, round: number) {
   const race = data.RaceTable.Races[0];
   if (!race) return null;
   const positions: Record<number, string> = {};
-  for (const r of race.Results as any[]) positions[Number(r.position)] = r.Driver.code;
+  for (const r of race.Results as any[]) positions[Number(r.position)] = driverCode(r.Driver);
   return positions;
 }
 

@@ -19,7 +19,7 @@ export default function PoolTabs() {
     }}>
       <Tabs.Screen name="index" options={{ title: 'Palpite', tabBarIcon: icon('flag') }} />
       <Tabs.Screen name="standings" options={{ title: 'Ranking', tabBarIcon: icon('trophy') }} />
-      <Tabs.Screen name="races" options={{ title: 'Corridas', tabBarIcon: icon('calendar') }} />
+      <Tabs.Screen name="races" options={{ title: 'Pontos', tabBarIcon: icon('list'), href: pool?.race_id ? null : undefined }} />
       <Tabs.Screen name="members" options={{ title: 'Galera', tabBarIcon: icon('people') }} />
     </Tabs>
   );

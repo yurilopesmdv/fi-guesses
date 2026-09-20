@@ -3,19 +3,24 @@ import { Text, View } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { Schedule } from '@/components/Schedule';
 import { flag, fmtDate } from '@/lib/format';
-import { listRaceResults } from '@/lib/repo';
-import type { RaceResult } from '@/lib/types';
-import { useSeason } from '@/lib/useSeason';
+import { getRace, listDrivers, listRaceResults } from '@/lib/repo';
+import type { Driver, Race, RaceResult } from '@/lib/types';
 import { Card, H2, Loading, Muted, P, Row, Screen } from '@/ui/primitives';
 import { colors } from '@/ui/theme';
 
 /** Corrida (fora de bolão): programação em horário de Brasília + classificação oficial. */
 export default function RaceScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { races, drivers } = useSeason();
-  const race = races.find((r) => r.id === id);
+  const [race, setRace] = useState<Race | null>(null);
+  const [drivers, setDrivers] = useState<Driver[]>([]);
   const [results, setResults] = useState<RaceResult[] | null>(null);
-  useEffect(() => { if (race) listRaceResults(race.season, race.round).then(setResults); }, [race]);
+  useEffect(() => {
+    getRace(id).then(async (r) => {
+      setRace(r);
+      const [d, res] = await Promise.all([listDrivers(r.season), listRaceResults(r.season, r.round)]);
+      setDrivers(d); setResults(res);
+    });
+  }, [id]);
 
   if (!race) return <Screen scroll={false}><Loading /></Screen>;
   const byCode = Object.fromEntries(drivers.map((d) => [d.code, d]));

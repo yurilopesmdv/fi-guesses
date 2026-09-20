@@ -42,6 +42,7 @@ export const raceParticipation = async (poolId: string, raceId: string) =>
   throwIf(await supabase.rpc('race_participation', { p_pool: poolId, p_race: raceId })) as { user_id: string; has_prediction: boolean }[];
 
 // ---------- calendário / pilotos ----------
+export const getRace = async (id: string) => throwIf(await supabase.from('races').select('*').eq('id', id).single()) as Race;
 export const listRaces = async (season: number) =>
   throwIf(await supabase.from('races').select('*').eq('season', season).order('round')) as Race[];
 export const listDrivers = async (season: number) =>
