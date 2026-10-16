@@ -3,6 +3,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { fetchHeadshots, fetchSeasonBundle } from '../_shared/f1api.ts';
 import { fetchF2F3Bundle } from '../_shared/f2f3.ts';
+import { createSyncHandler } from '../_shared/sync-handler.ts';
 
 const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 const up = async (table: string, rows: any[], onConflict: string) => {
@@ -30,22 +31,9 @@ async function syncOne(series: 'f1' | 'f2' | 'f3', season: number) {
 
 /** Pódio oficial → resultado da pergunta "podium" em todos os bolões que ainda não apuraram. */
 async function autoSettle(season: number) {
-  const { data } = await db.rpc('auto_settle_podiums', { p_season: season });
+  const { data, error } = await db.rpc('auto_settle_podiums', { p_season: season });
+  if (error) throw new Error(error.message);
   return data ?? 0;
 }
 
-Deno.serve(async (req) => {
-  try {
-    const body = req.method === 'POST' ? await req.json().catch(() => ({})) : {};
-    const season = Number(body.season ?? new Date().getFullYear());
-    const list: ('f1' | 'f2' | 'f3')[] = body.series && body.series !== 'all' ? [body.series] : ['f1', 'f2', 'f3'];
-    const out: Record<string, unknown> = {};
-    for (const s of list) {
-      try { out[s] = await syncOne(s, season); } catch (e) { out[s] = { error: String((e as Error).message) }; }
-    }
-    if (list.includes('f1')) out.settled = await autoSettle(season);
-    return Response.json({ ok: true, season, ...out });
-  } catch (e) {
-    return Response.json({ ok: false, error: String((e as Error).message) }, { status: 500 });
-  }
-});
+Deno.serve(createSyncHandler(syncOne, autoSettle));

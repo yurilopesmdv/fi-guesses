@@ -3,14 +3,28 @@ import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'r
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COMPOUND, fmtLap, projectChampionship, type Standing } from '@/lib/openf1';
 import { useLive } from '@/lib/useLive';
+import { LIVE_ENABLED } from '@/lib/features';
 import { openDriver } from '@/lib/nav';
 import { useSeason } from '@/lib/useSeason';
-import { Card, H2, Loading, Muted, P, Pill, Row } from '@/ui/primitives';
+import { Card, H2, Loading, Muted, P, Pill, Row, Screen } from '@/ui/primitives';
 import { colors, radius, space } from '@/ui/theme';
 
 const FLAG_COLOR: Record<string, string> = { GREEN: colors.green, YELLOW: colors.gold, 'DOUBLE YELLOW': colors.gold, RED: colors.red, CHEQUERED: colors.text, CLEAR: colors.green, BLUE: '#3B82F6' };
 
 export default function Live() {
+  if (!LIVE_ENABLED) return (
+    <Screen>
+      <Card>
+        <H2>📡 Ao vivo indisponível</H2>
+        <P>O monitor ao vivo precisa de uma assinatura OpenF1.</P>
+        <Muted style={{ marginTop: space(1) }}>Aguardando ativação da assinatura. Enquanto isso, acompanhe a programação e os resultados nas abas Corridas e F1.</Muted>
+      </Card>
+    </Screen>
+  );
+  return <LiveMonitor />;
+}
+
+function LiveMonitor() {
   const insets = useSafeAreaInsets();
   const [sel, setSel] = useState<number | null>(null);
   const [proj, setProj] = useState<'off' | 'drivers' | 'teams'>('off');

@@ -16,11 +16,14 @@ concurrency:
 jobs:
   app:
     name: App (EAS Update + Web)
+    needs: supabase
     runs-on: ubuntu-latest
     env:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
       EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
       EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+      EXPO_PUBLIC_LIVE_ENABLED: ${{ vars.EXPO_PUBLIC_LIVE_ENABLED || 'false' }}
+      APK_URL: ${{ vars.APK_URL }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -29,14 +32,16 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run typecheck
+      - run: npm test
       - name: Publicar JS (EAS Update)
-        run: npx eas-cli update --channel preview --environment preview --platform all --non-interactive --message "${{ github.event.head_commit.message || 'manual' }}"
+        env:
+          UPDATE_MESSAGE: ${{ github.event.head_commit.message || 'manual' }}
+        run: node scripts/eas.mjs update --channel preview --environment preview --platform all --non-interactive --message "$UPDATE_MESSAGE"
       - name: Publicar web + página de convite (EAS Hosting)
         run: |
           npx expo export --platform web
-          cp site/entrar.html dist/
-          sed -i "s#__APK_URL__#${{ vars.APK_URL || 'https://tqbftaqkqtjouovyvrkq.supabase.co/storage/v1/object/public/site/bolao-f1.apk' }}#" dist/entrar.html
-          npx eas-cli deploy --prod --non-interactive
+          node scripts/prepare-web.mjs
+          node scripts/eas.mjs deploy --prod --non-interactive
 
   supabase:
     name: Banco + Edge Function
@@ -59,6 +64,9 @@ jobs:
       - name: Migrations
         if: steps.changes.outputs.supabase == 'true' || github.event_name == 'workflow_dispatch'
         run: node scripts/setup-supabase.mjs "$SUPABASE_PROJECT_REF"
+      - name: Dependências para bundle da função
+        if: steps.changes.outputs.supabase == 'true' || github.event_name == 'workflow_dispatch'
+        run: npm ci
       - name: Edge Function
         if: steps.changes.outputs.supabase == 'true' || github.event_name == 'workflow_dispatch'
-        run: npx supabase@latest functions deploy sync-series --project-ref "$SUPABASE_PROJECT_REF"
+        run: node scripts/deploy-function.mjs sync-series "$SUPABASE_PROJECT_REF"

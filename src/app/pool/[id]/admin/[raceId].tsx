@@ -6,6 +6,7 @@ import { KIND_LABEL, QuestionField } from '@/components/QuestionField';
 import { addQuestion, deleteQuestion, fetchOfficialPodium, listQuestions, listResults, listStandings, saveResult } from '@/lib/repo';
 import type { Answer, Question, QuestionKind, Standing } from '@/lib/types';
 import { usePool } from '@/lib/usePool';
+import { useUserId } from '@/lib/auth';
 import { Button, Card, H2, Input, Loading, Muted, P, Pill, Row, Screen } from '@/ui/primitives';
 import { colors, space } from '@/ui/theme';
 
@@ -19,7 +20,9 @@ const PRESETS: { prompt: string; kind: QuestionKind; points: number }[] = [
 
 export default function Admin() {
   const { raceId } = useLocalSearchParams<{ raceId: string }>();
-  const { pool, races, drivers, isOpen } = usePool();
+  const { pool, races, drivers, isOpen, reload } = usePool();
+  const uid = useUserId();
+  const isOwner = pool?.owner_id === uid;
   const race = races.find((r) => r.id === raceId);
   const [questions, setQuestions] = useState<Question[] | null>(null);
   const [results, setResults] = useState<Record<string, any>>({});
@@ -31,16 +34,17 @@ export default function Admin() {
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(() => {
-    if (!pool || !race) return;
+    if (!pool || !race || !isOwner) return;
     listQuestions(pool.id, race.id).then(async (qs) => {
       setQuestions(qs);
       const rs = await listResults(qs.map((q) => q.id));
       setResults(Object.fromEntries(rs.map((r) => [r.question_id, r.answer])));
     });
     listStandings(pool.id).then(setMembers);
-  }, [pool, race]);
+  }, [pool, race, isOwner]);
   useFocusEffect(load);
 
+  if (pool && !isOwner) return <Screen><H2>Área do organizador</H2><Muted>Somente o proprietário pode informar resultados oficiais.</Muted><Button title="Voltar aos palpites" onPress={() => router.replace(`/pool/${pool.id}`)} /></Screen>;
   if (!pool || !race || questions === null) return <Screen scroll={false}><Loading /></Screen>;
   const open = isOpen(race);
   const podiumQ = questions.find((q) => q.kind === 'podium')!;
@@ -60,7 +64,7 @@ export default function Admin() {
       const r = await fetchOfficialPodium(race);
       if (!r) return Alert.alert('Ainda não publicado', 'A API ainda não tem o resultado desta corrida. Preencha à mão.');
       setResults((prev) => ({ ...prev, [podiumQ.id]: { p1: r.p1, p2: r.p2, p3: r.p3 } }));
-      Alert.alert('Pódio importado', `${r.p1} · ${r.p2} · ${r.p3}\nConfira e toque em "Salvar apuração".`);
+      Alert.alert('Pódio importado', `${r.p1} · ${r.p2} · ${r.p3}\nConfira e toque em "Salvar resultados oficiais".`);
     } catch (e: any) { Alert.alert('Erro', e.message); } finally { setBusy(false); }
   };
 
@@ -68,6 +72,7 @@ export default function Admin() {
     setBusy(true);
     try {
       for (const q of questions) if (results[q.id]) await saveResult(q.id, results[q.id] as Answer);
+      reload();
       Alert.alert('Apuração salva', 'A pontuação já está no ranking.');
       router.back();
     } catch (e: any) { Alert.alert('Erro', e.message); } finally { setBusy(false); }
@@ -82,6 +87,13 @@ export default function Admin() {
   return (
     <Screen>
       <Stack.Screen options={{ title: `Apuração · ${race.name}` }} />
+
+      <Card style={{ borderColor: colors.red, backgroundColor: '#1f1216' }}>
+        <H2>⚙️ Modo organizador · apuração oficial</H2>
+        <P>Você está informando os resultados finais da corrida.</P>
+        <Muted style={{ marginTop: space(1) }}>Salvar aqui altera a pontuação de todos os participantes. Seu palpite pessoal é preenchido na tela de palpites.</Muted>
+        <Button title="Voltar aos meus palpites" variant="ghost" onPress={() => router.replace(`/pool/${pool.id}/race/${race.id}`)} />
+      </Card>
 
       <Card>
         <H2>Perguntas extras</H2>
@@ -114,7 +126,7 @@ export default function Admin() {
       </Card>
 
       <Card style={{ borderColor: colors.red }}>
-        <H2>Resultado oficial</H2>
+        <H2>Resultado final oficial · não é um palpite</H2>
         {open && <Muted style={{ marginBottom: space(1) }}>⚠️ Os palpites ainda estão abertos — normalmente você apura depois da corrida.</Muted>}
         <Button title="Importar pódio da API" variant="ghost" onPress={importPodium} loading={busy} style={{ marginTop: 0, marginBottom: space(1) }} />
         <Podium value={results[podiumQ.id] ?? {}} drivers={drivers} onChange={(v) => setR(podiumQ.id, v)} />
@@ -134,7 +146,7 @@ export default function Admin() {
             )}
           </View>
         ))}
-        <Button title="Salvar apuração" onPress={saveAll} loading={busy} />
+        <Button title="Salvar resultados oficiais" onPress={saveAll} loading={busy} />
       </Card>
     </Screen>
   );

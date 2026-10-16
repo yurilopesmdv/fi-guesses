@@ -15,6 +15,7 @@ export default function RootTabs() {
       sceneStyle: { backgroundColor: colors.bg },
     }}>
       <Tabs.Screen name="index" options={{ title: 'Bolões', headerTitle: 'Bolão F1', tabBarIcon: icon('trophy') }} />
+      <Tabs.Screen name="ranking" options={{ title: 'Ranking', headerTitle: 'Ranking geral', tabBarIcon: icon('podium') }} />
       <Tabs.Screen name="races" options={{ title: 'Corridas', tabBarIcon: icon('calendar') }} />
       <Tabs.Screen name="f1" options={{ title: 'F1', headerTitle: 'Campeonato', tabBarIcon: icon('speedometer') }} />
       <Tabs.Screen name="live" options={{ title: 'Ao vivo', tabBarIcon: icon('radio') }} />

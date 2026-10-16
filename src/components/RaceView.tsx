@@ -4,6 +4,8 @@ import { router, useFocusEffect } from 'expo-router';
 import { PicksBoard } from './PicksBoard';
 import { Podium } from './Podium';
 import { Schedule } from './Schedule';
+import { PoolStatus } from './PoolStatus';
+import { poolStatusDescription } from '@/lib/poolStatus';
 import { QuestionField, answerLabel } from './QuestionField';
 import { useUserId } from '@/lib/auth';
 import { openDriver } from '@/lib/nav';
@@ -15,7 +17,7 @@ import { Button, Card, H2, Loading, Muted, P, Pill, Row, Screen } from '@/ui/pri
 import { colors, space } from '@/ui/theme';
 
 export function RaceView({ race }: { race: Race }) {
-  const { pool, drivers } = usePool();
+  const { pool, drivers, lifecycle } = usePool();
   const uid = useUserId();
   const [questions, setQuestions] = useState<Question[] | null>(null);
   const [predictions, setPredictions] = useState<Prediction[]>([]);
@@ -73,6 +75,10 @@ export function RaceView({ race }: { race: Race }) {
   return (
     <Screen>
       <Card>
+        <Row style={{ marginBottom: space(1), flexWrap: 'wrap' }}>
+          <PoolStatus state={lifecycle} />
+          <Muted>{poolStatusDescription(lifecycle)}</Muted>
+        </Row>
         <Row style={{ justifyContent: 'space-between' }}>
           <View style={{ flex: 1 }}>
             <Text style={s.title}>{flag(race.country)} {race.name}</Text>
@@ -81,7 +87,9 @@ export function RaceView({ race }: { race: Race }) {
           {open ? <Pill color={colors.green}>fecha em {fmtCountdown(lockAt - now)}</Pill>
             : hasResults ? <Pill color={colors.red}>apurada</Pill> : <Pill>fechada</Pill>}
         </Row>
-        {open && <Muted style={{ marginTop: 6 }}>{saved === 'saving' ? 'Salvando…' : saved === 'ok' ? 'Palpite salvo ✓ · ' : ''}Você pode alterar seus palpites até a largada.</Muted>}
+        {open && <Muted style={{ marginTop: 6 }}>{saved === 'saving' ? 'Salvando…' : saved === 'ok' ? 'Palpite salvo ✓ · ' : ''}Você pode alterar seus palpites até o horário de fechamento.</Muted>}
+        {isOwner && <P style={{ fontWeight: '700', marginTop: space(1) }}>{open ? '✍️ Modo participante · seu palpite' : '👀 Modo participante · consulta dos palpites'}</P>}
+        {isOwner && <Muted>Esta tela é para os seus palpites. Para informar os resultados finais, abra a apuração abaixo.</Muted>}
       </Card>
 
       {isOwner && (
@@ -89,8 +97,8 @@ export function RaceView({ race }: { race: Race }) {
           <Card style={{ borderColor: colors.red, backgroundColor: '#1f1216' }}>
             <Row style={{ justifyContent: 'space-between' }}>
               <View style={{ flex: 1 }}>
-                <P style={{ fontWeight: '800' }}>⚙️ Você é o organizador</P>
-                <Muted>{open ? `${extras.length} pergunta${extras.length === 1 ? '' : 's'} extra${extras.length === 1 ? '' : 's'} · toque pra adicionar` : hasResults ? 'Apuração feita · toque pra editar' : 'Corrida fechada · toque pra apurar'}</Muted>
+                <P style={{ fontWeight: '800' }}>⚙️ Abrir apuração oficial</P>
+                <Muted>{open ? 'Área do organizador: gerenciar perguntas e informar resultados finais.' : hasResults ? 'Área do organizador: revisar os resultados finais.' : 'Área do organizador: informar os resultados finais.'}</Muted>
               </View>
               <Text style={{ color: colors.red, fontSize: 24 }}>›</Text>
             </Row>
@@ -103,7 +111,7 @@ export function RaceView({ race }: { race: Race }) {
           <Schedule race={race} support={support} />
           {podiumQ && (
             <Card>
-              <H2>🏆 Pódio <Muted>3 pts exato · 1 pt piloto certo</Muted></H2>
+              <H2>🏆 Seu palpite de pódio <Muted>3 pts exato · 1 pt piloto certo</Muted></H2>
               <Podium value={mine(podiumQ.id) ?? {}} drivers={drivers} onChange={(v) => onAnswer(podiumQ, v)} />
             </Card>
           )}

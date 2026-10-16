@@ -1,14 +1,16 @@
-import { useCallback, useState } from 'react';
-import { Alert, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { useCallback, useRef, useState } from 'react';
+import { Alert, AppState, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { router, Stack, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Updates from 'expo-updates';
 import { supabase } from '@/lib/supabase';
-import { flag, fmtCountdown } from '@/lib/format';
+import { flag, fmtCountdown, lockTime } from '@/lib/format';
 import { shareInvite } from '@/lib/invite';
-import { createPool, joinPool, joinPoolById, listMyPools, listOpenPools, getMyProfile, myPoolsSummary, updateMyProfile } from '@/lib/repo';
+import { createPool, joinPool, joinPoolById, listMyPools, listOpenPools, listPoolLifecycles, getMyProfile, myPoolsSummary, updateMyProfile } from '@/lib/repo';
+import { PoolStatus } from '@/components/PoolStatus';
+import { poolStatusDescription, sortPools } from '@/lib/poolStatus';
 import { SEASON, useSeason } from '@/lib/useSeason';
-import type { OpenPool, Pool, PoolSummary, Profile } from '@/lib/types';
+import type { OpenPool, Pool, PoolLifecycle, PoolSummary, Profile } from '@/lib/types';
 import { Button, Card, H2, Input, Loading, Muted, P, Pill, Row } from '@/ui/primitives';
 import { colors, space } from '@/ui/theme';
 
@@ -22,6 +24,7 @@ export default function Home() {
   const [pools, setPools] = useState<Pool[] | null>(null);
   const [summary, setSummary] = useState<Record<string, PoolSummary>>({});
   const [open, setOpen] = useState<OpenPool[]>([]);
+  const [lifecycles, setLifecycles] = useState<Record<string, PoolLifecycle>>({});
   const [me, setMe] = useState<Profile | null>(null);
   const [panel, setPanel] = useState<'none' | 'create' | 'join' | 'profile'>('none');
   const [name, setName] = useState('');
@@ -31,14 +34,24 @@ export default function Home() {
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const loadingRef = useRef(false);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (silent = false) => {
+    if (loadingRef.current) return;
+    loadingRef.current = true;
     try {
-      const [ps, sm, prof, op] = await Promise.all([listMyPools(), myPoolsSummary(), getMyProfile(), listOpenPools()]);
+      const [ps, sm, prof, op, states] = await Promise.all([listMyPools(), myPoolsSummary(), getMyProfile(), listOpenPools(), listPoolLifecycles()]);
       setPools(ps); setSummary(Object.fromEntries(sm.map((s) => [s.pool_id, s]))); setMe(prof); setOpen(op.filter((o) => !o.is_member));
-    } catch (e: any) { Alert.alert('Erro', e.message); }
+      setLifecycles(Object.fromEntries(states.map((s) => [s.pool_id, s])));
+    } catch (e: any) { if (!silent) Alert.alert('Erro', e.message); }
+    finally { loadingRef.current = false; }
   }, []);
-  useFocusEffect(useCallback(() => { load(); }, [load]));
+  useFocusEffect(useCallback(() => {
+    void load();
+    const timer = setInterval(() => { if (AppState.currentState === 'active') void load(true); }, 30_000);
+    const sub = AppState.addEventListener('change', (state) => { if (state === 'active') void load(true); });
+    return () => { clearInterval(timer); sub.remove(); };
+  }, [load]));
 
   const openCreate = () => {
     setPanel(panel === 'create' ? 'none' : 'create');
@@ -136,13 +149,21 @@ export default function Home() {
       <H2 style={{ marginTop: space(1) }}>Meus bolões{pools ? ` (${pools.length})` : ''}</H2>
       {pools === null ? <Loading /> : pools.length === 0 ? (
         <Muted>Você ainda não está em nenhum bolão. Crie um ou entre com o código que te mandaram.</Muted>
-      ) : pools.map((p) => {
+      ) : (['ongoing', 'finished'] as const).map((status) => {
+        const items = sortPools(pools, lifecycles).filter((p) => (lifecycles[p.id]?.status ?? 'ongoing') === status);
+        if (!items.length) return null;
+        return <View key={status}>
+          <P style={{ fontWeight: '800', color: status === 'ongoing' ? colors.green : colors.muted, marginTop: space(1), marginBottom: space(1) }}>
+            {status === 'ongoing' ? 'Em andamento' : 'Finalizados'} ({items.length})
+          </P>
+          {items.map((p) => {
         const s = summary[p.id];
+        const lifecycle = lifecycles[p.id];
         const single = season.races.find((r) => r.id === p.race_id);
-        const left = s?.next_race_date ? new Date(s.next_race_date).getTime() - Date.now() : null;
+        const left = s?.next_race_date ? lockTime(s.next_race_date, p.lock_minutes_before) - Date.now() : null;
         return (
           <Pressable key={p.id} onPress={() => router.push(`/pool/${p.id}`)}>
-            <Card>
+            <Card style={status === 'ongoing' ? { borderColor: '#166534', borderLeftWidth: 4 } : undefined}>
               <Row style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <View style={{ flex: 1 }}>
                   <P style={{ fontWeight: '800', fontSize: 18 }}>{p.name}</P>
@@ -151,30 +172,35 @@ export default function Home() {
                 {s && s.members > 1 && <Text style={{ fontSize: 22 }}>{MEDAL[s.my_rank - 1] ?? `${s.my_rank}º`}</Text>}
               </Row>
               <Row style={{ marginTop: space(1), flexWrap: 'wrap' }}>
+                <PoolStatus state={lifecycle} />
                 <Pill>👥 {s?.members ?? 1}</Pill>
                 <Pill color={colors.card2}>⭐ {s?.my_total ?? 0} pts</Pill>
                 {s?.next_race_name && left != null && <Pill color={left < 86400000 ? '#3a2a10' : colors.card2}>🏁 {s.next_race_name} · fecha em {fmtCountdown(left)}</Pill>}
-                {s && !s.next_race_name && <Pill>encerrado</Pill>}
               </Row>
+              <Muted style={{ marginTop: 6 }}>{poolStatusDescription(lifecycle)}</Muted>
               <Pressable onPress={() => shareInvite(p.name, p.invite_code)} style={{ marginTop: space(1) }}>
                 <Text style={{ color: colors.red, fontWeight: '700' }}>Convidar pelo WhatsApp · código {p.invite_code} ↗</Text>
               </Pressable>
             </Card>
           </Pressable>
         );
+          })}
+        </View>;
       })}
 
       {open.length > 0 && (
         <>
           <H2 style={{ marginTop: space(2) }}>Bolões da galera</H2>
           <Muted style={{ marginBottom: space(1) }}>Criados por outros participantes — toque em Participar.</Muted>
-          {open.map((o) => (
-            <Card key={o.id}>
+          {sortPools(open, lifecycles).map((o) => (
+            <Card key={o.id} style={lifecycles[o.id]?.status === 'ongoing' ? { borderColor: '#166534', borderLeftWidth: 4 } : undefined}>
+              <Row style={{ marginBottom: space(1) }}><PoolStatus state={lifecycles[o.id]} /></Row>
               <Row style={{ justifyContent: 'space-between' }}>
                 <View style={{ flex: 1 }}>
                   <P style={{ fontWeight: '800', fontSize: 17 }}>{o.name}</P>
                   <Muted>{o.race_id ? `GP único · ${o.race_name}` : `Temporada ${o.season}`} · por {o.owner_name} · 👥 {o.members}{o.stake_label ? ` · ${o.stake_label}` : ''}</Muted>
-                  {o.next_race_date && <Muted>fecha em {fmtCountdown(new Date(o.next_race_date).getTime() - Date.now())}</Muted>}
+                  {o.next_race_date && <Muted>Próxima corrida em {fmtCountdown(new Date(o.next_race_date).getTime() - Date.now())}</Muted>}
+                  <Muted>{poolStatusDescription(lifecycles[o.id])}</Muted>
                 </View>
                 <Button title="Participar" style={{ marginTop: 0, paddingVertical: 10 }} loading={busy}
                   onPress={async () => { setBusy(true); try { await joinPoolById(o.id); await load(); router.push(`/pool/${o.id}`); } catch (e: any) { Alert.alert('Erro', e.message); } finally { setBusy(false); } }} />

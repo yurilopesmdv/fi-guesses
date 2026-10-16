@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 import { fetchRaceResult, fetchSeasonBundle } from './f1api';
-import type { Answer, ConstructorStanding, DriverProfile, DriverRaceRow, DriverSearchRow, HeadToHead, OpenPool, TeamHeadToHead, TeamProfile, TeamSearchRow, PoolSummary, Series, Driver, DriverStanding, Pool, Prediction, Question, Race, RaceResult, Result, Standing } from './types';
+import type { Answer, ConstructorStanding, DriverProfile, DriverRaceRow, DriverSearchRow, GlobalStanding, HeadToHead, OpenPool, PoolLifecycle, TeamHeadToHead, TeamProfile, TeamSearchRow, PoolSummary, Series, Driver, DriverStanding, Pool, Prediction, Question, Race, RaceResult, Result, Standing } from './types';
 
 const throwIf = <T>(r: { data: T; error: { message: string } | null }) => {
   if (r.error) throw new Error(r.error.message);
@@ -20,7 +20,9 @@ export const updateMyProfile = async (patch: { name?: string; avatar?: string })
 
 // ---------- bolões ----------
 export const listMyPools = async () =>
-  throwIf(await supabase.from('pools').select('*').order('created_at')) as Pool[];
+  throwIf(await supabase.from('pools').select('*').order('created_at', { ascending: false })) as Pool[];
+export const listPoolLifecycles = async (ids?: string[]) =>
+  throwIf(await supabase.rpc('pool_lifecycles', { p_pool_ids: ids ?? null })) as PoolLifecycle[];
 export const getPool = async (id: string) =>
   throwIf(await supabase.from('pools').select('*').eq('id', id).single()) as Pool;
 export const createPool = async (name: string, season: number, stake_label?: string, race_id?: string) =>
@@ -33,6 +35,12 @@ export const joinPool = async (code: string) =>
   throwIf(await supabase.rpc('join_pool', { p_code: code })) as string;
 export const updatePool = async (id: string, patch: Partial<Pool>) =>
   throwIf(await supabase.from('pools').update(patch).eq('id', id));
+/** .single() também rejeita exclusão sem linha afetada (RLS / bolão inexistente). */
+export const deletePool = async (id: string) =>
+  throwIf(await supabase.from('pools').delete().eq('id', id).select('id').single());
+
+export const listGlobalStandings = async () =>
+  throwIf(await supabase.rpc('global_standings')) as GlobalStanding[];
 
 export const listStandings = async (poolId: string) =>
   throwIf(await supabase.from('pool_standings').select('*').eq('pool_id', poolId).order('total', { ascending: false })) as Standing[];
@@ -63,7 +71,11 @@ export const importSeason = async (season: number) => {
 /** Sincroniza no servidor (Edge Function): F1/F2/F3 da temporada atual + apuração automática dos bolões. */
 export const syncSeries = async (series: Series | 'all' = 'all') => {
   const { data, error } = await supabase.functions.invoke('sync-series', { body: { series } });
-  if (error) throw new Error(error.message);
+  if (error) {
+    const details = error.context instanceof Response ? await error.context.json().catch(() => null) : null;
+    throw new Error(details?.error ?? error.message);
+  }
+  if (!data?.ok || data[series]?.error) throw new Error(data?.error ?? data?.[series]?.error ?? 'A sincronização não foi concluída.');
   return data as { ok: boolean; settled?: number };
 };
 export const getSyncInfo = async (season: number, series: Series = 'f1') =>

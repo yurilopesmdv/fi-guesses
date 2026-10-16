@@ -1,18 +1,22 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
-import type { ColorValue } from 'react-native';
+import { Text, View, type ColorValue } from 'react-native';
 import { usePool } from '@/lib/usePool';
 import { colors } from '@/ui/theme';
+import { poolStatusLabel } from '@/lib/poolStatus';
 
 const icon = (name: keyof typeof Ionicons.glyphMap) => ({ color, size }: { color: ColorValue; size: number }) =>
   <Ionicons name={name} color={color as string} size={size} />;
 
 export default function PoolTabs() {
-  const { pool } = usePool();
+  const { pool, lifecycle } = usePool();
   return (
     <Tabs screenOptions={{
       headerStyle: { backgroundColor: colors.bg }, headerTintColor: colors.text, headerTitleStyle: { fontWeight: '800' },
-      headerTitle: pool?.name ?? 'Bolão',
+      headerTitle: () => <View style={{ maxWidth: 270 }}>
+        <Text style={{ color: colors.text, fontSize: 17, fontWeight: '800' }} numberOfLines={1}>{pool?.name ?? 'Bolão'}</Text>
+        <Text style={{ color: lifecycle?.status === 'ongoing' ? colors.green : colors.muted, fontSize: 12 }}>{poolStatusLabel(lifecycle)}</Text>
+      </View>,
       tabBarStyle: { backgroundColor: colors.card, borderTopColor: colors.border },
       tabBarActiveTintColor: colors.red, tabBarInactiveTintColor: colors.muted,
       sceneStyle: { backgroundColor: colors.bg },

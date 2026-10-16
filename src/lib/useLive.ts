@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { LIVE_ENABLED } from './features';
 import {
   buildStandings, championshipDrivers, championshipTeams, type ChampDriver, type ChampTeam, hasLiveAccess, latestCarData, latestSession, sessionDrivers, sessionIntervals, sessionLaps, sessionPits,
   sessionPositions, sessionRaceControl, sessionResult, sessionStints, sessionWeather, type CarData, type Lap, type OF1Driver, type RaceControl, type Session, type Standing, type Weather,
@@ -12,11 +13,12 @@ export type LiveState = {
 
 /** Sessão mais recente da OpenF1; faz polling enquanto ela estiver ao vivo. */
 export function useLive(selectedDriver: number | null) {
-  const [st, setSt] = useState<LiveState>({ session: null, isLive: false, hasAccess: false, standings: [], raceControl: [], weather: null, laps: [], error: null, loading: true, updatedAt: 0, leaderLap: 0, champ: [], champTeams: [] });
+  const [st, setSt] = useState<LiveState>({ session: null, isLive: false, hasAccess: false, standings: [], raceControl: [], weather: null, laps: [], error: null, loading: LIVE_ENABLED, updatedAt: 0, leaderLap: 0, champ: [], champTeams: [] });
   const [car, setCar] = useState<CarData | null>(null);
   const cache = useRef<{ drivers: OF1Driver[]; positions: any[]; intervals: any[]; laps: Lap[]; sk: number; champ: ChampDriver[]; champTeams: ChampTeam[] } | null>(null);
 
   const tick = useCallback(async (full = false) => {
+    if (!LIVE_ENABLED) return;
     try {
       const session = full || !cache.current ? await latestSession() : st.session!;
       if (!session) throw new Error('Nenhuma sessão encontrada');
@@ -60,9 +62,9 @@ export function useLive(selectedDriver: number | null) {
     }
   }, [selectedDriver, st.session]);
 
-  useEffect(() => { tick(true); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (LIVE_ENABLED) tick(true); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (!st.isLive) return;
+    if (!LIVE_ENABLED || !st.isLive) return;
     const id = setInterval(() => tick(), st.hasAccess ? 8000 : 15000);
     return () => clearInterval(id);
   }, [st.isLive, st.hasAccess, tick]);

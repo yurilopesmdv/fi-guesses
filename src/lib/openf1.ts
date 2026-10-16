@@ -1,5 +1,6 @@
 // OpenF1 (openf1.org) — histórico grátis; ao vivo exige conta sponsor (token). ~3 s de atraso.
 import { supabase } from './supabase';
+import { LIVE_ENABLED } from './features';
 
 const BASE = 'https://api.openf1.org/v1';
 let token: string | null = null;
@@ -7,6 +8,7 @@ let tokenTriedAt = 0;
 
 /** Token de tempo real, se houver credenciais em app_settings (openf1_user / openf1_pass). */
 async function getToken() {
+  if (!LIVE_ENABLED) return null;
   if (token || Date.now() - tokenTriedAt < 10 * 60_000) return token;
   tokenTriedAt = Date.now();
   const { data } = await supabase.from('app_settings').select('key,value').in('key', ['openf1_user', 'openf1_pass']);
@@ -27,7 +29,8 @@ const throttle = <T>(fn: () => Promise<T>) => {
   return p;
 };
 
-const get = <T = any>(path: string, params: Record<string, string | number> = {}): Promise<T[]> => throttle(() => rawGet<T>(path, params));
+const get = <T = any>(path: string, params: Record<string, string | number> = {}): Promise<T[]> =>
+  LIVE_ENABLED ? throttle(() => rawGet<T>(path, params)) : Promise.resolve([]);
 
 async function rawGet<T = any>(path: string, params: Record<string, string | number> = {}): Promise<T[]> {
   const qs = Object.entries(params).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');

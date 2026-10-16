@@ -32,10 +32,12 @@
     "react-native-worklets": "0.10.1"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.10",
     "@types/react": "~19.2.2",
-    "typescript": "~6.0.3",
+    "eas-cli": "^16.0.0",
+    "esbuild": "0.28.2",
     "tsx": "^4.19.0",
-    "eas-cli": "^16.0.0"
+    "typescript": "~6.0.3"
   },
   "scripts": {
     "start": "expo start",
@@ -44,12 +46,13 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "node tests/pools.test.mjs && node --import tsx tests/sync-function.test.mjs && node --import tsx tests/pool-status.test.mjs",
     "db:migrate": "node scripts/setup-supabase.mjs",
     "db:sql": "node scripts/sql.mjs",
     "sync:f1": "tsx scripts/sync-f1.mjs",
     "sync:f2f3": "node scripts/sync-f2f3.mjs",
-    "publish": "eas update --channel preview --environment preview --platform all",
-    "web:deploy": "expo export --platform web && cp site/entrar.html dist/ && eas deploy --prod"
+    "publish": "node scripts/eas.mjs update --channel preview --environment preview --platform all",
+    "web:deploy": "expo export --platform web && node scripts/prepare-web.mjs && node scripts/eas.mjs deploy --prod"
   },
   "private": true
 }

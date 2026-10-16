@@ -14,6 +14,7 @@ export type Pool = {
   stake_label: string | null;
   lock_minutes_before: number;
   race_id: string | null;
+  created_at: string;
 };
 
 export type Race = {
@@ -78,6 +79,16 @@ export type Standing = {
   races_scored: number;
 };
 
+export type GlobalStanding = {
+  user_id: string;
+  name: string;
+  avatar: string;
+  total: number;
+  pools_played: number;
+  races_scored: number;
+  rank: number;
+};
+
 export type DriverStanding = { series: Series; season: number; position: number; driver_code: string; team: string | null; points: number; wins: number };
 export type ConstructorStanding = { series: Series; season: number; position: number; team: string; team_color: string | null; points: number; wins: number };
 export type RaceResult = { series: Series; session: 'race' | 'sprint' | 'feature'; season: number; round: number; position: number; driver_code: string; team: string | null; grid: number | null; points: number; status: string; fastest_lap: boolean };
@@ -85,6 +96,16 @@ export type RaceResult = { series: Series; session: 'race' | 'sprint' | 'feature
 export type PoolSummary = { pool_id: string; members: number; next_race_name: string | null; next_race_date: string | null; my_total: number; my_rank: number };
 
 export type OpenPool = { id: string; name: string; season: number; race_id: string | null; race_name: string | null; stake_label: string | null; owner_name: string; members: number; next_race_date: string | null; is_member: boolean };
+
+export type PoolLifecycle = {
+  pool_id: string;
+  status: 'ongoing' | 'finished';
+  pending_results: number;
+  has_future_races: boolean;
+  has_races: boolean;
+  created_at: string;
+  last_race_date: string | null;
+};
 
 export type DriverSeasonStat = { season: number; team: string | null; position: number | null; champ_points: number | null; races: number; wins: number; podiums: number; poles: number; fastest_laps: number; dnfs: number; best: number | null; avg_finish: number | null; avg_grid: number | null; champion: boolean };
 export type DriverTeamStat = { team: string; first_season: number; last_season: number; seasons: number; races: number; wins: number; podiums: number; poles: number; points: number; dnfs: number; team_color: string | null; titles: number };

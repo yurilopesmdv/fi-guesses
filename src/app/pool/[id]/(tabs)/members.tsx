@@ -1,13 +1,13 @@
 import { useCallback, useState } from 'react';
-import { Alert, Text, View } from 'react-native';
+import { Alert, Modal, Text, View } from 'react-native';
 import { shareInvite } from '@/lib/invite';
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useUserId } from '@/lib/auth';
-import { listStandings, updatePool } from '@/lib/repo';
+import { deletePool, listStandings, updatePool } from '@/lib/repo';
 import type { Standing } from '@/lib/types';
 import { usePool } from '@/lib/usePool';
 import { Button, Card, H2, Input, Loading, Muted, P, Row, Screen } from '@/ui/primitives';
-import { colors } from '@/ui/theme';
+import { colors, space } from '@/ui/theme';
 
 export default function Members() {
   const { pool, reload } = usePool();
@@ -15,6 +15,9 @@ export default function Members() {
   const [rows, setRows] = useState<Standing[] | null>(null);
   const [lock, setLock] = useState('');
   const [stake, setStake] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   useFocusEffect(useCallback(() => {
     if (!pool) return;
     listStandings(pool.id).then(setRows);
@@ -23,6 +26,18 @@ export default function Members() {
 
   if (!pool || rows === null) return <Screen scroll={false}><Loading /></Screen>;
   const isOwner = pool.owner_id === uid;
+
+  const removePool = async () => {
+    if (!isOwner || deleting) return;
+    setDeleting(true); setDeleteError(null);
+    try {
+      await deletePool(pool.id);
+      setConfirmDelete(false);
+      router.replace('/(tabs)');
+    } catch {
+      setDeleteError('Não foi possível excluir. Confira sua conexão e se você ainda é o proprietário do bolão.');
+    } finally { setDeleting(false); }
+  };
 
   return (
     <Screen>
@@ -55,8 +70,21 @@ export default function Members() {
             try { await updatePool(pool.id, { stake_label: stake.trim() || null, lock_minutes_before: parseInt(lock, 10) || 0 }); reload(); Alert.alert('Salvo'); }
             catch (e: any) { Alert.alert('Erro', e.message); }
           }} />
+          <Button title="Excluir bolão" variant="danger" onPress={() => { setDeleteError(null); setConfirmDelete(true); }} />
         </Card>
       )}
+      <Modal visible={isOwner && confirmDelete} transparent animationType="fade" onRequestClose={() => { if (!deleting) setConfirmDelete(false); }}>
+        <View style={{ flex: 1, justifyContent: 'center', padding: space(3), backgroundColor: '#000000bb' }}>
+          <Card style={{ width: '100%', maxWidth: 440, alignSelf: 'center' }}>
+            <H2>Excluir bolão?</H2>
+            <P style={{ fontWeight: '700', marginBottom: space(1) }}>{pool.name}</P>
+            <Muted>Os participantes, palpites e resultados deste bolão serão removidos. Seus pontos deixarão de contar no ranking geral. Esta ação não pode ser desfeita.</Muted>
+            {deleteError && <P style={{ color: colors.gold, marginTop: space(1) }}>{deleteError}</P>}
+            <Button title="Cancelar" variant="ghost" disabled={deleting} onPress={() => setConfirmDelete(false)} />
+            <Button title="Excluir definitivamente" variant="danger" loading={deleting} onPress={removePool} />
+          </Card>
+        </View>
+      </Modal>
     </Screen>
   );
 }
