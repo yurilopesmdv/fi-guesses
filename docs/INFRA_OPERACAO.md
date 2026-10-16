@@ -62,7 +62,7 @@ flowchart TD
   MIG --> FN[Management API: deploy sync-series]
 ```
 
-`ci.yml` roda no PR e no push da `main`. `deploy.yml` roda em push na `main` ou manualmente e configura concorrência `deploy-main`, sem cancelar a execução em andamento. O job app depende do sucesso do job Supabase; quando não há mudança no backend, esse job termina com os passos de aplicação ignorados. O deploy do app faz seu próprio typecheck e testes SQL, sem depender do workflow CI separado.
+`ci.yml` roda no PR e no push da `main`. `deploy.yml` roda em push na `main` ou manualmente e configura concorrência `deploy-main`, sem cancelar a execução em andamento. O job app depende do sucesso do job Supabase; o filtro inclui `supabase/**`, scripts de migration/deploy, manifests de dependências e o próprio workflow. Quando nenhum desses arquivos muda, esse job termina com os passos de aplicação ignorados. O deploy do app faz seu próprio typecheck e testes SQL, sem depender do workflow CI separado.
 
 O CI e o job app executam TypeScript e os 24 testes de SQL/RLS, handler HTTP e status. Aplicar migrations antes do cliente; `0017`–`0019` já aplicadas no serviço compartilhado. O workflow assegura a dependência app/backend.
 

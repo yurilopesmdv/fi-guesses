@@ -57,6 +57,11 @@ jobs:
           filters: |
             supabase:
               - 'supabase/**'
+              - 'scripts/setup-supabase.mjs'
+              - 'scripts/deploy-function.mjs'
+              - 'package.json'
+              - 'package-lock.json'
+              - '.github/workflows/deploy.yml'
       - uses: actions/setup-node@v4
         if: steps.changes.outputs.supabase == 'true' || github.event_name == 'workflow_dispatch'
         with:
