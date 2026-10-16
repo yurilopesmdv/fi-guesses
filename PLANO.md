@@ -1,5 +1,7 @@
 # Bolão F1 — Plano de implementação
 
+> Documento histórico de planejamento. Para funcionamento atual, consulte [docs/README.md](docs/README.md). Existem divergências deliberadas: autenticação por senha, palpites visíveis antes do fechamento e hospedagem web no EAS. Sugestões, preços e cotas abaixo não foram revalidados e não representam recursos entregues nem custos atuais confirmados.
+
 Projeto paralelo (família). 2 iPhones + 3 Androids. Sem App Store / Play Store.
 
 ## 1. Decisões de stack
