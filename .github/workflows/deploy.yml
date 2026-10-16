@@ -66,6 +66,16 @@ jobs:
         if: steps.changes.outputs.supabase == 'true' || github.event_name == 'workflow_dispatch'
         with:
           node-version: 20
+      - name: Validar formato da credencial Supabase
+        if: steps.changes.outputs.supabase == 'true' || github.event_name == 'workflow_dispatch'
+        run: |
+          node --input-type=module <<'JS'
+          const token = process.env.SUPABASE_ACCESS_TOKEN ?? '';
+          if (!/^sbp_[A-Za-z0-9]+$/.test(token)) {
+            console.error('SUPABASE_ACCESS_TOKEN deve conter somente o token pessoal sbp_, sem nome da variável, aspas ou espaços.');
+            process.exit(1);
+          }
+          JS
       - name: Migrations
         if: steps.changes.outputs.supabase == 'true' || github.event_name == 'workflow_dispatch'
         run: node scripts/setup-supabase.mjs "$SUPABASE_PROJECT_REF"
