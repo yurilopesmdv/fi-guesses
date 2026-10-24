@@ -18,4 +18,4 @@ Antes de alterar o projeto, consulte [docs/README.md](docs/README.md), [docs/DES
 - Atualize a documentação correspondente junto das alterações. `PLANO.md` é histórico, não especificação vigente.
 - Convenção existente: Conventional Commits em português, um assunto por commit.
 
-- Status de bolão vem de `pool_lifecycles` (`0019`): fechamento de palpites não finaliza. Em andamento antes de Finalizados, criação desc dentro de cada grupo. Testes atuais: 24 (SQL/RLS, HTTP, helpers). Publicações e limites em `docs/VALIDACAO_PRODUCAO.md`.
+- Status de bolão vem de `pool_lifecycles` (`0019`): fechamento de palpites não finaliza. Em andamento antes de Finalizados, criação desc dentro de cada grupo. Testes atuais: 26 (SQL/RLS, HTTP, helpers e carregamento do bolão). Publicações e limites em `docs/VALIDACAO_PRODUCAO.md`.

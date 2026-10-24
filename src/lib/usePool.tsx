@@ -1,10 +1,9 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
 import { AppState } from 'react-native';
 import { useFocusEffect } from 'expo-router';
-import { getPool, listPoolLifecycles } from './repo';
+import { getPool, listDrivers, listPoolLifecycles, listRaces } from './repo';
 import type { Driver, Pool, PoolLifecycle, Race } from './types';
 import { lockTime } from './format';
-import { useSeason } from './useSeason';
 
 type PoolCtx = {
   pool: Pool | null;
@@ -22,8 +21,7 @@ type PoolCtx = {
 const Ctx = createContext<PoolCtx>({ pool: null, loading: true, error: null, lifecycle: null, races: [], drivers: [], reload: () => {}, nextRace: null, isOpen: () => false });
 
 export function PoolProvider({ id, children }: { id: string; children: ReactNode }) {
-  const season = useSeason();
-  const [pool, setPool] = useState<Pool | null>(null);
+  const [{ pool, races: calendar, drivers }, setData] = useState<{ pool: Pool | null; races: Race[]; drivers: Driver[] }>({ pool: null, races: [], drivers: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lifecycle, setLifecycle] = useState<PoolLifecycle | null>(null);
@@ -32,10 +30,20 @@ export function PoolProvider({ id, children }: { id: string; children: ReactNode
   useEffect(() => {
     let active = true;
     setLoading(true); setError(null);
-    getPool(id)
-      .then((data) => { if (active) setPool(data); })
-      .catch(() => { if (active) { setPool(null); setError('O bolão pode ter sido excluído, você pode não ter acesso ou a conexão falhou.'); } })
-      .finally(() => { if (active) setLoading(false); });
+    (async () => {
+      let pool: Pool;
+      try { pool = await getPool(id); }
+      catch {
+        if (active) setError('O bolão pode ter sido excluído, você pode não ter acesso ou a conexão falhou.');
+        return;
+      }
+      try {
+        const [races, drivers] = await Promise.all([listRaces(pool.season, 'f1'), listDrivers(pool.season, 'f1')]);
+        if (active) setData({ pool, races, drivers });
+      } catch {
+        if (active) setError('Não foi possível carregar as corridas do bolão. Verifique a conexão e tente novamente.');
+      }
+    })().finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [id, reloadKey]);
   useFocusEffect(useCallback(() => {
@@ -54,11 +62,11 @@ export function PoolProvider({ id, children }: { id: string; children: ReactNode
     return () => { active = false; clearInterval(timer); sub.remove(); };
   }, [id, reloadKey]));
 
-  const races = pool?.race_id ? season.races.filter((r) => r.id === pool.race_id) : season.races;
+  const races = pool?.race_id ? calendar.filter((r) => r.id === pool.race_id) : calendar;
   const isOpen = (race: Race) => Date.now() < lockTime(race.date_utc, pool?.lock_minutes_before ?? 0);
   const nextRace = races.find(isOpen) ?? races[races.length - 1] ?? null;
 
-  return <Ctx.Provider value={{ pool, loading, error, lifecycle, races, drivers: season.drivers, reload, nextRace, isOpen }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ pool, loading, error, lifecycle, races, drivers, reload, nextRace, isOpen }}>{children}</Ctx.Provider>;
 }
 
 export const usePool = () => useContext(Ctx);
