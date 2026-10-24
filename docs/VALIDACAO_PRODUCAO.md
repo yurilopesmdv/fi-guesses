@@ -33,3 +33,10 @@ Site de produção: [bolao-f1.expo.app](https://bolao-f1.expo.app). Alterações
 ## Limites e pendências
 
 Não houve teste em aparelho físico, build nativo, restauração, carga, auditoria de dependências ou sessão ao vivo paga. As policies amplas de dados esportivos e o acesso autenticado a `app_settings` permanecem pendências estruturais: não houve alteração de permissões fora das tarefas. Não foi auditado o conjunto de secrets/proteções do GitHub. O fluxo normal de entrega é commit e push na `main`, que dispara CI e publicação de backend, OTA e web. A publicação manual descrita neste relatório antecedeu o versionamento destas alterações.
+
+
+## Compatibilidade Android SDK 57 — 24/10/2026
+
+A branch `compat/android-sdk57` preserva o código da correção do calendário publicada para o APK instalado, mantendo as dependências do SDK 57. A principal `main` segue no SDK 58. O detalhe do bolão carrega seu próprio calendário F1 por `pool.season`, aguarda os dados e oferece nova tentativa em caso de falha. Sem alteração de banco nem novo APK.
+
+Publicação no canal/branch EAS `preview`, runtime `exposdk:57.0.0`, grupo `4b782f62-2c67-4dd6-8675-d2391a49d802`, update Android `01a16fe7-ce69-706e-a3af-defc5ce14c0f`. TypeScript e exportação Android aprovados nesta combinação de fontes/dependências. Manifesto e download do bundle conferidos com HTTP 200. Os dois testes novos do provider foram executados na linha SDK 58; a confirmação no aparelho físico fica com o usuário.

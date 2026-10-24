@@ -61,7 +61,7 @@ Versões declaradas: Expo `~57.0.24`, React Native `0.86.3`, React `19.2.3`, Typ
 
 O layout raiz monta `AuthProvider` → `SeasonProvider` → Stack e aciona atualização OTA. A sessão persiste em AsyncStorage, com renovação automática e `detectSessionInUrl: false`. Os redirecionamentos de login estão na entrada, convite e perfis de piloto/equipe; não há guard central protegendo todas as rotas. A proteção dos dados depende das políticas do banco.
 
-Após login, `SeasonProvider` busca corridas/pilotos F1 do ano do aparelho. Se não há calendário, importa da API. `useYear` carrega calendário, pilotos e campeonatos para um ano/categoria; importa F1 se faltam corridas ou classificação. `PoolProvider` utiliza o calendário global atual e filtra GP único. Isso limita a navegação correta de bolões de anos anteriores, mesmo que o banco os conserve.
+Após login, `SeasonProvider` busca corridas/pilotos F1 do ano do aparelho. Se não há calendário, importa da API. `useYear` carrega calendário, pilotos e campeonatos para um ano/categoria; importa F1 se faltam corridas ou classificação. `PoolProvider` consulta corridas e pilotos F1 de `pool.season`, aguarda o calendário antes de encerrar o carregamento e filtra GP único. Falhas exibem erro com nova tentativa.
 
 O estado fica em React Context, state e refs. Não há Redux, cache persistente de dados esportivos, fila offline nem assinatura Supabase Realtime. Telas de bolão recarregam ao receber foco; Ao vivo usa polling HTTP. Alguns erros são exibidos por Alert; outros são silenciados para manter o estado anterior, e alguns carregamentos não têm tratamento de rejeição.
 

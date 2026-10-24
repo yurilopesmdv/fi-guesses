@@ -3,6 +3,7 @@
 Antes de alterar o projeto, consulte [docs/README.md](docs/README.md), [docs/DESENVOLVIMENTO.md](docs/DESENVOLVIMENTO.md) e [docs/DIAGNOSTICO.md](docs/DIAGNOSTICO.md). Produto, arquitetura, dados e operação têm guias próprios nesse índice. O levantamento-base é de 16/10/2026; confira o código ao evoluir comportamentos.
 
 - Expo/React Native/TypeScript; Supabase gerenciado. Node 20.19.5 foi validado; Node 18 não compila a web.
+- Antes de publicar, faça commit e push do código validado para o GitHub. Esta branch preserva o APK SDK 57; a principal é `main`, no SDK 58.
 - Canal `preview` é usado pela família. Push na `main` publica automaticamente; desenvolvimento local pode acessar o banco compartilhado configurado no `.env`.
 - Não exponha tokens, senhas ou service role. `app_settings` é legível por autenticados e não é cofre de segredos.
 - Não edite migrations aplicadas; crie a próxima sequência. O runner usa `public._migrations` e também altera Auth/`.env`.
