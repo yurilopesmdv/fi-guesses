@@ -1,6 +1,6 @@
 import { createContext, ReactNode, useContext, useEffect, useRef } from 'react';
 import {
-  ActivityIndicator, Dimensions, Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, TextInputProps, View, ViewProps,
+  ActivityIndicator, Dimensions, Keyboard, Pressable, ScrollView, ScrollViewInstance, StyleSheet, Text, TextInput, TextInputInstance, TextInputProps, View, ViewProps,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, radius, space } from './theme';
@@ -10,7 +10,7 @@ const ScrollCtx = createContext<{ reveal: (el: any) => void }>({ reveal: () => {
 
 export function Screen({ children, scroll = true, style }: { children: ReactNode; scroll?: boolean; style?: object }) {
   const insets = useSafeAreaInsets();
-  const ref = useRef<ScrollView>(null);
+  const ref = useRef<ScrollViewInstance>(null);
   const scrollY = useRef(0);
   const kb = useRef(0);
   useEffect(() => {
@@ -65,7 +65,7 @@ export function Button({
 
 export const Input = (p: TextInputProps) => {
   const { reveal } = useContext(ScrollCtx);
-  const ref = useRef<TextInput>(null);
+  const ref = useRef<TextInputInstance>(null);
   return (
     <TextInput ref={ref} placeholderTextColor={colors.muted} style={[s.input, p.style]} {...p}
       onFocus={(e) => { reveal(ref.current); p.onFocus?.(e); }} />

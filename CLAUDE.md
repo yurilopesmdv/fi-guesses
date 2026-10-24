@@ -5,7 +5,7 @@ App de bolão de Fórmula 1 para uso familiar (iPhone via Expo Go, Android via A
 Documentação detalhada e diagramas: [docs/README.md](docs/README.md). Consulte também o [diagnóstico de 16/10/2026](docs/DIAGNOSTICO.md), que distingue implementação, verificações e pendências de infraestrutura. O plano original é histórico.
 
 ## Stack
-- **App**: Expo SDK 57 (React Native 0.86) + TypeScript + expo-router. Node 20.19.4+ compatível; validado com 20.19.5. Node 18 falha na exportação.
+- **App**: Expo SDK 58 (React Native 0.88) + TypeScript + expo-router. Node 22.13+ na linha 22; ambiente local fixado em 22.23.2 via .nvmrc. Node 20 e anteriores não são suportados pelo SDK 58.
 - **Backend**: Supabase — Postgres com RLS, Auth (e-mail+senha, sem confirmação), Edge Function `sync-series`, pg_cron.
 - **Dados**: Jolpica (F1, histórico 1950→), API pública da F1 + sites oficiais (F2/F3, temporada atual), OpenF1 (ao vivo; tempo real exige assinatura).
 - **Distribuição**: EAS Update (canal `preview` = canal de produção da família), EAS Hosting (web + página de convite), APK arm64 no Storage do Supabase.

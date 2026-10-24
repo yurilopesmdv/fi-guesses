@@ -33,3 +33,14 @@ Site de produção: [bolao-f1.expo.app](https://bolao-f1.expo.app). Alterações
 ## Limites e pendências
 
 Não houve teste em aparelho físico, build nativo, restauração, carga, auditoria de dependências ou sessão ao vivo paga. As policies amplas de dados esportivos e o acesso autenticado a `app_settings` permanecem pendências estruturais: não houve alteração de permissões fora das tarefas. Não foi auditado o conjunto de secrets/proteções do GitHub. O fluxo normal de entrega é commit e push na `main`, que dispara CI e publicação de backend, OTA e web. A publicação manual descrita neste relatório antecedeu o versionamento destas alterações.
+
+
+## Upgrade para Expo SDK 58 — 24/10/2026
+
+Projeto migrado para Expo `58.0.19`, React Native `0.88.0` e React `19.3.0`, com dependências recomendadas por `expo install`. Node local em `22.23.2` (`.nvmrc`) e CI em Node 22, conforme o mínimo do SDK 58. Referências de `ScrollView` e `TextInput` adaptadas para os tipos de instância da API estrita do React Native. Convite, instruções de instalação e QR code agora usam `exposdk:58.0.0`. O usuário informou que ambos os iPhones já usam Expo Go compatível com SDK 58; o histórico do Expo Go pode manter o link antigo, então abrir pelo novo link/QR code.
+
+TypeScript, 24 testes, `expo install --check` e exportação de iOS/Android/web aprovados em Node 22.23.2. `expo-doctor`: 19/20 verificações aprovadas; o único aviso é `eas-cli` como dependência local, configuração preexistente usada por `scripts/eas.mjs`. Mantido esse mecanismo de publicação. Sem teste em aparelho físico ou geração de novo binário nativo.
+
+Publicação manual no canal/branch `preview`, runtime `exposdk:58.0.0`, grupo OTA `df00ab36-017d-40fa-baea-20219044588a`: iOS `01a16fa1-fbd6-7f3d-a343-73757966630b`, Android `01a16fa1-fbd6-75d4-b1b2-0fc9c3b7d877`. Manifestos públicos: HTTP 200, runtime e IDs conferidos. Bundles baixados por GET com os headers de `extensions.assetRequestHeaders` do manifesto: HTTP 200 (iOS 3.939.155 bytes; Android 4.268.705 bytes). O CDN exige esses headers; acessá-lo diretamente sem eles retorna 403.
+
+Web deployment `slq8s1tmk5` promovido para [bolao-f1.expo.app](https://bolao-f1.expo.app), com página de convite atualizada. Publicação com Ao vivo desligado (`EXPO_PUBLIC_LIVE_ENABLED=false`). Sem alterações no backend ou substituição do APK existente; o manifesto Android SDK 57 continua disponível em HTTP 200, ID `01a14596-6373-7c2a-9cb7-6b502938121e`. Para o APK receber futuras alterações do SDK 58, será necessário novo build Android.

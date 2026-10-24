@@ -100,7 +100,7 @@ OTA de JS compatível:
 npm run publish -- --message "descrição da alteração"
 ```
 
-`preview` é o canal de uso da família, apesar do nome. No APK, `useOtaUpdate` verifica, baixa e recarrega a atualização ao abrir; falhas de rede são ignoradas e a versão existente continua. O Expo Go tem seu próprio ciclo de carregamento. O projeto define runtime por SDK, atualmente `exposdk:57.0.0` nos links de convite.
+`preview` é o canal de uso da família, apesar do nome. No APK, `useOtaUpdate` verifica, baixa e recarrega a atualização ao abrir; falhas de rede são ignoradas e a versão existente continua. O Expo Go tem seu próprio ciclo de carregamento. O projeto define runtime por SDK, atualmente `exposdk:58.0.0` nos links de convite. O Expo Go dos iPhones precisa ser compatível com SDK 58. O APK existente em SDK 57 permanece no runtime anterior e não recebe bundles do SDK 58; migrá-lo exige gerar e distribuir outro APK.
 
 `scripts/eas.mjs` carrega o token do `.env`, com precedência das variáveis do processo. O comando `npm run web:deploy` exporta a SPA, prepara convite/link APK e publica. Para revisar um artefato antes de publicar:
 

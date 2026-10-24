@@ -2,11 +2,11 @@
 
 ## Preparar o ambiente
 
-O CI configura Node 20. A versão instalada de React Native exige `^20.19.4 || ^22.13.0 || ^24.3.0 || >=25.0.0`; a CLI Expo rejeita Node anterior a 20.19.4. **Node 20.19.5 foi usado com sucesso no levantamento.** Node 18.13.0 era o padrão do terminal e falhou na exportação por ausência de `util.parseEnv`. Não há `.nvmrc`, `engines` no package raiz ou configuração de container impondo a versão.
+O projeto usa Expo SDK 58 e React Native 0.88. A CLI exige Node `^22.13.0 || ^24.3.0 || >=26.0.0`. O CI usa Node 22 e o `.nvmrc` fixa **22.23.2** para desenvolvimento. Node 20 e anteriores não são suportados pelo SDK 58.
 
 ```bash
 # Se usar nvm e a versão já estiver instalada:
-nvm use 20.19.5
+nvm use
 node --version
 npm ci
 
@@ -40,7 +40,7 @@ Não há `supabase/config.toml`, seed, stack Docker, banco de testes ou configur
 | `npm run publish -- --message "descrição"` | Publica OTA no canal `preview` |
 | `npm run web:deploy` | Exporta e publica web; link APK preparado por `prepare-web.mjs` |
 
-Scripts adicionais: `npx tsx scripts/backfill-driver-ids.mjs` preenche identidades históricas; `node scripts/upload-apk.mjs arquivo.apk` substitui APK público. `sync-all.mjs` importa anos ausentes; o erro de sintaxe identificado foi corrigido. Backfill completo não foi executado. Scripts que importam `.ts` devem passar por `tsx` com Node 20.
+Scripts adicionais: `npx tsx scripts/backfill-driver-ids.mjs` preenche identidades históricas; `node scripts/upload-apk.mjs arquivo.apk` substitui APK público. `sync-all.mjs` importa anos ausentes; o erro de sintaxe identificado foi corrigido. Backfill completo não foi executado. Scripts que importam `.ts` devem passar por `tsx` com Node 22.
 
 O parser de `.env` dos scripts é manual e não equivale ao parser da CLI Expo; use valores simples, sem comentários na mesma linha. Exceto `setup-supabase`, os scripts administrativos consultados dependem diretamente do arquivo `.env`, sem fallback geral para `process.env`. Não os reutilize no CI apenas injetando variáveis sem adaptar esse comportamento.
 
@@ -79,4 +79,4 @@ Use Conventional Commits em português, um assunto por commit, conforme convenç
 
 Uma alteração JavaScript compatível com o runtime pode seguir por OTA. Novo módulo nativo, plugin ou configuração nativa exige novo binário. O runtime usa política `sdkVersion`, que não captura sozinho toda alteração nativa dentro do mesmo SDK; planeje a compatibilidade entre APK antigo e atualização publicada. O perfil chamado `production` existe, mas o fluxo operacional publicado no repositório usa `preview`.
 
-A suíte completa tem 24 testes: 16 SQL/RLS, 6 do handler HTTP de sincronização e 2 dos helpers de status/ordenação. `scripts/eas.mjs` carrega `.env` com parser nativo de Node 20 e preserva precedência das variáveis do processo. `scripts/prepare-web.mjs` prepara convite/link APK de forma idêntica no CI e manualmente. `scripts/deploy-function.mjs` empacota com esbuild e publica via Management API com verificação JWT habilitada.
+A suíte completa tem 24 testes: 16 SQL/RLS, 6 do handler HTTP de sincronização e 2 dos helpers de status/ordenação. `scripts/eas.mjs` carrega `.env` com parser nativo de Node 22 e preserva precedência das variáveis do processo. `scripts/prepare-web.mjs` prepara convite/link APK de forma idêntica no CI e manualmente. `scripts/deploy-function.mjs` empacota com esbuild e publica via Management API com verificação JWT habilitada.

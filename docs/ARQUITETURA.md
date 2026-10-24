@@ -34,7 +34,7 @@ A seta dos clientes para Jolpica representa importação sob demanda e consulta 
 
 ## Stack e organização
 
-Versões declaradas: Expo `~57.0.24`, React Native `0.86.3`, React `19.2.3`, TypeScript `~6.0.3`, Supabase JS `^2.109.0`. Resoluções exatas estão em `package-lock.json`. Expo Router parte de `expo-router/entry`; aliases `@/*` apontam para `src/*`. TypeScript é estrito, mas há uso de `any` e coerções de resultados do banco; os tipos não são gerados do schema.
+Versões declaradas: Expo `~58.0.19`, React Native `0.88.0`, React `19.3.0`, TypeScript `~6.0.3`, Supabase JS `^2.109.0` (lockfile em `2.118.0`). Resoluções exatas estão em `package-lock.json`. Expo Router parte de `expo-router/entry`; aliases `@/*` apontam para `src/*`. TypeScript é estrito, mas há uso de `any` e coerções de resultados do banco; os tipos não são gerados do schema.
 
 | Diretório/arquivo | Responsabilidade |
 |---|---|

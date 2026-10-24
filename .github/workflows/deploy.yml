@@ -28,7 +28,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '22'
           cache: npm
       - run: npm ci
       - run: npm run typecheck
@@ -65,7 +65,7 @@ jobs:
       - uses: actions/setup-node@v4
         if: steps.changes.outputs.supabase == 'true' || github.event_name == 'workflow_dispatch'
         with:
-          node-version: 20
+          node-version: '22'
       - name: Validar formato da credencial Supabase
         if: steps.changes.outputs.supabase == 'true' || github.event_name == 'workflow_dispatch'
         run: |

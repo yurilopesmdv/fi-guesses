@@ -2,7 +2,8 @@
 
 Antes de alterar o projeto, consulte [docs/README.md](docs/README.md), [docs/DESENVOLVIMENTO.md](docs/DESENVOLVIMENTO.md) e [docs/DIAGNOSTICO.md](docs/DIAGNOSTICO.md). Produto, arquitetura, dados e operação têm guias próprios nesse índice. O levantamento-base é de 16/10/2026; confira o código ao evoluir comportamentos.
 
-- Expo/React Native/TypeScript; Supabase gerenciado. Node 20.19.5 foi validado; Node 18 não compila a web.
+- Expo/React Native/TypeScript; Supabase gerenciado. SDK 58 exige Node 22.13+ na linha 22; use `nvm use` (22.23.2). CI em Node 22.
+- Antes de publicar, faça commit e push do código validado para o GitHub. A branch principal é `main`; ela deve refletir o código publicado. Hotfix para runtime antigo também deve ter commit/branch rastreável.
 - Canal `preview` é usado pela família. Push na `main` publica automaticamente; desenvolvimento local pode acessar o banco compartilhado configurado no `.env`.
 - Não exponha tokens, senhas ou service role. `app_settings` é legível por autenticados e não é cofre de segredos.
 - Não edite migrations aplicadas; crie a próxima sequência. O runner usa `public._migrations` e também altera Auth/`.env`.

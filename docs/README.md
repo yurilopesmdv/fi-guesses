@@ -2,7 +2,7 @@
 
 Levantamento em **16/10/2026**, sobre o commit `f3c4bff`. Os documentos descrevem o código e as configurações versionadas; o [diagnóstico](DIAGNOSTICO.md) separa verificações locais, respostas dos serviços publicados e informações ainda não confirmadas nas contas de nuvem.
 
-As adaptações implementadas depois do levantamento estão em [TASKS.md](TASKS.md); os guias abaixo já descrevem exclusão, ranking geral e flag Ao vivo. As migrations até `0019` foram aplicadas no serviço compartilhado. Consulte [validação de produção](VALIDACAO_PRODUCAO.md) para evidências e publicações.
+O projeto foi migrado para Expo SDK 58 em 24/10/2026; ambiente em Node 22 e links Expo Go atualizados, com publicação registrada na [validação de produção](VALIDACAO_PRODUCAO.md). As adaptações implementadas depois do levantamento estão em [TASKS.md](TASKS.md); os guias abaixo já descrevem exclusão, ranking geral e flag Ao vivo. As migrations até `0019` foram aplicadas no serviço compartilhado. Consulte [validação de produção](VALIDACAO_PRODUCAO.md) para evidências e publicações.
 
 | Documento | Conteúdo |
 |---|---|

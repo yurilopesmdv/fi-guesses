@@ -14,11 +14,11 @@ Atualizações de JavaScript compatíveis são verificadas ao abrir o app. Mudan
 1. App Store → **Expo Go**.
 2. Câmera → apontar pro `docs/qr-expo-go.png` → "Abrir no Expo Go".
    Ou Expo Go → *Enter URL manually* →
-   `exp://u.expo.dev/7efe543a-c812-4af7-9e7b-bc998f3b2f4c?channel-name=preview&runtime-version=exposdk:57.0.0`
+   `exp://u.expo.dev/7efe543a-c812-4af7-9e7b-bc998f3b2f4c?channel-name=preview&runtime-version=exposdk:58.0.0`
 3. Se pedir login no Expo Go: conta `yurilopesmdv`.
 4. **Criar conta** no app.
 
-O link aponta ao canal `preview`, com runtime do SDK 57. A abertura depende de um Expo Go compatível com esse runtime; se falhar, use o navegador e confira a compatibilidade antes de regenerar os links.
+O link e o QR code apontam ao canal `preview`, com runtime do SDK 58. Atualize o Expo Go dos dois iPhones para a versão compatível com SDK 58. Um projeto SDK 58 não abre no Expo Go para SDK 57; se aparecer incompatibilidade, confira a versão instalada e abra o link novo acima. O histórico salvo no Expo Go pode continuar apontando para o link antigo (SDK 57).
 
 ## Qualquer aparelho, sem instalar
 https://bolao-f1.expo.app (no iPhone: Compartilhar → "Adicionar à Tela de Início").
