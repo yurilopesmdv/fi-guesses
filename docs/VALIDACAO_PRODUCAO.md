@@ -45,3 +45,7 @@ Publicação no canal/branch EAS `preview`, runtime `exposdk:57.0.0`, grupo `4b7
 ## Grid de largada — compatibilidade Android SDK 57 — 26/10/2026
 
 Port da implementação `cadb8d2` da main para o APK já instalado, preservando dependências SDK 57. Grid completo em bolões e corrida, priorizando posições dos resultados históricos, depois grid público OpenF1 e classificação Jolpica identificada como provisória. Consulta independente do monitor Ao vivo, atualização manual e periódica em foco. TypeScript, seis testes de grid e exportação Android aprovados antes de publicar. Nenhuma migration ou novo binário necessário.
+
+## Separação entre largada e chegada — 26/10/2026
+
+Port do commit `bb168f5` da main para SDK 57. Grid real separado de qualy e resultado final; seletor e pódio do participante mostram posição de largada, sem preencher palpites automaticamente. Corrigida a associação do endpoint starting_grid à sessão Qualifying do mesmo meeting_key; nunca usa ordem da qualy como grid. TypeScript, sete testes de grid e exportação Android aprovados antes da publicação.

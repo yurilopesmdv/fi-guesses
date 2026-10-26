@@ -1,20 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { PicksBoard } from './PicksBoard';
 import { Podium } from './Podium';
 import { Schedule } from './Schedule';
 import { StartingGrid } from './StartingGrid';
+import { RaceClassification } from './RaceClassification';
 import { PoolStatus } from './PoolStatus';
 import { poolStatusDescription } from '@/lib/poolStatus';
-import { QuestionField, answerLabel } from './QuestionField';
+import { QuestionField } from './QuestionField';
 import { useUserId } from '@/lib/auth';
-import { openDriver } from '@/lib/nav';
 import { flag, fmtCountdown, fmtDate, lockTime } from '@/lib/format';
 import { listPredictions, listQuestions, listRaceResults, listResults, listStandings, listSupportRaces, raceParticipation, savePrediction } from '@/lib/repo';
-import type { Answer, Prediction, Question, Race, RaceResult, Result, Standing } from '@/lib/types';
+import type { Answer, Prediction, Question, Race, RaceResult, Result, Standing, StartingGrid as Grid } from '@/lib/types';
 import { usePool } from '@/lib/usePool';
-import { Button, Card, H2, Loading, Muted, P, Pill, Row, Screen } from '@/ui/primitives';
+import { Card, H2, Loading, Muted, P, Pill, Row, Screen } from '@/ui/primitives';
 import { colors, space } from '@/ui/theme';
 
 export function RaceView({ race }: { race: Race }) {
@@ -26,6 +26,7 @@ export function RaceView({ race }: { race: Race }) {
   const [members, setMembers] = useState<Standing[]>([]);
   const [participation, setParticipation] = useState<Record<string, boolean>>({});
   const [official, setOfficial] = useState<RaceResult[]>([]);
+  const [startingGrid, setStartingGrid] = useState<Grid | null>(null);
   const [support, setSupport] = useState<Race[]>([]);
   const [now, setNow] = useState(Date.now());
   const [saved, setSaved] = useState<'idle' | 'saving' | 'ok'>('idle');
@@ -107,7 +108,7 @@ export function RaceView({ race }: { race: Race }) {
         </Pressable>
       )}
 
-      <StartingGrid race={race} drivers={drivers} results={official} />
+      <StartingGrid race={race} drivers={drivers} results={official} compact={open} onGridChange={setStartingGrid} />
 
       {open ? (
         <>
@@ -115,14 +116,14 @@ export function RaceView({ race }: { race: Race }) {
           {podiumQ && (
             <Card>
               <H2>🏆 Seu palpite de pódio <Muted>3 pts exato · 1 pt piloto certo</Muted></H2>
-              <Podium value={mine(podiumQ.id) ?? {}} drivers={drivers} onChange={(v) => onAnswer(podiumQ, v)} />
+              <Podium value={mine(podiumQ.id) ?? {}} startingGrid={startingGrid} drivers={drivers} onChange={(v) => onAnswer(podiumQ, v)} />
             </Card>
           )}
           {extras.length > 0 && <H2 style={{ marginTop: space(0.5) }}>❓ Perguntas extras</H2>}
           {extras.map((q) => (
             <Card key={q.id}>
               <H2>{q.prompt} <Muted>{q.points} pts{q.near_points ? ` · ±1: ${q.near_points}` : ''}</Muted></H2>
-              <QuestionField q={q} value={mine(q.id)} drivers={drivers} onChange={(a) => onAnswer(q, a)} />
+              <QuestionField q={q} value={mine(q.id)} startingGrid={startingGrid} drivers={drivers} onChange={(a) => onAnswer(q, a)} />
             </Card>
           ))}
           <PicksBoard questions={questions} predictions={predictions} results={results} members={members} drivers={drivers} uid={uid} />
@@ -138,28 +139,9 @@ export function RaceView({ race }: { race: Race }) {
           </Card>
         </>
       ) : (
-        <>
-          <PicksBoard questions={questions} predictions={predictions} results={results} members={members} drivers={drivers} uid={uid} />
-          {official.length > 0 && (
-            <Card>
-              <H2>🏁 Classificação da corrida</H2>
-              {official.map((r) => {
-                const d = drivers.find((x) => x.code === r.driver_code);
-                return (
-                  <Pressable key={r.position} onPress={() => openDriver(d)}>
-                  <Row style={{ marginBottom: 6 }}>
-                    <Text style={{ color: colors.muted, fontWeight: '800', width: 28 }}>{r.position}</Text>
-                    <View style={{ width: 4, alignSelf: 'stretch', borderRadius: 2, backgroundColor: d?.team_color ?? colors.border }} />
-                    <P style={{ flex: 1, fontWeight: '600' }}>{d?.name ?? r.driver_code}{r.fastest_lap ? ' ⏱️' : ''}</P>
-                    <Muted>{r.status !== 'Finished' && !/^\+\d/.test(r.status) ? r.status : `${r.points} pts`}</Muted>
-                  </Row>
-                  </Pressable>
-                );
-              })}
-            </Card>
-          )}
-        </>
+        <PicksBoard questions={questions} predictions={predictions} results={results} members={members} drivers={drivers} uid={uid} />
       )}
+      <RaceClassification race={race} drivers={drivers} results={official} />
 
     </Screen>
   );

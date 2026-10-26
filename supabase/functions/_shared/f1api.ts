@@ -196,21 +196,27 @@ export async function fetchPublishedGrid(dateUtc: string, season: number) {
     const timer = setTimeout(() => controller.abort(), 10000);
     try {
       const res = await fetch(`https://api.openf1.org/v1/${path}`, { signal: controller.signal });
+      if (res.status === 404) return []; // fonte ainda não publicou esta sessão
       if (!res.ok) throw new Error(`Grid F1 indisponível (${res.status})`);
       return await res.json() as any[];
     } finally { clearTimeout(timer); }
   };
   const day = Date.parse(dateUtc);
-  const from = new Date(day - 86400000).toISOString();
+  const from = new Date(day - 3 * 86400000).toISOString();
   const to = new Date(day + 86400000).toISOString();
-  const sessions = await read(`sessions?year=${season}&session_name=Race&date_start>=${encodeURIComponent(from)}&date_start<=${encodeURIComponent(to)}`);
+  const sessions = await read(`sessions?year=${season}&date_start>=${encodeURIComponent(from)}&date_start<=${encodeURIComponent(to)}`);
   // Não confundir Sprint com a corrida principal nem associar um GP distante.
-  const session = sessions.filter((s) => s.session_name === 'Race').sort((a, b) => Math.abs(Date.parse(a.date_start) - day) - Math.abs(Date.parse(b.date_start) - day))[0];
+  const race = sessions.filter((s) => s.session_name === 'Race' && Math.abs(Date.parse(s.date_start) - day) <= 86400000).sort((a, b) => Math.abs(Date.parse(a.date_start) - day) - Math.abs(Date.parse(b.date_start) - day))[0];
+  if (!race) return [];
+  // starting_grid é indexado pela Qualifying do GP, não pela sessão Race.
+  // Sprint Qualifying tem outro nome e nunca fornece o grid da corrida principal.
+  const session = sessions.find((s) => s.session_name === 'Qualifying' && s.meeting_key === race.meeting_key);
   if (!session) return [];
   const grid = await read(`starting_grid?session_key=${session.session_key}`);
   if (!grid.length) return [];
   const drivers = await read(`drivers?session_key=${session.session_key}`);
-  return grid.map((r) => {
+  const entries = [...grid, ...drivers.filter((d) => !grid.some((r) => r.driver_number === d.driver_number)).map((d) => ({ driver_number: d.driver_number, position: null }))];
+  return entries.map((r) => {
     const d = drivers.find((d) => d.driver_number === r.driver_number);
     return {
       position: Number(r.position) || null, driver_code: String(d?.name_acronym ?? r.driver_number),

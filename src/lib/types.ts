@@ -135,4 +135,6 @@ export type TeamHeadToHead = { season: number; a_position: number | null; b_posi
 
 /** Zero representa boxes/sem posição de grid informada pela fonte. */
 export type StartingGridRow = { position: number | null; driver_id?: string; driver_code: string; name: string; team: string | null; team_color?: string };
-export type StartingGrid = { source: 'results' | 'openf1' | 'qualifying'; rows: StartingGridRow[] };
+export type StartingGrid = { source: 'results' | 'openf1'; rows: StartingGridRow[] };
+
+export type QualifyingOrder = { source: 'qualifying'; rows: StartingGridRow[] };
