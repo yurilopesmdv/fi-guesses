@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { Driver } from '@/lib/types';
+import type { Driver, StartingGrid } from '@/lib/types';
+import { driversByStartingGrid, startingPositionLabel } from '@/lib/raceGrid';
 import { canOpenDriver, openDriver } from '@/lib/nav';
 import { Button, Input, Muted } from '@/ui/primitives';
 import { colors, radius, space } from '@/ui/theme';
@@ -9,34 +10,37 @@ import { colors, radius, space } from '@/ui/theme';
 type Props = {
   visible: boolean;
   drivers: Driver[];
+  startingGrid?: StartingGrid | null;
   title?: string;
   onSelect: (code: string) => void;
   onClose: () => void;
 };
 
 /** Lista de pilotos com busca por nome, código, número ou equipe. */
-export function DriverPicker({ visible, drivers, title = 'Escolha o piloto', onSelect, onClose }: Props) {
+export function DriverPicker({ visible, drivers, title = 'Escolha o piloto', onSelect, onClose, startingGrid }: Props) {
   const [q, setQ] = useState('');
   const insets = useSafeAreaInsets();
   const list = useMemo(() => {
     const t = q.trim().toLowerCase();
-    if (!t) return drivers;
-    return drivers.filter((d) =>
+    const ordered = driversByStartingGrid(drivers, startingGrid);
+    if (!t) return ordered;
+    return ordered.filter((d) =>
       [d.name, d.code, d.team ?? '', String(d.number ?? '')].some((v) => v.toLowerCase().includes(t)),
     );
-  }, [q, drivers]);
+  }, [q, drivers, startingGrid]);
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View style={[s.wrap, { paddingTop: insets.top + space(1), paddingBottom: insets.bottom }]}>
         <Text style={s.title}>{title}</Text>
+        {startingGrid && <Muted>Ordenados pela largada. Escolha quem você acha que vai chegar na posição do palpite.</Muted>}
         <Input placeholder="Buscar: nome, número, equipe…" value={q} onChangeText={setQ} autoFocus autoCorrect={false} />
         <FlatList
           data={list}
           keyExtractor={(d) => d.code}
           keyboardShouldPersistTaps="handled"
           ListEmptyComponent={<Muted style={{ textAlign: 'center', marginTop: space(3) }}>Nenhum piloto encontrado</Muted>}
-          renderItem={({ item }) => <DriverRow d={item} onPress={() => { onSelect(item.code); setQ(''); onClose(); }} />}
+          renderItem={({ item }) => <DriverRow d={item} startingGrid={startingGrid} onPress={() => { onSelect(item.code); setQ(''); onClose(); }} />}
         />
         <Button title="Fechar" variant="ghost" onPress={onClose} />
       </View>
@@ -44,7 +48,7 @@ export function DriverPicker({ visible, drivers, title = 'Escolha o piloto', onS
   );
 }
 
-export function DriverRow({ d, onPress, info = true }: { d: Driver; onPress?: () => void; info?: boolean }) {
+export function DriverRow({ d, onPress, info = true, startingGrid }: { d: Driver; onPress?: () => void; info?: boolean; startingGrid?: StartingGrid | null }) {
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [s.row, pressed && { opacity: 0.7 }]}>
       <View style={[s.stripe, { backgroundColor: d.team_color ?? colors.muted }]} />
@@ -52,6 +56,7 @@ export function DriverRow({ d, onPress, info = true }: { d: Driver; onPress?: ()
       <View style={{ flex: 1 }}>
         <Text style={s.name}>{d.name}</Text>
         <Muted>{d.team ?? ''}</Muted>
+        {startingPositionLabel(startingGrid, d.code) && <Text style={{ color: colors.green, fontWeight: '700' }}>{startingPositionLabel(startingGrid, d.code)}</Text>}
       </View>
       <Text style={s.code}>{d.code}</Text>
       {info && canOpenDriver(d) && (

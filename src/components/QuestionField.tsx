@@ -2,14 +2,14 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { DriverPicker } from './DriverPicker';
 import { PositionPicker } from './PositionPicker';
-import type { Answer, Driver, Question } from '@/lib/types';
+import type { Answer, Driver, Question, StartingGrid } from '@/lib/types';
 import { Input, Row } from '@/ui/primitives';
 import { colors, radius, space } from '@/ui/theme';
 
-type Props = { q: Question; value: any; drivers: Driver[]; onChange: (a: Answer) => void };
+type Props = { q: Question; value: any; drivers: Driver[]; startingGrid?: StartingGrid | null; onChange: (a: Answer) => void };
 
 /** Entrada de resposta pra perguntas personalizadas (também usada pelo organizador na apuração). */
-export function QuestionField({ q, value, drivers, onChange }: Props) {
+export function QuestionField({ q, value, drivers, onChange, startingGrid }: Props) {
   const [picking, setPicking] = useState(false);
   const byCode = Object.fromEntries(drivers.map((d) => [d.code, d]));
 
@@ -22,7 +22,7 @@ export function QuestionField({ q, value, drivers, onChange }: Props) {
           <Text style={[s.txt, !d && { color: colors.muted }]}>{d ? d.name : 'Toque para escolher o piloto'}</Text>
           <Text style={s.chev}>›</Text>
         </Pressable>
-        <DriverPicker visible={picking} drivers={drivers} onClose={() => setPicking(false)} onSelect={(code) => onChange({ driver: code })} />
+        <DriverPicker visible={picking} drivers={drivers} startingGrid={startingGrid} onClose={() => setPicking(false)} onSelect={(code) => onChange({ driver: code })} />
       </>
     );
   }

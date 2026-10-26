@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { gridFromResults, resolveGridDrivers } from '../src/lib/raceGrid.ts';
+import { driversByStartingGrid, gridFromResults, resolveGridDrivers, startingPositionLabel } from '../src/lib/raceGrid.ts';
 import { fetchPublishedGrid, fetchRaceQualifying } from '../src/lib/f1api.ts';
 
 const drivers = [{ code: 'HIL', driver_id: 'damon_hill', name: 'Damon Hill', team_color: '#fff' }, { code: 'PHI', driver_id: 'phil_hill', name: 'Phil Hill' }];
@@ -18,7 +18,7 @@ test('histórico usa grid real em vez da chegada, conserva todos os pilotos e is
   assert.equal(grid.rows[1].driver_id, 'damon_hill');
   assert.equal(results[0].position, 1);
 });
-test('sem grid histórico permite buscar classificação; zero não vira pole', () => {
+test('sem grid histórico não inventa largada; zero não vira pole', () => {
   assert.equal(gridFromResults([], drivers), null);
   assert.equal(gridFromResults([{ series: 'f1', session: 'race', grid: null }], drivers), null);
   const grid = gridFromResults([{ series: 'f1', session: 'race', grid: 0, driver_code: 'BOX' }, { series: 'f1', session: 'race', grid: 1, driver_code: 'HIL' }], drivers);
@@ -28,24 +28,28 @@ test('identidade histórica usa driver_id mesmo com sigla diferente', () => {
   const grid = resolveGridDrivers({ source: 'qualifying', rows: [{ driver_id: 'phil_hill', driver_code: 'HIL', position: 1, name: 'Phil Hill' }] }, drivers);
   assert.equal(grid.rows[0].driver_code, 'PHI');
 });
-test('grid publicado seleciona Race e mapeia número para piloto sem autenticação', async () => {
+test('grid publicado usa Qualifying do GP correto, exclui Sprint e preserva pilotos sem posição', async () => {
   const original = globalThis.fetch;
   const paths = [];
   globalThis.fetch = async (url, options) => {
     paths.push(String(url));
     assert.equal(options.headers, undefined);
     const rows = paths.length === 1 ? [
-      { session_name: 'Sprint', session_key: 10, date_start: '2024-06-09T14:00:00Z' },
-      { session_name: 'Race', session_key: 20, date_start: '2024-06-09T18:00:00Z' },
-    ] : paths.length === 2 ? [{ position: 2, driver_number: 44 }] : [{ driver_number: 44, name_acronym: 'HAM', full_name: 'Lewis Hamilton', team_colour: '27F4D2' }];
+      { session_name: 'Sprint Qualifying', session_key: 10, meeting_key: 30 },
+      { session_name: 'Qualifying', session_key: 19, meeting_key: 30 },
+      { session_name: 'Qualifying', session_key: 99, meeting_key: 99 },
+      { session_name: 'Race', session_key: 20, meeting_key: 30, date_start: '2024-06-09T18:00:00Z' },
+    ] : paths.length === 2 ? [{ position: 2, driver_number: 44 }] : [{ driver_number: 44, name_acronym: 'HAM', full_name: 'Lewis Hamilton', team_colour: '27F4D2' }, { driver_number: 1, name_acronym: 'VER', full_name: 'Max Verstappen' }];
     return Response.json(rows);
   };
   try {
     const rows = await fetchPublishedGrid('2024-06-09T18:00:00Z', 2024);
-    assert.match(paths[1], /starting_grid\?session_key=20/);
+    assert.match(paths[1], /starting_grid\?session_key=19/);
     assert.equal(rows[0].name, 'Lewis Hamilton');
     assert.equal(rows[0].team_color, '#27F4D2');
     assert.equal(rows[0].position, 2);
+    assert.equal(rows.length, 2);
+    assert.equal(rows[1].position, null);
   } finally { globalThis.fetch = original; }
 });
 test('classificação vazia é normal e identidade da qualy independe do importador', async () => {
@@ -64,7 +68,7 @@ test('classificação vazia é normal e identidade da qualy independe do importa
   } finally { globalThis.fetch = original; }
 });
 
-test('repositório prioriza histórico, bloqueia corrida futura e faz fallback/cache/atualização após qualy', async () => {
+test('repositório mantém grid e qualy separados, prioriza histórico e atualiza caches independentes', async () => {
   const { build } = await import('esbuild');
   const { mkdir, writeFile } = await import('node:fs/promises');
   const { createRequire } = await import('node:module');
@@ -79,7 +83,7 @@ test('repositório prioriza histórico, bloqueia corrida futura e faz fallback/c
   });
   await mkdir('.expo', { recursive: true });
   await writeFile('.expo/race-grid-repo-test.cjs', built.outputFiles[0].text);
-  const { getStartingGrid } = createRequire(import.meta.url)('../.expo/race-grid-repo-test.cjs');
+  const { getStartingGrid, getQualifyingOrder } = createRequire(import.meta.url)('../.expo/race-grid-repo-test.cjs');
   let published = 0, qualifying = 0;
   globalThis.gridRepoTest = {
     published: async () => { published++; throw new Error('401'); },
@@ -92,17 +96,36 @@ test('repositório prioriza histórico, bloqueia corrida futura e faz fallback/c
     const stored = await getStartingGrid(race, drivers, [{ series: 'f1', session: 'race', grid: 1, driver_code: 'HIL' }]);
     assert.equal(stored.source, 'results');
     assert.equal(published, 0);
-    const fallback = await getStartingGrid(race, drivers, []);
-    assert.equal(fallback.source, 'qualifying');
-    assert.equal(fallback.rows[0].driver_code, 'PHI');
-    assert.equal(published, 1); assert.equal(qualifying, 1);
-    await getStartingGrid(race, drivers, []);
-    assert.equal(published, 1); assert.equal(qualifying, 1);
+    await assert.rejects(getStartingGrid(race, drivers, []), /401/);
+    assert.equal(qualifying, 0, 'grid nunca recorre a posições da qualy');
+    const order = await getQualifyingOrder(race, drivers);
+    assert.equal(order.source, 'qualifying');
+    assert.equal(order.rows[0].driver_code, 'PHI');
+    globalThis.gridRepoTest.published = async () => { published++; return []; };
+    assert.equal(await getStartingGrid(race, drivers, []), null);
     globalThis.gridRepoTest.published = async () => { published++; return [{ position: 2, driver_code: 'PHI', name: 'Phil Hill' }]; };
-    assert.equal((await getStartingGrid(race, drivers, [], true)).source, 'openf1');
-    assert.equal(published, 2);
+    const grid = await getStartingGrid(race, drivers, []);
+    assert.equal(grid.source, 'openf1');
+    assert.equal(grid.rows[0].position, 2, 'largada P2 não recebe P1 da qualy');
+    const calls = published;
+    await getStartingGrid(race, drivers, []);
+    assert.equal(published, calls);
+    await getStartingGrid(race, drivers, [], true);
+    assert.equal(published, calls + 1);
+    await getQualifyingOrder(race, drivers);
+    assert.equal(qualifying, 1);
     globalThis.gridRepoTest.published = async () => { throw new Error('offline'); };
-    globalThis.gridRepoTest.qualifying = async () => { throw new Error('offline'); };
-    await assert.rejects(getStartingGrid({ ...race, round: 2 }, drivers, []), /Não foi possível consultar/);
+    await assert.rejects(getStartingGrid({ ...race, round: 2 }, drivers, []), /offline/);
+
   } finally { delete globalThis.gridRepoTest; }
+});
+
+
+test('seletor ordena por largada, mantém pilotos sem posição e não muda palpites ou lista original', () => {
+  const grid = { source: 'openf1', rows: [{ driver_code: 'PHI', position: 1 }, { driver_code: 'HIL', position: 8 }] };
+  assert.deepEqual(driversByStartingGrid(drivers, grid).map((d) => d.code), ['PHI', 'HIL']);
+  assert.equal(drivers[0].code, 'HIL');
+  assert.equal(startingPositionLabel(grid, 'HIL'), 'Larga em P8');
+  assert.equal(startingPositionLabel(null, 'HIL'), null);
+  assert.equal(startingPositionLabel(grid, 'OUT'), null);
 });

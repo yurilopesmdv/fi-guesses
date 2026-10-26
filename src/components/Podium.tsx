@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { startingPositionLabel } from '@/lib/raceGrid';
 import { DriverPicker } from './DriverPicker';
-import type { Driver, PodiumAnswer } from '@/lib/types';
+import type { Driver, PodiumAnswer, StartingGrid } from '@/lib/types';
 import { colors, radius, space } from '@/ui/theme';
 
 const SLOTS: { key: keyof PodiumAnswer; label: string; color: string }[] = [
@@ -13,12 +14,13 @@ const SLOTS: { key: keyof PodiumAnswer; label: string; color: string }[] = [
 type Props = {
   value: PodiumAnswer;
   drivers: Driver[];
+  startingGrid?: StartingGrid | null;
   onChange?: (v: PodiumAnswer) => void;
   /** pódio oficial — quando presente, pinta acerto (3), quase (1) e erro */
   result?: PodiumAnswer | null;
 };
 
-export function Podium({ value, drivers, onChange, result }: Props) {
+export function Podium({ value, drivers, onChange, result, startingGrid }: Props) {
   const [picking, setPicking] = useState<keyof PodiumAnswer | null>(null);
   const byCode = Object.fromEntries(drivers.map((d) => [d.code, d]));
   const podium = result ? [result.p1, result.p2, result.p3] : [];
@@ -46,7 +48,7 @@ export function Podium({ value, drivers, onChange, result }: Props) {
             <View style={[s.stripe, { backgroundColor: d?.team_color ?? colors.border }]} />
             <View style={{ flex: 1 }}>
               <Text style={[s.name, !d && { color: colors.muted }]}>{d ? d.name : 'Toque para escolher'}</Text>
-              {d && <Text style={s.team}>{d.team}</Text>}
+              {d && <Text style={s.team}>{d.team}{startingPositionLabel(startingGrid, d.code) ? ` · ${startingPositionLabel(startingGrid, d.code)}` : ''}</Text>}
             </View>
             {m ? <Text style={[s.mark, { color: m.color }]}>{m.txt}</Text> : onChange && d ? (
               <Pressable hitSlop={12} onPress={() => { const next = { ...value }; delete next[key]; onChange(next); }}>
@@ -59,6 +61,7 @@ export function Podium({ value, drivers, onChange, result }: Props) {
       <DriverPicker
         visible={picking !== null}
         drivers={drivers}
+        startingGrid={startingGrid}
         title={picking ? `Quem chega em ${SLOTS.find((x) => x.key === picking)!.label}?` : ''}
         onClose={() => setPicking(null)}
         onSelect={(code) => {

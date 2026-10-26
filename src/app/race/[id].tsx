@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
-import { openDriver } from '@/lib/nav';
+import { Text } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { Schedule } from '@/components/Schedule';
 import { StartingGrid } from '@/components/StartingGrid';
+import { RaceClassification } from '@/components/RaceClassification';
 import { flag, fmtDate } from '@/lib/format';
 import { getRace, listDrivers, listRaceResults, listSupportRaces } from '@/lib/repo';
 import { SERIES_LABEL, type Driver, type Race, type RaceResult } from '@/lib/types';
-import { Card, H2, Loading, Muted, P, Row, Screen } from '@/ui/primitives';
+import { Card, Loading, Muted, Screen } from '@/ui/primitives';
 import { colors } from '@/ui/theme';
 
 /** Corrida (fora de bolão): programação em horário de Brasília + classificação oficial. */
@@ -26,7 +26,6 @@ export default function RaceScreen() {
   }, [id]);
 
   if (!race) return <Screen scroll={false}><Loading /></Screen>;
-  const byCode = Object.fromEntries(drivers.map((d) => [d.code, d]));
 
   return (
     <Screen>
@@ -38,27 +37,7 @@ export default function RaceScreen() {
       </Card>
       <Schedule race={race} support={support} />
       <StartingGrid race={race} drivers={drivers} results={results} />
-      {results && results.length > 0 && (
-        <Card>
-          <H2>🏁 {race.series === 'f1' ? 'Classificação' : 'Feature Race · top 5'}</H2>
-          {results.map((r) => {
-            const d = byCode[r.driver_code];
-            return (
-              <Pressable key={`${r.session}-${r.position}-${r.driver_code}`} onPress={() => openDriver(d)}>
-              <Row style={{ marginBottom: 6 }}>
-                <Text style={{ color: colors.muted, fontWeight: '800', width: 28 }}>{r.position}</Text>
-                <View style={{ width: 4, alignSelf: 'stretch', borderRadius: 2, backgroundColor: d?.team_color ?? colors.border }} />
-                <View style={{ flex: 1 }}>
-                  <P style={{ fontWeight: '600' }}>{d?.name ?? r.driver_code}{r.fastest_lap ? ' ⏱️' : ''}</P>
-                  <Muted>{r.team}{r.grid ? ` · grid ${r.grid}` : ''}</Muted>
-                </View>
-                <Muted>{r.status !== 'Finished' && !/^\+\d/.test(r.status) ? r.status : `${r.points} pts`}</Muted>
-              </Row>
-              </Pressable>
-            );
-          })}
-        </Card>
-      )}
+      <RaceClassification race={race} drivers={drivers} results={results} />
     </Screen>
   );
 }

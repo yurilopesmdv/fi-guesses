@@ -149,25 +149,26 @@ export async function getStartingGrid(race: Race, drivers: Driver[], results: Ra
   const key = `${race.series}:${race.season}:${race.round}`;
   const cached = gridCache.get(key);
   if (!refresh && cached && cached.expires > Date.now()) return resolveGridDrivers(cached.value, drivers);
-  let unavailable = false;
-  if (race.season >= 2023) {
-    try {
-      const rows = await fetchPublishedGrid(race.date_utc, race.season);
-      if (rows.length) {
-        const value = { source: 'openf1' as const, rows };
-        gridCache.set(key, { expires: Date.now() + 120000, value });
-        return resolveGridDrivers(value, drivers);
-      }
-    } catch { unavailable = true; }
-  }
-  try {
-    const rows = await fetchRaceQualifying(race.season, race.round);
-    if (rows.length) {
-      const value = { source: 'qualifying' as const, rows };
-      gridCache.set(key, { expires: Date.now() + 120000, value });
-      return resolveGridDrivers(value, drivers);
-    }
-  } catch { unavailable = true; }
-  if (unavailable) throw new Error('Não foi possível consultar o grid. Tente atualizar.');
-  return null;
+  if (race.season < 2023) return null;
+  const rows = await fetchPublishedGrid(race.date_utc, race.season);
+  if (!rows.length) return null;
+  const value = { source: 'openf1' as const, rows };
+  gridCache.set(key, { expires: Date.now() + 120000, value });
+  return resolveGridDrivers(value, drivers);
+}
+
+const qualifyingCache = new Map<string, { expires: number; value: import('./types').QualifyingOrder }>();
+/** A qualy é referência separada: nunca substitui a largada nem o resultado final. */
+export async function getQualifyingOrder(race: Race, drivers: Driver[], refresh = false): Promise<import('./types').QualifyingOrder | null> {
+  if (race.series !== 'f1') return null;
+  if (race.quali_utc && Date.now() < Date.parse(race.quali_utc)) return null;
+  if (!race.quali_utc && Date.now() < Date.parse(race.date_utc) - 2 * 86400000) return null;
+  const key = `${race.series}:${race.season}:${race.round}`;
+  const cached = qualifyingCache.get(key);
+  if (!refresh && cached && cached.expires > Date.now()) return resolveGridDrivers(cached.value, drivers);
+  const rows = await fetchRaceQualifying(race.season, race.round);
+  if (!rows.length) return null;
+  const value = { source: 'qualifying' as const, rows };
+  qualifyingCache.set(key, { expires: Date.now() + 120000, value });
+  return resolveGridDrivers(value, drivers);
 }
