@@ -3,6 +3,7 @@ import { Pressable, Text, View } from 'react-native';
 import { openDriver } from '@/lib/nav';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { Schedule } from '@/components/Schedule';
+import { StartingGrid } from '@/components/StartingGrid';
 import { flag, fmtDate } from '@/lib/format';
 import { getRace, listDrivers, listRaceResults, listSupportRaces } from '@/lib/repo';
 import { SERIES_LABEL, type Driver, type Race, type RaceResult } from '@/lib/types';
@@ -36,6 +37,7 @@ export default function RaceScreen() {
         {!race.times_tbc && <Muted>{race.series === 'f1' ? 'Largada' : 'Feature Race'}: {fmtDate(race.date_utc)}</Muted>}
       </Card>
       <Schedule race={race} support={support} />
+      <StartingGrid race={race} drivers={drivers} results={results} />
       {results && results.length > 0 && (
         <Card>
           <H2>🏁 {race.series === 'f1' ? 'Classificação' : 'Feature Race · top 5'}</H2>

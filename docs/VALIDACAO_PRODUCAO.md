@@ -40,3 +40,8 @@ Não houve teste em aparelho físico, build nativo, restauração, carga, audito
 A branch `compat/android-sdk57` preserva o código da correção do calendário publicada para o APK instalado, mantendo as dependências do SDK 57. A principal `main` segue no SDK 58. O detalhe do bolão carrega seu próprio calendário F1 por `pool.season`, aguarda os dados e oferece nova tentativa em caso de falha. Sem alteração de banco nem novo APK.
 
 Publicação no canal/branch EAS `preview`, runtime `exposdk:57.0.0`, grupo `4b782f62-2c67-4dd6-8675-d2391a49d802`, update Android `01a16fe7-ce69-706e-a3af-defc5ce14c0f`. TypeScript e exportação Android aprovados nesta combinação de fontes/dependências. Manifesto e download do bundle conferidos com HTTP 200. Os dois testes novos do provider foram executados na linha SDK 58; a confirmação no aparelho físico fica com o usuário.
+
+
+## Grid de largada — compatibilidade Android SDK 57 — 26/10/2026
+
+Port da implementação `cadb8d2` da main para o APK já instalado, preservando dependências SDK 57. Grid completo em bolões e corrida, priorizando posições dos resultados históricos, depois grid público OpenF1 e classificação Jolpica identificada como provisória. Consulta independente do monitor Ao vivo, atualização manual e periódica em foco. TypeScript, seis testes de grid e exportação Android aprovados antes de publicar. Nenhuma migration ou novo binário necessário.

@@ -132,3 +132,7 @@ export type TeamProfile = {
 };
 export type TeamSearchRow = { team: string; first_season: number; last_season: number; wins: number; titles: number; team_color: string | null };
 export type TeamHeadToHead = { season: number; a_position: number | null; b_position: number | null; a_points: number; b_points: number; a_wins: number; b_wins: number };
+
+/** Zero representa boxes/sem posição de grid informada pela fonte. */
+export type StartingGridRow = { position: number | null; driver_id?: string; driver_code: string; name: string; team: string | null; team_color?: string };
+export type StartingGrid = { source: 'results' | 'openf1' | 'qualifying'; rows: StartingGridRow[] };

@@ -177,3 +177,45 @@ export async function fetchHeadshots(): Promise<Record<string, string>> {
   const list = (await res.json()) as { name_acronym: string; headshot_url: string | null }[];
   return Object.fromEntries(list.filter((d) => d.headshot_url).map((d) => [d.name_acronym, d.headshot_url!.replace('/1col/', '/2col/')]));
 }
+
+/** Classificação do GP principal; identidade explícita, sem depender do codeBook global. */
+export async function fetchRaceQualifying(season: number, round: number) {
+  const data = await get(`${season}/${round}/qualifying.json`);
+  return (data.RaceTable.Races[0]?.QualifyingResults ?? []).map((r: any) => ({
+    position: Number(r.position) || null, driver_id: r.Driver.driverId as string,
+    driver_code: (r.Driver.code ?? '') as string,
+    name: `${r.Driver.givenName} ${r.Driver.familyName}`,
+    team: teamName(r.Constructor.constructorId), team_color: teamColor(r.Constructor.constructorId),
+  }));
+}
+
+/** Consulta pública de grid, independente do monitor Ao vivo e de suas credenciais. */
+export async function fetchPublishedGrid(dateUtc: string, season: number) {
+  const read = async (path: string) => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 10000);
+    try {
+      const res = await fetch(`https://api.openf1.org/v1/${path}`, { signal: controller.signal });
+      if (!res.ok) throw new Error(`Grid F1 indisponível (${res.status})`);
+      return await res.json() as any[];
+    } finally { clearTimeout(timer); }
+  };
+  const day = Date.parse(dateUtc);
+  const from = new Date(day - 86400000).toISOString();
+  const to = new Date(day + 86400000).toISOString();
+  const sessions = await read(`sessions?year=${season}&session_name=Race&date_start>=${encodeURIComponent(from)}&date_start<=${encodeURIComponent(to)}`);
+  // Não confundir Sprint com a corrida principal nem associar um GP distante.
+  const session = sessions.filter((s) => s.session_name === 'Race').sort((a, b) => Math.abs(Date.parse(a.date_start) - day) - Math.abs(Date.parse(b.date_start) - day))[0];
+  if (!session) return [];
+  const grid = await read(`starting_grid?session_key=${session.session_key}`);
+  if (!grid.length) return [];
+  const drivers = await read(`drivers?session_key=${session.session_key}`);
+  return grid.map((r) => {
+    const d = drivers.find((d) => d.driver_number === r.driver_number);
+    return {
+      position: Number(r.position) || null, driver_code: String(d?.name_acronym ?? r.driver_number),
+      name: String(d?.full_name ?? `Piloto #${r.driver_number}`), team: (d?.team_name ?? null) as string | null,
+      team_color: d?.team_colour ? `#${d.team_colour}` : undefined,
+    };
+  });
+}
