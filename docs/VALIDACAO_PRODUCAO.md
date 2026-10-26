@@ -62,3 +62,13 @@ Web deployment `dffj5ksig2` promovido para produção em `https://bolao-f1.expo.
 
 
 Rastreabilidade Git: a migração está no commit `03f6656` da `main`. O hotfix do APK SDK 57 está no commit `8b9f883`, branch `compat/android-sdk57`, preservando suas dependências nativas; a correção e seus testes também estão na `main` para SDK 58. Publicações futuras devem partir de commits enviados ao GitHub.
+
+## Grid de largada — 26/10/2026
+
+Implementação no commit `cadb8d2` da main; CI e Deploy concluídos com sucesso na execução `40310508096`. TypeScript, 32 testes e exportação web aprovados. Grid completo compartilhado por bolão e detalhe da corrida, inclusive histórico, com resultados importados como prioridade; depois OpenF1 e classificação Jolpica identificada como provisória. Resultado do bolão passa a mostrar todos os pilotos. Não houve nova migration nem alteração de pontuação.
+
+SDK 58 publicado automaticamente no canal/branch preview: grupo `b9a4d160-babc-400c-8eaa-1d3cb1f06b3e`, Android `01a177d7-6e68-7d8b-b12f-b580f3a9846c`, iOS `01a177d7-6e68-728d-b95a-48e0301705fe`. Web deployment `abiuy7k43q` promovido para produção em https://bolao-f1.expo.app.
+
+APK Android SDK 57: port rastreável no commit `89f1a93`, branch `compat/android-sdk57`, enviado ao GitHub antes da publicação. TypeScript, seis testes novos de grid e exportação Android aprovados. Grupo OTA `60a1482e-9af3-40b0-92c0-cfb443480cbb`, update `01a177d7-8c64-71c6-b407-ec95104234e3` no canal preview. Nenhum novo APK necessário.
+
+Os três manifestos e respectivos bundles responderam HTTP 200 usando headers públicos do manifesto; site de produção HTTP 200. Jolpica retornou 20 classificados de 1996/rodada 1. Consultas públicas OpenF1 de sessão, grid e pilotos responderam HTTP 200 em amostra; outra sessão histórica retornou 404 e a alternativa Jolpica permaneceu disponível. Fontes não garantem cobertura de todo GP. Ao vivo continua desligado; grid é consulta esportiva independente. Não houve validação em aparelho físico nem teste visual autenticado nesta entrega.
