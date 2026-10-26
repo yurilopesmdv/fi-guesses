@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
-import { fetchRaceResult, fetchSeasonBundle } from './f1api';
+import { gridFromResults, resolveGridDrivers } from './raceGrid';
+import { fetchPublishedGrid, fetchRaceQualifying, fetchRaceResult, fetchSeasonBundle } from './f1api';
 import type { Answer, ConstructorStanding, DriverProfile, DriverRaceRow, DriverSearchRow, GlobalStanding, HeadToHead, OpenPool, PoolLifecycle, TeamHeadToHead, TeamProfile, TeamSearchRow, PoolSummary, Series, Driver, DriverStanding, Pool, Prediction, Question, Race, RaceResult, Result, Standing } from './types';
 
 const throwIf = <T>(r: { data: T; error: { message: string } | null }) => {
@@ -135,3 +136,38 @@ export const headToHead = async (a: string, b: string) =>
 export const getTeamProfile = async (team: string) => throwIf(await supabase.rpc('team_profile', { p_team: team })) as TeamProfile;
 export const searchTeams = async (q: string) => throwIf(await supabase.rpc('team_search', { p_q: q })) as TeamSearchRow[];
 export const teamHeadToHead = async (a: string, b: string) => throwIf(await supabase.rpc('team_head_to_head', { p_a: a, p_b: b })) as TeamHeadToHead[];
+
+// Cache curto para consultas públicas de grid; não persiste sessão nem credenciais.
+const gridCache = new Map<string, { expires: number; value: import('./types').StartingGrid }>();
+export async function getStartingGrid(race: Race, drivers: Driver[], results: RaceResult[], refresh = false): Promise<import('./types').StartingGrid | null> {
+  if (race.series !== 'f1') return null;
+  const stored = gridFromResults(results, drivers);
+  if (stored) return stored;
+  // Horários antigos podem não conter a sessão de classificação. Não bloquear o histórico.
+  if (race.quali_utc && Date.now() < Date.parse(race.quali_utc)) return null;
+  if (!race.quali_utc && Date.now() < Date.parse(race.date_utc) - 2 * 86400000) return null;
+  const key = `${race.series}:${race.season}:${race.round}`;
+  const cached = gridCache.get(key);
+  if (!refresh && cached && cached.expires > Date.now()) return resolveGridDrivers(cached.value, drivers);
+  let unavailable = false;
+  if (race.season >= 2023) {
+    try {
+      const rows = await fetchPublishedGrid(race.date_utc, race.season);
+      if (rows.length) {
+        const value = { source: 'openf1' as const, rows };
+        gridCache.set(key, { expires: Date.now() + 120000, value });
+        return resolveGridDrivers(value, drivers);
+      }
+    } catch { unavailable = true; }
+  }
+  try {
+    const rows = await fetchRaceQualifying(race.season, race.round);
+    if (rows.length) {
+      const value = { source: 'qualifying' as const, rows };
+      gridCache.set(key, { expires: Date.now() + 120000, value });
+      return resolveGridDrivers(value, drivers);
+    }
+  } catch { unavailable = true; }
+  if (unavailable) throw new Error('Não foi possível consultar o grid. Tente atualizar.');
+  return null;
+}

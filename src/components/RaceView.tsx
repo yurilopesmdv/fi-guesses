@@ -4,6 +4,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { PicksBoard } from './PicksBoard';
 import { Podium } from './Podium';
 import { Schedule } from './Schedule';
+import { StartingGrid } from './StartingGrid';
 import { PoolStatus } from './PoolStatus';
 import { poolStatusDescription } from '@/lib/poolStatus';
 import { QuestionField, answerLabel } from './QuestionField';
@@ -106,6 +107,8 @@ export function RaceView({ race }: { race: Race }) {
         </Pressable>
       )}
 
+      <StartingGrid race={race} drivers={drivers} results={official} />
+
       {open ? (
         <>
           <Schedule race={race} support={support} />
@@ -140,7 +143,7 @@ export function RaceView({ race }: { race: Race }) {
           {official.length > 0 && (
             <Card>
               <H2>🏁 Classificação da corrida</H2>
-              {official.slice(0, 10).map((r) => {
+              {official.map((r) => {
                 const d = drivers.find((x) => x.code === r.driver_code);
                 return (
                   <Pressable key={r.position} onPress={() => openDriver(d)}>
