@@ -21,6 +21,10 @@ async function syncOne(series: 'f1' | 'f2' | 'f3', season: number) {
   await up('driver_standings', b.driver_standings, 'series,season,driver_code');
   await up('constructor_standings', b.constructor_standings, 'series,season,team');
   await up('race_results', b.race_results, 'series,season,round,session,position,driver_code');
+  if (series === 'f1') {
+    const { error } = await db.rpc('refresh_circuit_winners', { p_season: season });
+    if (error) throw new Error(`Pistas: ${error.message}`);
+  }
   await up('f1_sync', [{ series, season, last_round_with_results: b.last_round_with_results, synced_at: new Date().toISOString() }], 'series,season');
   if (series === 'f1' && season === new Date().getFullYear()) {
     const photos = await fetchHeadshots().catch(() => ({}));

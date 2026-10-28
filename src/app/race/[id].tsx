@@ -1,3 +1,4 @@
+import { CircuitLink } from '@/components/circuits/CircuitLink';
 import { useEffect, useState } from 'react';
 import { Text } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
@@ -34,6 +35,7 @@ export default function RaceScreen() {
         <Text style={{ color: colors.text, fontSize: 22, fontWeight: '800' }}>{flag(race.country)} {race.series !== 'f1' ? `${SERIES_LABEL[race.series]} · ` : ''}{race.name}</Text>
         <Muted>{race.circuit} · Rodada {race.round}{race.has_sprint ? ' · fim de semana com Sprint ⚡' : ''}</Muted>
         {!race.times_tbc && <Muted>{race.series === 'f1' ? 'Largada' : 'Feature Race'}: {fmtDate(race.date_utc)}</Muted>}
+            <CircuitLink race={race} />
       </Card>
       <Schedule race={race} support={support} />
       <StartingGrid race={race} drivers={drivers} results={results} />

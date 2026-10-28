@@ -1,3 +1,4 @@
+import { CircuitLink } from '@/components/circuits/CircuitLink';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
@@ -85,6 +86,7 @@ export function RaceView({ race }: { race: Race }) {
           <View style={{ flex: 1 }}>
             <Text style={s.title}>{flag(race.country)} {race.name}</Text>
             <Muted>{race.circuit} · Largada {fmtDate(race.date_utc)}</Muted>
+            <CircuitLink race={race} />
           </View>
           {open ? <Pill color={colors.green}>fecha em {fmtCountdown(lockAt - now)}</Pill>
             : hasResults ? <Pill color={colors.red}>apurada</Pill> : <Pill>fechada</Pill>}

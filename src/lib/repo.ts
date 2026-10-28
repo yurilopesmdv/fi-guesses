@@ -172,3 +172,20 @@ export async function getQualifyingOrder(race: Race, drivers: Driver[], refresh 
   qualifyingCache.set(key, { expires: Date.now() + 120000, value });
   return resolveGridDrivers(value, drivers);
 }
+
+
+// ---------- catálogo de pistas ----------
+export const listCircuits = async (season: number) =>
+  throwIf(await supabase.rpc('circuit_catalog', { p_season: season })) as import('./types').CircuitSummary[];
+export const getCircuitProfile = async (id: string) =>
+  throwIf(await supabase.rpc('circuit_profile', { p_id: id })) as import('./types').CircuitProfile | null;
+export const circuitMediaUrl = (path: string) => supabase.storage.from('circuits').getPublicUrl(path).data.publicUrl;
+/** Resolve também corridas importadas antes da introdução de circuit_id. */
+export const findRaceCircuit = async (race: Race) => {
+  if (race.series !== 'f1') return null;
+  if (race.circuit_id) {
+    const circuit = throwIf(await supabase.from('circuits').select('id').eq('id',race.circuit_id).maybeSingle()) as { id: string } | null;
+    return circuit?.id ?? null;
+  }
+  return (throwIf(await supabase.from('circuit_seasons').select('circuit_id').eq('season',race.season).eq('round',race.round).maybeSingle()) as { circuit_id: string } | null)?.circuit_id ?? null;
+};

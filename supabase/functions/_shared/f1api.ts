@@ -60,6 +60,7 @@ export async function fetchSeasonRaces(season: number) {
   const data = await get(`${season}.json`);
   return (data.RaceTable.Races as any[]).map((r) => ({
     series: 'f1' as const,
+    circuit_id: r.Circuit.circuitId as string,
     season,
     round: Number(r.round),
     name: r.raceName.replace(' Grand Prix', ' GP'),
@@ -224,4 +225,29 @@ export async function fetchPublishedGrid(dateUtc: string, season: number) {
       team_color: d?.team_colour ? `#${d.team_colour}` : undefined,
     };
   });
+}
+
+/** Metadados e identidade dos circuitos presentes no calendário. */
+export async function fetchCircuitCalendar(season: number) {
+  const data = await get(`${season}.json`);
+  return (data.RaceTable.Races as any[]).map((r) => ({
+    circuit: { id: String(r.Circuit.circuitId), name: String(r.Circuit.circuitName), locality: String(r.Circuit.Location.locality), country: String(r.Circuit.Location.country), latitude: Number(r.Circuit.Location.lat), longitude: Number(r.Circuit.Location.long) },
+    event: { circuit_id: String(r.Circuit.circuitId), season, round: Number(r.round), race_name: String(r.raceName), date_utc: `${r.date}T${r.time ?? '12:00:00Z'}` },
+  }));
+}
+
+/** Vencedores da corrida principal: inclui identidades históricas e vitórias compartilhadas. */
+export async function fetchCircuitWinners(circuitId: string) {
+  const rows: { circuit_id: string; season: number; round: number; race_name: string; date_utc: string; driver_id: string; driver_name: string; team: string | null }[] = [];
+  for (let offset = 0; ; offset += 100) {
+    const data = await get(`circuits/${encodeURIComponent(circuitId)}/results/1.json`,offset);
+    for (const race of data.RaceTable.Races as any[]) {
+      for (const r of race.Results as any[]) {
+        if (Number(r.position) !== 1 || !r.Driver?.driverId) throw new Error('Vencedor inválido no catálogo de pistas.');
+        rows.push({ circuit_id: circuitId, season: Number(race.season), round: Number(race.round), race_name: String(race.raceName), date_utc: `${race.date}T${race.time ?? '12:00:00Z'}`, driver_id: String(r.Driver.driverId), driver_name: `${r.Driver.givenName} ${r.Driver.familyName}`, team: teamName(r.Constructor?.constructorId) });
+      }
+    }
+    if (offset + 100 >= Number(data.total)) break;
+  }
+  return rows;
 }

@@ -34,6 +34,7 @@ await sql([
   upsert('race_results', withSeries(b.race_results.map((r) => ({ session: 'race', ...r }))), ['series', 'season', 'round', 'session', 'position', 'driver_code']),
   upsert('f1_sync', [{ series: 'f1', season, last_round_with_results: b.last_round_with_results, synced_at: new Date().toISOString() }], ['series', 'season']),
 ].join('\n'));
+await sql(`select public.refresh_circuit_winners(${season})`);
 if (season === new Date().getFullYear()) {
   const photos = await fetchHeadshots().catch(() => ({}));
   const vals = Object.entries(photos).map(([c, u]) => `('${c}','${u}')`).join(',');

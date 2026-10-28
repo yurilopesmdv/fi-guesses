@@ -2,11 +2,11 @@
 
 ## Preparar o ambiente
 
-O CI configura Node 20. A versão instalada de React Native exige `^20.19.4 || ^22.13.0 || ^24.3.0 || >=25.0.0`; a CLI Expo rejeita Node anterior a 20.19.4. **Node 20.19.5 foi usado com sucesso no levantamento.** Node 18.13.0 era o padrão do terminal e falhou na exportação por ausência de `util.parseEnv`. Não há `.nvmrc`, `engines` no package raiz ou configuração de container impondo a versão.
+O projeto usa Expo SDK 58 e React Native 0.88. A CLI exige Node `^22.13.0 || ^24.3.0 || >=26.0.0`. O CI usa Node 22 e o `.nvmrc` fixa **22.23.2** para desenvolvimento. Node 20 e anteriores não são suportados pelo SDK 58.
 
 ```bash
 # Se usar nvm e a versão já estiver instalada:
-nvm use 20.19.5
+nvm use
 node --version
 npm ci
 
@@ -40,7 +40,7 @@ Não há `supabase/config.toml`, seed, stack Docker, banco de testes ou configur
 | `npm run publish -- --message "descrição"` | Publica OTA no canal `preview` |
 | `npm run web:deploy` | Exporta e publica web; link APK preparado por `prepare-web.mjs` |
 
-Scripts adicionais: `npx tsx scripts/backfill-driver-ids.mjs` preenche identidades históricas; `node scripts/upload-apk.mjs arquivo.apk` substitui APK público. `sync-all.mjs` importa anos ausentes; o erro de sintaxe identificado foi corrigido. Backfill completo não foi executado. Scripts que importam `.ts` devem passar por `tsx` com Node 20.
+Scripts adicionais: `npx tsx scripts/backfill-driver-ids.mjs` preenche identidades históricas; `node scripts/upload-apk.mjs arquivo.apk` substitui APK público. `sync-all.mjs` importa anos ausentes; o erro de sintaxe identificado foi corrigido. Backfill completo não foi executado. Scripts que importam `.ts` devem passar por `tsx` com Node 22.
 
 O parser de `.env` dos scripts é manual e não equivale ao parser da CLI Expo; use valores simples, sem comentários na mesma linha. Exceto `setup-supabase`, os scripts administrativos consultados dependem diretamente do arquivo `.env`, sem fallback geral para `process.env`. Não os reutilize no CI apenas injetando variáveis sem adaptar esse comportamento.
 
@@ -79,4 +79,12 @@ Use Conventional Commits em português, um assunto por commit, conforme convenç
 
 Uma alteração JavaScript compatível com o runtime pode seguir por OTA. Novo módulo nativo, plugin ou configuração nativa exige novo binário. O runtime usa política `sdkVersion`, que não captura sozinho toda alteração nativa dentro do mesmo SDK; planeje a compatibilidade entre APK antigo e atualização publicada. O perfil chamado `production` existe, mas o fluxo operacional publicado no repositório usa `preview`.
 
-A suíte completa tem 24 testes: 16 SQL/RLS, 6 do handler HTTP de sincronização e 2 dos helpers de status/ordenação. `scripts/eas.mjs` carrega `.env` com parser nativo de Node 20 e preserva precedência das variáveis do processo. `scripts/prepare-web.mjs` prepara convite/link APK de forma idêntica no CI e manualmente. `scripts/deploy-function.mjs` empacota com esbuild e publica via Management API com verificação JWT habilitada.
+A suíte completa tem 26 testes: 16 SQL/RLS, 6 do handler HTTP de sincronização, 2 dos helpers de status/ordenação e 2 do provider do bolão (calendário lento/ano correto e recuperação de erro). `scripts/eas.mjs` carrega `.env` com parser nativo de Node 22 e preserva precedência das variáveis do processo. `scripts/prepare-web.mjs` prepara convite/link APK de forma idêntica no CI e manualmente. `scripts/deploy-function.mjs` empacota com esbuild e publica via Management API com verificação JWT habilitada.
+
+Os sete cenários de `tests/race-grid.test.mjs` cobrem ordenação pelo grid histórico, distinção de sprint/corrida, posições ausentes/boxes, identidade histórica por `driver_id`, vinculação OpenF1 ao `meeting_key` e à sessão Qualifying correta, parsing Jolpica, caches independentes e ordenação/posição no seletor de pilotos. A suíte tem 33 testes. Grid indisponível nunca recebe a ordem da qualy. Para conferir a UI: bolão aberto → grid → seletor/pódio com “Larga em P…” → expandir todos; qualy disponível sem grid → dois cartões identificados; corrida encerrada → largada e chegada distintas. Use dados simulados e intercepte escritas ao testar no navegador.
+
+## Preparação do catálogo de pistas
+
+A curadoria fica em `data/circuits/catalog-2026.json` e `media-sources.json`. `python3 scripts/prepare-circuit-media.py` requer requests/Pillow, baixa fontes públicas aprovadas com cache/backoff e prepara WebP principal/thumbnail em `/tmp/bolao-f1-circuit-media`. `node --import tsx scripts/sync-circuits.mjs 2026` pagina todo o histórico e prepara o bundle, sem escrever remotamente. `--metadata-only` recompõe apenas os metadados locais. `node scripts/upload-circuit-media.mjs` valida arquivos; `--apply` envia pelo backend. Após migration 0020 e upload, `node --import tsx scripts/sync-circuits.mjs 2026 --apply` publica o catálogo numa transação. Tokens administrativos permanecem em memória; nada disso é executado pelo app. Os novos scripts usam o parser nativo Node e respeitam variáveis do processo.
+
+A suíte passa a 40 testes: 21 SQL/RLS, 6 HTTP, 2 status, 2 provider, 7 grid e 2 helpers de circuitos. Os cinco novos cenários SQL cobrem edições/temporadas, identidade/empates, vitória compartilhada, rascunhos/autenticação, escrita e reconciliação do backend. PGlite não valida Storage real; conferir acesso no serviço antes de publicar.

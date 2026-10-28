@@ -41,7 +41,10 @@ before(async () => {
     // PGlite não inclui pg_cron/pg_net. A função de apuração dessa migration
     // é aplicada; apenas o agendamento externo fica fora deste teste.
     if (name.startsWith('0010_')) sql = sql.split('-- Agendamento:')[0];
+    // Reproduz os defaults do Supabase para os RPCs novos, além dos grants de tabela.
+    if (name.startsWith('0020_')) await db.exec('alter default privileges in schema public grant execute on functions to anon');
     await db.exec(sql);
+    if (name.startsWith('0020_')) await db.exec('alter default privileges in schema public revoke execute on functions from anon');
   }
   await db.exec('grant select, insert, update, delete on all tables in schema public to authenticated, anon');
   for (const [n, name] of [[1, 'Ana'], [2, 'Bruno'], [3, 'Carla'], [4, 'Davi'], [5, 'Observador']]) {
@@ -202,4 +205,78 @@ test('metadados de status só são acessíveis com sessão e respeitam filtro de
   assert.deepEqual((await db.query('select * from pool_lifecycles()')).rows, []);
   await asUser(null,'anon');
   await assert.rejects(db.query('select * from pool_lifecycles()'), /permission denied/);
+});
+
+async function seedCircuit() {
+  await db.exec('reset role');
+  await db.exec(`insert into circuits(id,name,locality,country,official_url,published) values
+    ('test-circuit','Pista de teste','Cidade','Brazil','https://example.test',true),
+    ('draft-circuit','Rascunho','Cidade','Brazil','https://example.test',false);
+    insert into circuit_seasons values ('test-circuit',2026,1,'GP Teste','2026-03-01');
+    insert into circuit_layouts(circuit_id,season,length_m,turns,direction,source_url) values('test-circuit',2026,4309,15,'anticlockwise','https://example.test');
+    insert into circuit_imports(circuit_id,results_complete,source_url) values('test-circuit',true,'https://example.test');
+    insert into circuit_race_winners values
+      ('test-circuit',1973,1,'GP Antigo','1973-01-01','alpha','Alfa','Equipe A'),
+      ('test-circuit',1990,1,'GP Retorno','1990-01-01','alpha','Alfa','Equipe A'),
+      ('test-circuit',1990,2,'Outro GP na pista','1990-02-01','beta','Beta','Equipe B'),
+      ('test-circuit',2026,1,'GP Teste','2026-03-01','beta','Beta','Equipe B');
+    insert into circuit_media(id,circuit_id,kind,storage_path,thumbnail_path,width,height,caption,author,license,license_url,source_url,published) values
+      ('photo','test-circuit','photo','photo.webp','thumb.webp',1920,1080,'Pista','Autor','CC BY 4.0','https://example.test','https://example.test',true),
+      ('draft','test-circuit','photo','draft.webp','draft.webp',1920,1080,'Rascunho','Autor','CC BY 4.0','https://example.test','https://example.test',false);`);
+}
+
+test('pistas contam temporadas distintas, duas edições no ano e mantêm empate de vencedores por identidade', async () => {
+  await seedCircuit(); await asUser(1);
+  const {rows:[{profile}]}=await db.query("select circuit_profile('test-circuit') as profile");
+  assert.equal(profile.stats.first_season,1973);
+  assert.equal(profile.stats.seasons,3);
+  assert.equal(profile.stats.races,4);
+  assert.equal(profile.stats.complete,true);
+  assert.equal(profile.stats.different_winners,2);
+  assert.equal(profile.stats.record_wins,2);
+  assert.deepEqual(profile.winners.map(w=>[w.driver_id,w.wins,w.rank]),[['alpha',2,1],['beta',2,1]]);
+  assert.equal(profile.last_race.season,2026);
+  assert.deepEqual(profile.media.map(m=>m.id),['photo']);
+  assert.equal((await db.query('select count(*) from circuit_catalog(2026)')).rows[0].count,1);
+  assert.equal((await db.query('select count(*) from circuit_catalog(2025)')).rows[0].count,0);
+});
+
+test('pistas não confundem vitória compartilhada com duas corridas', async()=>{
+  await seedCircuit();
+  await db.exec("insert into circuit_race_winners values('test-circuit',1973,1,'GP Antigo','1973-01-01','gamma','Gama','Equipe C')");
+  await asUser(1);
+  const {rows:[{profile}]}=await db.query("select circuit_profile('test-circuit') as profile");
+  assert.equal(profile.stats.races,4);
+  assert.equal(profile.stats.seasons,3);
+  assert.equal(profile.winners.find(w=>w.driver_id==='gamma').wins,1);
+});
+
+test('rascunhos e usuários sem sessão não acessam catálogo nem mídias, mesmo com grants amplos legados',async()=>{
+  await seedCircuit(); await asUser(1);
+  assert.equal((await db.query("select circuit_profile('draft-circuit') as profile")).rows[0].profile,null);
+  assert.equal((await db.query('select count(*) from circuits')).rows[0].count,1);
+  await asUser(null);
+  assert.equal((await db.query('select count(*) from circuit_catalog(2026)')).rows[0].count,0);
+  assert.equal((await db.query('select count(*) from circuit_media')).rows[0].count,0);
+  await asUser(null,'anon');
+  await assert.rejects(db.query('select * from circuit_catalog(2026)'),/permission denied/);
+});
+
+test('membros não alteram pistas nem executam a atualização administrativa',async()=>{
+  await seedCircuit(); await asUser(1);
+  assert.equal((await db.query("update circuits set name='Alterada' where id='test-circuit' returning id")).rows.length,0);
+  assert.equal((await db.query("delete from circuit_media returning id")).rows.length,0);
+  await assert.rejects(db.query('select refresh_circuit_winners(2026)'),/permission denied/);
+});
+
+test('atualização do servidor corrige vencedor atual, ignora sprint e preserva acervo antigo',async()=>{
+  await seedCircuit();
+  await db.query("update races set circuit_id='test-circuit' where id=$1",[raceA]);
+  await db.exec("insert into drivers(series,season,code,name,driver_id) values('f1',2026,'ALF','Alfa','alpha'),('f1',2026,'BET','Beta','beta'); insert into race_results(series,season,round,session,position,driver_code) values('f1',2026,1,'race',1,'ALF'),('f1',2026,1,'sprint',1,'BET'); select refresh_circuit_winners(2026);");
+  let rows=(await db.query("select driver_id from circuit_race_winners where circuit_id='test-circuit' and season=2026")).rows;
+  assert.deepEqual(rows.map(r=>r.driver_id),['alpha']);
+  await db.exec("update race_results set driver_code='BET' where series='f1' and season=2026 and round=1 and session='race'; select refresh_circuit_winners(2026)");
+  rows=(await db.query("select driver_id from circuit_race_winners where circuit_id='test-circuit' and season=2026")).rows;
+  assert.deepEqual(rows.map(r=>r.driver_id),['beta']);
+  assert.equal((await db.query("select count(*) from circuit_race_winners where circuit_id='test-circuit' and season=1973")).rows[0].count,1);
 });

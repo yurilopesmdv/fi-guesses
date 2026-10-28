@@ -34,7 +34,7 @@ A seta dos clientes para Jolpica representa importação sob demanda e consulta 
 
 ## Stack e organização
 
-Versões declaradas: Expo `~57.0.24`, React Native `0.86.3`, React `19.2.3`, TypeScript `~6.0.3`, Supabase JS `^2.109.0`. Resoluções exatas estão em `package-lock.json`. Expo Router parte de `expo-router/entry`; aliases `@/*` apontam para `src/*`. TypeScript é estrito, mas há uso de `any` e coerções de resultados do banco; os tipos não são gerados do schema.
+Versões declaradas: Expo `~58.0.19`, React Native `0.88.0`, React `19.3.0`, TypeScript `~6.0.3`, Supabase JS `^2.109.0` (lockfile em `2.118.0`). Resoluções exatas estão em `package-lock.json`. Expo Router parte de `expo-router/entry`; aliases `@/*` apontam para `src/*`. TypeScript é estrito, mas há uso de `any` e coerções de resultados do banco; os tipos não são gerados do schema.
 
 | Diretório/arquivo | Responsabilidade |
 |---|---|
@@ -61,7 +61,7 @@ Versões declaradas: Expo `~57.0.24`, React Native `0.86.3`, React `19.2.3`, Typ
 
 O layout raiz monta `AuthProvider` → `SeasonProvider` → Stack e aciona atualização OTA. A sessão persiste em AsyncStorage, com renovação automática e `detectSessionInUrl: false`. Os redirecionamentos de login estão na entrada, convite e perfis de piloto/equipe; não há guard central protegendo todas as rotas. A proteção dos dados depende das políticas do banco.
 
-Após login, `SeasonProvider` busca corridas/pilotos F1 do ano do aparelho. Se não há calendário, importa da API. `useYear` carrega calendário, pilotos e campeonatos para um ano/categoria; importa F1 se faltam corridas ou classificação. `PoolProvider` consulta corridas e pilotos F1 de `pool.season`, aguarda o calendário antes de encerrar o carregamento e filtra GP único. Falhas exibem erro com nova tentativa.
+Após login, `SeasonProvider` busca corridas/pilotos F1 do ano do aparelho. Se não há calendário, importa da API. `useYear` carrega calendário, pilotos e campeonatos para um ano/categoria; importa F1 se faltam corridas ou classificação. `PoolProvider` carrega corridas e pilotos F1 pelo `pool.season`, depois de obter o bolão, e filtra GP único. O carregamento só termina quando os dados chegam; falhas exibem erro com nova tentativa em vez de calendário vazio. O detalhe independe do carregamento global da temporada atual.
 
 O estado fica em React Context, state e refs. Não há Redux, cache persistente de dados esportivos, fila offline nem assinatura Supabase Realtime. Telas de bolão recarregam ao receber foco; Ao vivo usa polling HTTP. Alguns erros são exibidos por Alert; outros são silenciados para manter o estado anterior, e alguns carregamentos não têm tratamento de rejeição.
 
@@ -114,3 +114,15 @@ As siglas de pilotos antigos são geradas por temporada; `driver_id` mantém ide
 `useLive` considera a sessão ativa da meia hora anterior à meia hora posterior aos horários publicados. Carrega a sessão mais recente, mantém resultados/voltas em memória e consulta a cada 8 s com acesso autenticado ou 15 s sem ele. Fora da sessão usa o resultado final. Não há WebSocket. A fila de requisições pode fazer um ciclo durar mais que o intervalo, sem trava contra sobreposição.
 
 Credenciais opcionais `openf1_user` e `openf1_pass` são lidas de `app_settings` pelo cliente e trocadas por token no provedor. O token fica em memória; tentativas são espaçadas por dez minutos, e um 401 limpa o token. Essas credenciais **não são secretas para os usuários autenticados** na arquitetura atual. Ver [diagnóstico](DIAGNOSTICO.md).
+
+## Largada, classificação e chegada
+
+`StartingGrid` e `RaceClassification` são compartilhados por `RaceView` e detalhe de corrida. `getStartingGrid` retorna apenas largada: `race_results.grid` da sessão `race` ou `starting_grid` OpenF1. Sem essas posições, retorna ausência/erro, nunca a classificação da qualy. `getQualifyingOrder` e cache próprios consultam Jolpica; a UI pode exibir o resultado em outro cartão, sem alterar o grid nem o resultado final. `RaceClassification` recebe apenas `race_results`, com chegada e largada identificadas por piloto.
+
+OpenF1: consulta sessões de três dias antes a um dia depois da largada, localiza **Race** a até um dia do horário e a **Qualifying** do mesmo `meeting_key`, excluindo Sprint Qualifying. O endpoint `starting_grid` é indexado pelo identificador de Qualifying (confirmado contra a API real em Canadá 2024); não usa `session_result` nem a ordem de qualificação. Usa `drivers` da mesma sessão para nomes/números; pilotos ausentes no grid são mantidos com posição não informada. Timeout de 10 s e 404 tratado como ainda sem dados. Não usa settings/autenticação nem polling do monitor Ao vivo; permanece independente de `LIVE_ENABLED`.
+
+`StartingGrid` entrega apenas o grid real carregado para o pódio e os seletores do bolão. `driversByStartingGrid` ordena uma cópia dos pilotos; `startingPositionLabel` informa “Larga em P…”. Nenhum dado esportivo preenche o palpite automaticamente ou altera pontuação. No bolão aberto, o cartão tem cinco linhas e expansão para todos os pilotos; no histórico, mostra tudo. Cache público em memória de dois minutos; atualização manual ignora cache e consulta periódica a cada minuto só ocorre em foco/app ativo. Falhas de grid e qualy não bloqueiam apostas.
+
+## Catálogo de circuitos
+
+`(tabs)/circuits.tsx` e `circuit/[id].tsx` consomem RPCs via `repo.ts`; `circuits.ts` centraliza busca e formatação. `CircuitImage` usa cache do expo-image e variantes pequenas na lista; `CircuitViewer` usa Gesture Handler/Reanimated já presentes nos runtimes 57/58, sem módulo nativo novo. `CircuitLink` associa corridas pelo ID estável do circuito, validando disponibilidade no catálogo. F1 API e sua cópia Edge importam `circuit_id`; a sincronização administrativa atualiza vencedores após resultados F1. A galeria usa Storage público para leitura e escrita exclusiva do backend, com arquivos WebP de nomes imutáveis por hash.
