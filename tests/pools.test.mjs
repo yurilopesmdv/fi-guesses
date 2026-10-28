@@ -41,7 +41,10 @@ before(async () => {
     // PGlite não inclui pg_cron/pg_net. A função de apuração dessa migration
     // é aplicada; apenas o agendamento externo fica fora deste teste.
     if (name.startsWith('0010_')) sql = sql.split('-- Agendamento:')[0];
+    // Reproduz os defaults do Supabase para os RPCs novos, além dos grants de tabela.
+    if (name.startsWith('0020_')) await db.exec('alter default privileges in schema public grant execute on functions to anon');
     await db.exec(sql);
+    if (name.startsWith('0020_')) await db.exec('alter default privileges in schema public revoke execute on functions from anon');
   }
   await db.exec('grant select, insert, update, delete on all tables in schema public to authenticated, anon');
   for (const [n, name] of [[1, 'Ana'], [2, 'Bruno'], [3, 'Carla'], [4, 'Davi'], [5, 'Observador']]) {
