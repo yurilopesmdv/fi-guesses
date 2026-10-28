@@ -168,3 +168,9 @@ Para schema, usar migration corretiva compatível; não apagar linhas de `_migra
 ## Estado validado em 16/10/2026
 
 Migrations até `0019` registradas, função versão 8 ativa com JWT e cron com timeout de 120000 ms. Respostas recentes do cron: HTTP 200 sem timeout, corpo `ok: true`. Sincronização manual F1/F2/F3 concluída. Publicações e testes reais em [VALIDACAO_PRODUCAO.md](VALIDACAO_PRODUCAO.md). Nenhum APK novo foi gerado para estas alterações JavaScript.
+
+## Acervo de pistas
+
+Aplicar 0020 antes do cliente e da Edge Function atualizada. Publicar imagens antes do bundle do catálogo; somente depois disponibilizar a navegação. O upload usa chave de serviço obtida da Management API em memória; clientes autenticados leem os dados publicados, mas não podem alterar catálogo ou arquivos. O bucket `circuits` é público, exclusivo de WebP, limite 10 MB/arquivo; variantes são preparadas localmente para não depender de transformações pagas do Storage. Arquivos com hash permitem cache longo e atualização sem colisões. Importador pode ser reexecutado por upsert.
+
+O acervo inicial usa Commons e fotografias públicas identificadas na curadoria; não redistribui fotos oficiais F1 sem autorização. Cada mídia possui fonte, autoria e licença no visualizador. São quatro fotos por circuito, exceto Madring (duas fotos verificadas, sem preencher com imagens de outras pistas). O recorte de Madring publicado por Comunidad de Madrid no Flickr tem licença CC BY-NC-SA 4.0: manter atribuição, indicação de recorte e uso não comercial/mesma licença. Antes de eventual monetização, substituir esse arquivo por mídia compatível. O restante deve ser avaliado individualmente pela licença registrada; imagens de apoio de outras épocas/categorias têm legenda explícita.

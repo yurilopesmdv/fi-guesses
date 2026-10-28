@@ -11,6 +11,7 @@ export default function RootTabs() {
     <Tabs screenOptions={{
       headerStyle: { backgroundColor: colors.bg }, headerTintColor: colors.text, headerTitleStyle: { fontWeight: '800' },
       tabBarStyle: { backgroundColor: colors.card, borderTopColor: colors.border },
+      tabBarLabelStyle: { fontSize: 10 },
       tabBarActiveTintColor: colors.red, tabBarInactiveTintColor: colors.muted,
       sceneStyle: { backgroundColor: colors.bg },
     }}>
@@ -18,6 +19,7 @@ export default function RootTabs() {
       <Tabs.Screen name="ranking" options={{ title: 'Ranking', headerTitle: 'Ranking geral', tabBarIcon: icon('podium') }} />
       <Tabs.Screen name="races" options={{ title: 'Corridas', tabBarIcon: icon('calendar') }} />
       <Tabs.Screen name="f1" options={{ title: 'F1', headerTitle: 'Campeonato', tabBarIcon: icon('speedometer') }} />
+      <Tabs.Screen name="circuits" options={{ title: 'Pistas', tabBarIcon: icon('map') }} />
       <Tabs.Screen name="live" options={{ title: 'Ao vivo', tabBarIcon: icon('radio') }} />
     </Tabs>
   );

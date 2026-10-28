@@ -16,6 +16,7 @@ O projeto foi migrado para Expo SDK 58 em 24/10/2026; ambiente em Node 22 e link
 | [Validação de produção](VALIDACAO_PRODUCAO.md) | Integração real, publicação e limites dos testes |
 | [Instalação](../INSTALACAO.md) | Acesso para usuários em Android, iPhone e navegador |
 | [Guia de contribuidores/agentes](../CLAUDE.md) | Contexto resumido e cuidados para futuras tarefas |
+| [Plano de Pistas e Notícias](PLANO_PISTAS_NOTICIAS.md) | Pesquisa e implantação de Pistas; próximas entregas: históricas e Notícias |
 | [Plano original](../PLANO.md) | Histórico de intenção; não é especificação do estado atual |
 
 Para começar a trabalhar: leia Produto → Arquitetura → Desenvolvimento → Diagnóstico. Para alterações no backend, leia também Dados e Infraestrutura.

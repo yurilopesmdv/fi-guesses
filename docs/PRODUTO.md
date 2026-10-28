@@ -90,3 +90,7 @@ Notificações push, ranking como imagem, desempate configurável, setas de evol
 ## Bolões em andamento e finalizados
 
 Meus bolões separa Em andamento (primeiro, destaque verde) de Finalizados. Dentro de cada grupo, a criação mais recente aparece primeiro; o catálogo segue a mesma prioridade e exibe status. O status também aparece no cabeçalho e no cartão da corrida. Fechar palpites mantém Em andamento até terminar o calendário e apurar todas as perguntas; pendências ficam explícitas. Sem calendário, informa Aguardando calendário. Atualiza ao entrar, retomar o app e a cada 30 s na tela ativa.
+
+## Pistas
+
+A aba própria Pistas reúne o calendário F1 atual, com busca por pista/cidade/país, filtros por país, fotos, miniatura do traçado e destaque da próxima etapa. O perfil traz galeria ampliável com gestos de zoom, mapa numerado, extensão, curvas, sentido, primeiro GP, temporadas disputadas, total de GPs, maiores vencedores (com empates), último vencedor e acesso ao resultado quando já existente. A seção Sobre acrescenta cidade, país, última temporada, vencedores diferentes e recorde de vitórias; a ficha do GP informa voltas, distância e recorde de volta em corrida. Temporadas e edições são contadas separadamente; ausências no calendário não viram temporadas disputadas. Fotos de outras categorias/épocas são identificadas pelas legendas. Pistas históricas fora do calendário e Notícias são as próximas etapas, sem substituir o conteúdo entregue.

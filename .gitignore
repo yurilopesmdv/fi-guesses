@@ -46,3 +46,6 @@ example
 .env
 !.env.example
 .vscode/
+
+# Ferramentas locais de preparação de mídia
+__pycache__/

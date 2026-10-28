@@ -1,0 +1,104 @@
+{
+  "researched_at": "2026-10-28",
+  "status": "Viabilidade técnica; funcionamento de feed não equivale a permissão irrestrita de redistribuição.",
+  "checks": [
+    {
+      "url": "https://www.grandepremio.com.br/feed/",
+      "final_url": "https://grandepremio.com/br/",
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "bytes": 421813,
+      "feed": false,
+      "rss_links": []
+    },
+    {
+      "url": "https://www.grandepremio.com.br/f1/feed/",
+      "final_url": "https://grandepremio.com/br/",
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "bytes": 421813,
+      "feed": false,
+      "rss_links": []
+    },
+    {
+      "url": "https://grandepremio.com/br/feed/",
+      "final_url": "https://grandepremio.com/br/feed/",
+      "status": 200,
+      "content_type": "application/rss+xml; charset=UTF-8",
+      "bytes": 74775,
+      "feed": true,
+      "items": 10,
+      "preview": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><rss version=\"2.0\"\n\txmlns:content=\"http://purl.org/rss/1.0/modules/content/\"\n\txmlns:wfw=\"http://wellfo"
+    },
+    {
+      "url": "https://motorsport.uol.com.br/rss/f1/news/",
+      "final_url": "https://motorsport.uol.com.br/rss/f1/news/",
+      "status": 200,
+      "content_type": "application/xml; charset=utf-8",
+      "bytes": 69360,
+      "feed": true,
+      "items": 49,
+      "preview": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<rss xmlns:content=\"http://purl.org/rss/1.0/modules/content/\" xmlns:atom=\"http://www.w3.org/2005/Atom"
+    },
+    {
+      "url": "https://motorsport.uol.com.br/rss/",
+      "final_url": "https://motorsport.uol.com.br/rss/",
+      "status": 200,
+      "content_type": "text/html; charset=utf-8",
+      "bytes": 294323,
+      "feed": false,
+      "rss_links": [
+        "/rss/all/news/",
+        "/rss/all/videos/",
+        "/rss/f1/news/",
+        "/rss/f1/videos/",
+        "/rss/motogp/news/",
+        "/rss/motogp/videos/",
+        "/rss/stockcar-br/news/",
+        "/rss/stockcar-br/videos/",
+        "/rss/porsche/news/",
+        "/rss/porsche/videos/"
+      ]
+    },
+    {
+      "url": "https://www.formula1.com/en/latest/all.xml",
+      "final_url": "https://www.formula1.com/en/latest/all.xml",
+      "status": 200,
+      "content_type": "text/xml",
+      "bytes": 7839,
+      "feed": true,
+      "items": 10,
+      "preview": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n   <rss version=\"2.0\" xmlns:dc=\"https://purl.org/dc/elements/1.1/\">\n    <channel>\n      <title>Latest"
+    },
+    {
+      "url": "https://www.fia.com/rss.xml",
+      "final_url": "https://www.fia.com/rss.xml",
+      "status": 200,
+      "content_type": "application/rss+xml; charset=utf-8",
+      "bytes": 1132301,
+      "feed": true,
+      "items": 10,
+      "preview": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<rss version=\"2.0\" xml:base=\"https://www.fia.com\"  xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n<chan"
+    },
+    {
+      "url": "https://grandepremio.com/br/f1/feed/",
+      "status": 200,
+      "content_type": "application/rss+xml; charset=UTF-8",
+      "feed": true,
+      "items": 10,
+      "category_confirmed": "F1",
+      "has_description": true,
+      "has_content_encoded": true,
+      "note": "Descrição separada do corpo integral; não importar content:encoded como resumo."
+    }
+  ],
+  "recommended_candidates": [
+    "https://motorsport.uol.com.br/rss/f1/news/",
+    "https://grandepremio.com/br/f1/feed/"
+  ],
+  "exclude_from_translated_aggregator": {
+    "url": "https://www.formula1.com/en/latest/all.xml",
+    "terms": "https://www.formula1.com/en/information/legal-notices.7egvZU48hzrypubGBNcQKt",
+    "reason": "Termos do próprio feed restringem agregação e tradução."
+  }
+}
