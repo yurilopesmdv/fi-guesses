@@ -1,6 +1,6 @@
 # Plano de Pistas e Notícias
 
-Pesquisa em **28/10/2026**, America/Sao_Paulo. **Pistas atuais em implementação e validação; publicação registrada em VALIDACAO_PRODUCAO.md quando concluída.** O levantamento abaixo preserva as decisões e a pesquisa inicial. Históricas e Notícias continuam como etapas seguintes.
+Pesquisa em **28/10/2026**, America/Sao_Paulo. **Pistas atuais implementadas e publicadas; evidências em VALIDACAO_PRODUCAO.md.** O levantamento abaixo preserva as decisões e a pesquisa inicial. Históricas e Notícias continuam como etapas seguintes.
 
 ## Decisões confirmadas
 

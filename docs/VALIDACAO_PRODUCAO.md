@@ -82,3 +82,15 @@ TypeScript, 33 testes e exportação web aprovados. Navegador 390×844 no build 
 CI `40312086653` e Deploy `40312086787` concluídos com sucesso. SDK 58 preview: grupo `c7ed5d2d-76d0-41ad-aab1-804de0c7d937`, Android `01a177e2-f13e-79d3-9467-a70ba06587c2`, iOS `01a177e2-f13e-7e80-95c0-3a9088788902`. Web deployment `pehw8pb23o` promovido para https://bolao-f1.expo.app.
 
 Port SDK 57: commit `de702ac`, branch `compat/android-sdk57`, enviado antes da publicação. TypeScript, sete testes de grid e exportação Android aprovados. Grupo OTA `eccb5b06-e9e9-466d-9cb0-6be25771a1f2`, update Android `01a177e2-2c9a-7ad5-83bf-745ca90a627f`. Os três manifestos e bundles responderam HTTP 200 com headers do manifesto. Sem migration ou novo binário. Monitor Ao vivo permanece desligado; testes em aparelho físico continuam pendentes.
+
+## Pistas atuais — 28/10/2026
+
+Código `9458c5f` e correção de grants `b3359ed`, enviados à main antes da publicação. Migrations 0020/0021 aplicadas e registradas. Catálogo publicado com 23 pistas, 90 fotos, 23 mapas, 226 variantes WebP e 708 registros históricos de vencedores. As imagens foram conferidas em pranchas; versões antigas de mapas de Suzuka/Spa/Yas Marina foram substituídas e as marcações de DRS de 2022 são identificadas. Madring tem duas fotos verificadas; as demais pistas têm quatro.
+
+40 testes, TypeScript, exportação web e Android SDK 57 aprovados. Navegador com dados isolados em 390×844 e 360×800: busca por país, perfis, estatísticas, mapa/zoom/créditos e galeria. No Supabase real: catálogo/perfis, imagens públicas por HEAD (226/226), anônimo bloqueado (401), escrita de membro e RPC administrativa bloqueadas (403), alteração sem efeito sob RLS e upload de WebP válido bloqueado por row-level security. O teste reproduz agora os grants padrão de funções do Supabase. Contas temporárias removidas.
+
+Workflow Deploy `40785743754` concluído com sucesso: backend e Edge Function, OTA SDK 58 e hospedagem. Grupo SDK 58 `dbb5a5d9-68a6-4fe1-ba9a-77596dd0c2da`: Android `01a184cb-b4f4-7f48-9946-c55e7e7bbf1b`, iOS `01a184cb-b4f4-768f-95e1-7cb636aa658f`. Web deployment `r9bzljlt0p`, promovido para https://bolao-f1.expo.app.
+
+Compatibilidade APK: commit `90db1a7`, branch `compat/android-sdk57`, enviado antes do OTA Android. Grupo `fa62d413-f5b9-4d57-b405-f7ba5ab5b0df`, update `01a184ca-6c46-745d-b731-db306a634c12`. Os três manifestos e bundles retornaram HTTP 200 com os novos IDs. Nenhum módulo nativo novo/APK novo. Atualização pelo canal preview existente ao fechar e reabrir; Expo Go conserva o projeto já escaneado.
+
+No domínio publicado, com usuário temporário: lista real de 23 pistas, busca Brasil, perfil de Interlagos, avanço da galeria, mapa com zoom e créditos, sem erros JavaScript. Sem teste em aparelho físico; gestos nativos validados por compilação, não por hardware. Históricas e Notícias permanecem como próximas etapas.
