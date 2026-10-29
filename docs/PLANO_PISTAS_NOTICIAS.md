@@ -204,3 +204,5 @@ O usuário confirmou a correção dos mapas e solicitou novamente um book, agora
 ### Notícias implementadas
 
 A rota `/live` passa a Notícias, com feed em português, resumos fornecidos nos RSS, links, filtros e curiosidade diária do acervo. Fontes iniciais: Motorsport Brasil e Grande Prêmio, exclusivamente seus feeds F1. Não importa artigos integrais, imagens ou RSS da Formula1.com. Referências verificadas: página oficial de RSS Motorsport, https://motorsport.uol.com.br/rss/ ; feeds https://motorsport.uol.com.br/rss/f1/news/ e https://grandepremio.com/br/f1/feed/ ; agendamento/Vault em https://supabase.com/docs/guides/functions/schedule-functions . Coleta a cada dez minutos respeitando TTL por fonte; Motorsport declara 100 minutos. O app só lê o banco. Estado de publicação e evidências estão em VALIDACAO_PRODUCAO.md.
+
+A revisão visual e os motivos de exclusão estão em [Curadoria do book F1](pesquisas/book-f1-curadoria.md).
