@@ -142,7 +142,7 @@ export type QualifyingOrder = { source: 'qualifying'; rows: StartingGridRow[] };
 
 
 export type Circuit = { id: string; name: string; locality: string; country: string; description: string; official_url: string; updated_at: string };
-export type CircuitMedia = { id: string; circuit_id: string; kind: 'photo' | 'map'; storage_path: string; thumbnail_path: string; caption: string; author: string; license: string; license_url: string; source_url: string; width: number; height: number; period: string | null; layout_season: number | null };
+export type CircuitMedia = { id: string; circuit_id: string; kind: 'photo' | 'map'; section_title?: string | null; section_turns?: string | null; section_description?: string | null; storage_path: string; thumbnail_path: string; caption: string; author: string; license: string; license_url: string; source_url: string; width: number; height: number; period: string | null; layout_season: number | null };
 export type CircuitLayout = { circuit_id: string; season: number; length_m: number; turns: number; direction: 'clockwise' | 'anticlockwise' | 'figure_eight'; source_url: string; gp_laps: number | null; gp_distance_km: number | null; lap_record_time: string | null; lap_record_driver: string | null; lap_record_year: number | null; notes: string };
 export type CircuitStats = { first_season: number | null; last_season: number | null; seasons: number; races: number; different_winners: number; record_wins: number; complete: boolean; synced_at: string | null };
 export type CircuitCalendar = { circuit_id: string; season: number; round: number; race_name: string; date_utc: string };

@@ -179,7 +179,7 @@ export const listCircuits = async (season: number) =>
   throwIf(await supabase.rpc('circuit_catalog', { p_season: season })) as import('./types').CircuitSummary[];
 export const getCircuitProfile = async (id: string) =>
   throwIf(await supabase.rpc('circuit_profile', { p_id: id })) as import('./types').CircuitProfile | null;
-export const circuitMediaUrl = (path: string) => path.startsWith('https://media.formula1.com/')
+export const circuitMediaUrl = (path: string) => path.startsWith('https://')
   ? path : supabase.storage.from('circuits').getPublicUrl(path).data.publicUrl;
 /** Resolve também corridas importadas antes da introdução de circuit_id. */
 export const findRaceCircuit = async (race: Race) => {
