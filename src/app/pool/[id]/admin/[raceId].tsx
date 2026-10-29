@@ -8,6 +8,7 @@ import type { Answer, Question, QuestionKind, Standing } from '@/lib/types';
 import { usePool } from '@/lib/usePool';
 import { useUserId } from '@/lib/auth';
 import { Button, Card, H2, Input, Loading, Muted, P, Pill, Row, Screen } from '@/ui/primitives';
+import { sessionLabel,fmtDate,questionDeadline } from '@/lib/format';
 import { colors, space } from '@/ui/theme';
 
 const KINDS: QuestionKind[] = ['driver', 'position_of_driver', 'yesno', 'text'];
@@ -29,9 +30,11 @@ export default function Admin() {
   const [members, setMembers] = useState<Standing[]>([]);
   const [prompt, setPrompt] = useState('');
   const [kind, setKind] = useState<QuestionKind>('driver');
+  const [session,setSession]=useState<'race'|'qualifying'|'sprint'>('race');
   const [points, setPoints] = useState('2');
   const [near, setNear] = useState('0');
   const [busy, setBusy] = useState(false);
+  const [creating,setCreating]=useState(false);
 
   const load = useCallback(() => {
     if (!pool || !race || !isOwner) return;
@@ -50,12 +53,13 @@ export default function Admin() {
   const podiumQ = questions.find((q) => q.kind === 'podium')!;
   const extras = questions.filter((q) => q.kind !== 'podium');
 
-  const create = async (p = prompt, k = kind, pts = parseInt(points, 10) || 1, np = parseInt(near, 10) || 0) => {
-    if (!p.trim()) return;
+  const create = async (p = prompt, k = kind, pts = parseInt(points, 10) || 1, np = parseInt(near, 10) || 0, selectedSession:Question['session']=session) => {
+    if (!p.trim()||creating) return;
+    setCreating(true);
     try {
-      await addQuestion({ pool_id: pool.id, race_id: race.id, kind: k, prompt: p.trim(), points: pts, near_points: k === 'position_of_driver' ? np : 0, position: extras.length + 1 });
+      await addQuestion({ pool_id: pool.id, race_id: race.id, kind: k, session:selectedSession??'race', prompt: p.trim(), points: pts, near_points: k === 'position_of_driver' ? np : 0, position: extras.length + 1 });
       setPrompt(''); load();
-    } catch (e: any) { Alert.alert('Erro', e.message); }
+    } catch (e: any) { Alert.alert('Erro', e.message); } finally {setCreating(false);}
   };
 
   const importPodium = async () => {
@@ -100,7 +104,7 @@ export default function Admin() {
         {extras.length === 0 && <Muted style={{ marginBottom: space(1) }}>Só o pódio por enquanto.</Muted>}
         {extras.map((q) => (
           <Row key={q.id} style={{ justifyContent: 'space-between', marginBottom: 6 }}>
-            <View style={{ flex: 1 }}><P>{q.prompt}</P><Muted>{KIND_LABEL[q.kind]} · {q.points} pts</Muted></View>
+            <View style={{ flex: 1 }}><P>{q.prompt}</P><Muted>{sessionLabel(q.session)} · {KIND_LABEL[q.kind]} · {q.points} pts</Muted></View>
             <Pressable hitSlop={10} onPress={() => Alert.alert('Remover pergunta?', q.prompt, [{ text: 'Cancelar' }, { text: 'Remover', style: 'destructive', onPress: () => deleteQuestion(q.id).then(load) }])}>
               <Text style={{ color: colors.muted, fontSize: 18 }}>✕</Text>
             </Pressable>
@@ -109,15 +113,19 @@ export default function Admin() {
         <Muted style={{ marginTop: space(1) }}>Sugestões (1 toque):</Muted>
         <Row style={{ flexWrap: 'wrap', marginBottom: space(1) }}>
           {PRESETS.filter((p) => !extras.some((e) => e.prompt === p.prompt)).map((p) => (
-            <Pressable key={p.prompt} onPress={() => create(p.prompt, p.kind, p.points)}><Pill>+ {p.prompt}</Pill></Pressable>
+            <Pressable key={p.prompt} onPress={() => create(p.prompt, p.kind, p.points,0,'race')}><Pill>+ {p.prompt}</Pill></Pressable>
           ))}
         </Row>
+        <Muted>Opcional: perguntas por sessão. Nada é adicionado sem você escolher.</Muted>
+        <Row style={{flexWrap:'wrap',marginVertical:12}}>{race.quali_utc&&!extras.some(q=>q.session==='qualifying'&&q.prompt==='Quem vence a classificação?')&&<Pressable onPress={()=>create('Quem vence a classificação?','driver',2,0,'qualifying')}><Pill>+ Vencedor da classificação</Pill></Pressable>}{race.has_sprint&&race.sprint_utc&&!extras.some(q=>q.session==='sprint'&&q.prompt==='Quem vence a sprint?')&&<Pressable onPress={()=>create('Quem vence a sprint?','driver',2,0,'sprint')}><Pill>+ Vencedor da sprint</Pill></Pressable>}</Row>
         <Input placeholder='Pergunta (ex: "Em que lugar chega o Russell?")' value={prompt} onChangeText={setPrompt} />
         <Row style={{ flexWrap: 'wrap', marginBottom: space(1) }}>
           {KINDS.map((k) => (
             <Pressable key={k} onPress={() => setKind(k)}><Pill color={kind === k ? colors.red : colors.card2}>{KIND_LABEL[k]}</Pill></Pressable>
           ))}
         </Row>
+        <Muted>Sessão desta pergunta (corrida por padrão)</Muted><Row style={{flexWrap:'wrap',marginVertical:12}}>{(['race','qualifying','sprint'] as const).filter(v=>v==='race'||v==='qualifying'&&race.quali_utc||v==='sprint'&&race.has_sprint&&race.sprint_utc).map(v=><Pressable key={v} onPress={()=>setSession(v)}><Pill color={session===v?colors.red:colors.card2}>{sessionLabel(v)}</Pill></Pressable>)}</Row>
+        <Muted>{(()=>{const d=questionDeadline({session},race,pool.lock_minutes_before);return d?`Fecha em ${fmtDate(new Date(d).toISOString())}`:'Sem horário disponível';})()}</Muted>
         <Row>
           <View style={{ flex: 1 }}><Muted>Pontos</Muted><Input value={points} onChangeText={setPoints} keyboardType="number-pad" /></View>
           {kind === 'position_of_driver' && <View style={{ flex: 1 }}><Muted>Pts se errar por 1</Muted><Input value={near} onChangeText={setNear} keyboardType="number-pad" /></View>}

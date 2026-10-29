@@ -10,12 +10,12 @@ export function RaceClassification({ race, drivers, results }: { race: Race; dri
   return <Card>
     <H2>🏁 {race.series === 'f1' ? 'Resultado final da corrida' : 'Feature Race · resultado'}</H2>
     {!rows.length && <Muted>{results === null ? 'Carregando resultado…' : 'Resultado final ainda não disponível. As posições de largada aparecem na seção Grid de largada.'}</Muted>}
-    {rows.length > 0 && <Row style={{ marginTop: 10 }}><Muted style={{ width: 54 }}>Chegada</Muted><Muted>Piloto · largada</Muted></Row>}
+    {rows.length > 0 && <Row style={{ marginTop: 10 }}><Muted style={{ width: 66 }}>Chegada</Muted><Muted>Piloto · largada</Muted></Row>}
     {rows.map((r) => {
       const d = drivers.find((driver) => driver.code === r.driver_code);
       return <Pressable key={`${r.session}-${r.driver_code}`} onPress={() => openDriver(d)}>
         <Row style={{ marginTop: 10 }}>
-          <Text style={{ color: colors.text, fontWeight: '800', width: 54 }}>P{r.position}</Text>
+          <Text style={{ color: colors.text, fontWeight: '800', width: 66 }}>P{r.position}</Text>
           <View style={{ width: 4, alignSelf: 'stretch', borderRadius: 2, backgroundColor: d?.team_color ?? colors.border }} />
           <View style={{ flex: 1 }}>
             <P style={{ fontWeight: '600' }}>{d?.name ?? r.driver_code}{r.fastest_lap ? ' ⏱️' : ''}</P>

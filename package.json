@@ -47,7 +47,7 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test": "node tests/pools.test.mjs && node --import tsx tests/sync-function.test.mjs && node --import tsx tests/pool-status.test.mjs && node --import tsx tests/race-grid.test.mjs && node --import tsx tests/circuits.test.mjs && node --import tsx tests/news-feed.test.mjs",
+    "test": "node tests/pools.test.mjs && node --import tsx tests/sync-function.test.mjs && node --import tsx tests/pool-status.test.mjs && node tests/pool-loading.test.mjs && node --import tsx tests/race-grid.test.mjs && node --import tsx tests/circuits.test.mjs && node --import tsx tests/news-feed.test.mjs && node --import tsx tests/prediction-queue.test.mjs && node --import tsx tests/pool-insights.test.mjs",
     "db:migrate": "node scripts/setup-supabase.mjs",
     "db:sql": "node scripts/sql.mjs",
     "sync:f1": "tsx scripts/sync-f1.mjs",

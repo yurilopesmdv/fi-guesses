@@ -57,6 +57,7 @@ export type Question = {
   points: number;
   near_points: number;
   position: number;
+  session?: 'race' | 'qualifying' | 'sprint';
 };
 
 export type PodiumAnswer = { p1?: string; p2?: string; p3?: string };

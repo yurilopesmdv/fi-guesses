@@ -1,5 +1,9 @@
+import { RacePreparation } from '@/components/insights/RacePreparation';
+import { answerLabel } from './QuestionField';
+import { RaceTools } from '@/components/insights/RaceTools';
+import { usePredictionOutbox } from '@/lib/predictionOutbox';
 import { CircuitLink } from '@/components/circuits/CircuitLink';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { PicksBoard } from './PicksBoard';
@@ -11,11 +15,11 @@ import { PoolStatus } from './PoolStatus';
 import { poolStatusDescription } from '@/lib/poolStatus';
 import { QuestionField } from './QuestionField';
 import { useUserId } from '@/lib/auth';
-import { flag, fmtCountdown, fmtDate, lockTime } from '@/lib/format';
-import { listPredictions, listQuestions, listRaceResults, listResults, listStandings, listSupportRaces, raceParticipation, savePrediction } from '@/lib/repo';
+import { flag, fmtCountdown, fmtDate, lockTime, questionDeadline, sessionLabel } from '@/lib/format';
+import { listPredictions, listQuestions, listRaceResults, listResults, listStandings, listSupportRaces, raceParticipation } from '@/lib/repo';
 import type { Answer, Prediction, Question, Race, RaceResult, Result, Standing, StartingGrid as Grid } from '@/lib/types';
 import { usePool } from '@/lib/usePool';
-import { Card, H2, Loading, Muted, P, Pill, Row, Screen } from '@/ui/primitives';
+import { Button, Card, H2, Loading, Muted, P, Pill, Row, Screen } from '@/ui/primitives';
 import { colors, space } from '@/ui/theme';
 
 export function RaceView({ race }: { race: Race }) {
@@ -30,7 +34,9 @@ export function RaceView({ race }: { race: Race }) {
   const [startingGrid, setStartingGrid] = useState<Grid | null>(null);
   const [support, setSupport] = useState<Race[]>([]);
   const [now, setNow] = useState(Date.now());
-  const [saved, setSaved] = useState<'idle' | 'saving' | 'ok'>('idle');
+  const outbox=usePredictionOutbox();
+  const questionIds=questions?.map(q=>q.id)??[];
+  const drafts=outbox.rows.filter(r=>questionIds.includes(r.questionId));
 
   const lockAt = lockTime(race.date_utc, pool?.lock_minutes_before ?? 0);
   const open = now < lockAt;
@@ -51,26 +57,15 @@ export function RaceView({ race }: { race: Race }) {
   useFocusEffect(load);
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 30000); return () => clearInterval(t); }, []);
 
-  // auto-save com debounce curto por pergunta
-  const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const onAnswer = (q: Question, answer: Answer) => {
-    setPredictions((prev) => {
-      const i = prev.findIndex((p) => p.question_id === q.id && p.user_id === uid);
-      const next = [...prev];
-      if (i >= 0) next[i] = { ...next[i], answer }; else next.push({ id: '', question_id: q.id, user_id: uid, answer });
-      return next;
-    });
-    setSaved('saving');
-    clearTimeout(timers.current[q.id]);
-    timers.current[q.id] = setTimeout(async () => {
-      try { await savePrediction(q.id, answer); setSaved('ok'); setParticipation((p) => ({ ...p, [uid]: true })); }
-      catch (e: any) { setSaved('idle'); Alert.alert('Não salvou', e.message); }
-    }, 600);
+    void outbox.enqueue(q.id,answer,new Date(questionDeadline(q,race,pool?.lock_minutes_before??0)??lockAt).toISOString()).catch(e=>Alert.alert('Rascunho pendente',e.message));
   };
 
   if (!pool || questions === null) return <Screen scroll={false}><Loading /></Screen>;
 
-  const mine = (qid: string) => predictions.find((p) => p.question_id === qid && p.user_id === uid)?.answer as any;
+  const confirmedPredictions=[...predictions.filter(p=>!(p.user_id===uid&&outbox.acceptedAnswers[p.question_id])),...Object.entries(outbox.acceptedAnswers).filter(([id])=>questionIds.includes(id)).map(([id,answer])=>({id:'accepted-'+id,question_id:id,user_id:uid,answer}))];
+
+  const mine = (qid: string):any => outbox.get(qid)?.answer ?? outbox.acceptedAnswers[qid] ?? predictions.find((p) => p.question_id === qid && p.user_id === uid)?.answer as any;
   const podiumQ = questions.find((q) => q.kind === 'podium');
   const extras = questions.filter((q) => q.kind !== 'podium');
   const hasResults = results.length > 0;
@@ -91,11 +86,12 @@ export function RaceView({ race }: { race: Race }) {
           {open ? <Pill color={colors.green}>fecha em {fmtCountdown(lockAt - now)}</Pill>
             : hasResults ? <Pill color={colors.red}>apurada</Pill> : <Pill>fechada</Pill>}
         </Row>
-        {open && <Muted style={{ marginTop: 6 }}>{saved === 'saving' ? 'Salvando…' : saved === 'ok' ? 'Palpite salvo ✓ · ' : ''}Você pode alterar seus palpites até o horário de fechamento.</Muted>}
+        {open && <Muted style={{ marginTop: 6 }}>{drafts.length?'Rascunho pendente de confirmação · ':outbox.confirmed.some(id=>questionIds.includes(id))?'Palpite confirmado pelo servidor ✓ · ':''}Você pode alterar seus palpites até o horário de fechamento.</Muted>}
         {isOwner && <P style={{ fontWeight: '700', marginTop: space(1) }}>{open ? '✍️ Modo participante · seu palpite' : '👀 Modo participante · consulta dos palpites'}</P>}
         {isOwner && <Muted>Esta tela é para os seus palpites. Para informar os resultados finais, abra a apuração abaixo.</Muted>}
       </Card>
 
+      {(drafts.length>0||outbox.error)&&<Card><H2>Envio dos palpites</H2>{outbox.error&&<Muted>{outbox.error}</Muted>}{drafts.map(d=><Muted key={d.questionId}>{questions.find(q=>q.id===d.questionId)?.prompt}: {d.error??'Guardado neste aparelho. Aguardando confirmação.'}</Muted>)}{drafts.some(d=>d.status!=='expired')&&<Button title="Tentar enviar agora" variant="ghost" onPress={()=>void outbox.retry(questionIds).catch(e=>Alert.alert('Envio pendente',e.message))}/ >}{drafts.some(d=>d.status==='expired')&&<Button title="Descartar rascunhos vencidos" variant="ghost" onPress={()=>void outbox.discardExpired(questionIds).catch(()=>Alert.alert('Armazenamento indisponível','Não foi possível atualizar os rascunhos neste aparelho.'))}/>}</Card>}
       {isOwner && (
         <Pressable onPress={() => router.push(`/pool/${pool.id}/admin/${race.id}`)}>
           <Card style={{ borderColor: colors.red, backgroundColor: '#1f1216' }}>
@@ -110,6 +106,7 @@ export function RaceView({ race }: { race: Race }) {
         </Pressable>
       )}
 
+      <RacePreparation race={race} questions={questions} minutes={pool.lock_minutes_before} grid={startingGrid}/>
       <StartingGrid race={race} drivers={drivers} results={official} compact={open} onGridChange={setStartingGrid} />
 
       {open ? (
@@ -118,31 +115,33 @@ export function RaceView({ race }: { race: Race }) {
           {podiumQ && (
             <Card>
               <H2>🏆 Seu palpite de pódio <Muted>3 pts exato · 1 pt piloto certo</Muted></H2>
-              <Podium value={mine(podiumQ.id) ?? {}} startingGrid={startingGrid} drivers={drivers} onChange={(v) => onAnswer(podiumQ, v)} />
+              <Podium value={mine(podiumQ.id) ?? {}} startingGrid={startingGrid} drivers={drivers} race={race} onChange={(v) => onAnswer(podiumQ, v)} />
             </Card>
           )}
           {extras.length > 0 && <H2 style={{ marginTop: space(0.5) }}>❓ Perguntas extras</H2>}
           {extras.map((q) => (
             <Card key={q.id}>
               <H2>{q.prompt} <Muted>{q.points} pts{q.near_points ? ` · ±1: ${q.near_points}` : ''}</Muted></H2>
-              <QuestionField q={q} value={mine(q.id)} startingGrid={startingGrid} drivers={drivers} onChange={(a) => onAnswer(q, a)} />
+              <Muted>{sessionLabel(q.session)}{q.session&&q.session!=='race'?' · fechamento próprio desta sessão':''}</Muted>
+              {(questionDeadline(q,race,pool.lock_minutes_before)??0)>now?<QuestionField q={q} value={mine(q.id)} race={race} startingGrid={startingGrid} drivers={drivers} onChange={(a) => onAnswer(q, a)} />:<P>Palpites encerrados · Sua resposta confirmada: {answerLabel(q,outbox.acceptedAnswers[q.id]??predictions.find(p=>p.question_id===q.id&&p.user_id===uid)?.answer,drivers)}</P>}
             </Card>
           ))}
-          <PicksBoard questions={questions} predictions={predictions} results={results} members={members} drivers={drivers} uid={uid} />
+          <PicksBoard questions={questions} predictions={confirmedPredictions} results={results} members={members} drivers={drivers} uid={uid} />
           <Card>
             <H2>Quem já palpitou</H2>
             <Row style={{ flexWrap: 'wrap' }}>
               {members.map((m) => (
                 <Pill key={m.user_id} color={participation[m.user_id] ? colors.card2 : '#3a2a10'}>
-                  {m.avatar} {m.name} {participation[m.user_id] ? '✓' : '⏳'}
+                  {m.avatar} {m.name} {(participation[m.user_id] || (m.user_id===uid&&podiumQ&&outbox.confirmed.includes(podiumQ.id))) ? '✓' : '⏳'}
                 </Pill>
               ))}
             </Row>
           </Card>
         </>
       ) : (
-        <PicksBoard questions={questions} predictions={predictions} results={results} members={members} drivers={drivers} uid={uid} />
+        <PicksBoard questions={questions} predictions={confirmedPredictions} results={results} members={members} drivers={drivers} uid={uid} />
       )}
+      <RaceTools poolId={pool.id} race={race} questions={questions} predictions={confirmedPredictions} results={results} members={members} drivers={drivers} uid={uid} grid={startingGrid} official={official}/>
       <RaceClassification race={race} drivers={drivers} results={official} />
 
     </Screen>

@@ -1,3 +1,4 @@
+import { scoreQuestion } from '@/lib/poolInsights';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { answerLabel } from './QuestionField';
@@ -11,17 +12,7 @@ type Props = { questions: Question[]; predictions: Prediction[]; results: Result
 const SLOT = [{ k: 'p1', l: '1º', c: colors.gold }, { k: 'p2', l: '2º', c: colors.silver }, { k: 'p3', l: '3º', c: colors.bronze }] as const;
 
 /** Pontos de uma resposta (mesma regra do SQL) — só quando há resultado. */
-function points(q: Question, a: any, r: any, uid: string): number | null {
-  if (!r || !a) return null;
-  if (q.kind === 'podium') {
-    const pod = [r.p1, r.p2, r.p3];
-    return (['p1', 'p2', 'p3'] as const).reduce((t, k) => t + (a[k] === r[k] ? 3 : a[k] && pod.includes(a[k]) ? 1 : 0), 0);
-  }
-  if (q.kind === 'driver') return a.driver === r.driver ? q.points : 0;
-  if (q.kind === 'yesno') return a.v === r.v ? q.points : 0;
-  if (q.kind === 'position_of_driver') return a.pos === r.pos ? q.points : Math.abs(a.pos - r.pos) === 1 ? q.near_points : 0;
-  return (r.correct_users ?? []).includes(uid) ? q.points : 0;
-}
+function points(q:Question,a:any,r:any,uid:string):number|null{return !r||!a?null:scoreQuestion(q,a,r,uid);}
 
 /** Quadro de palpites de todo mundo: Cards (comparação com o seu) ou Tabela (todos de uma vez). */
 export function PicksBoard({ questions, predictions, results, members, drivers, uid }: Props) {

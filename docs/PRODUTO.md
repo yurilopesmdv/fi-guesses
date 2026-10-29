@@ -10,7 +10,7 @@ O Bolão F1 é um aplicativo familiar de palpites de Fórmula 1, acompanhado de 
 | Participante autenticado | Edita nome/avatar, cria ou entra em bolão, palpita, compara respostas e consulta ranking e dados esportivos |
 | Organizador | É o criador do bolão; configura antecedência do fechamento e aposta simbólica, adiciona/remove perguntas e registra/corrige resultados |
 
-O cadastro usa nome, e-mail e senha de pelo menos seis caracteres na interface. O backend cria `profiles` por trigger. Não há fluxo de recuperação de senha na interface atual. O perfil permite escolher entre emojis predefinidos.
+O cadastro usa nome, e-mail e senha de pelo menos seis caracteres na interface. O backend cria `profiles` por trigger. A entrada permite solicitar recuperação por e-mail; o link abre a página de troca de senha no navegador, inclusive quando solicitado no app. O perfil permite escolher entre emojis predefinidos.
 
 O usuário pode criar um bolão da temporada atual inteira ou de um único GP futuro; a interface começa com a opção de um GP. O criador entra automaticamente como membro. Bolões disponíveis aparecem para os demais usuários autenticados, com entrada em um toque. Também há código de convite e compartilhamento pelo menu nativo do aparelho, com texto voltado ao WhatsApp.
 
@@ -44,7 +44,7 @@ Rotas do Expo Router: `(tabs)` contém Bolões, Ranking, Corridas, F1/Campeonato
 
 ## Regras de palpite e apuração
 
-Cada GP de F1 de um bolão recebe uma pergunta de pódio automaticamente. O participante escolhe até três pilotos; o seletor evita repetir um piloto em duas posições. Cada alteração dispara salvamento após **600 ms**, por pergunta, com indicação de salvamento ou alerta de erro. Não existe fila persistente de envio offline.
+Cada GP de F1 de um bolão recebe uma pergunta de pódio automaticamente. O participante escolhe até três pilotos; o seletor evita repetir um piloto em duas posições. Cada alteração dispara salvamento após **600 ms**, por pergunta, com indicação de salvamento ou alerta de erro. Rascunhos ficam em uma fila persistente por conta no aparelho. A interface só confirma depois da resposta do servidor; falhas são reenviadas com conexão, sem ultrapassar o prazo. Falha de armazenamento é informada e não impede envio online.
 
 Os palpites ficam abertos até `date_utc - lock_minutes_before`; zero significa a largada. O app atualiza a indicação de tempo a cada 30 segundos, mas a decisão de aceitar a escrita pertence ao relógio e às políticas do banco. **Todos os membros veem os palpites dos demais mesmo antes do fechamento**, conforme a migration `0007` e o componente `PicksBoard`.
 
@@ -99,3 +99,18 @@ Foram mantidos extensão, curvas, sentido, estreia, temporadas disputadas, total
 
 
 O catálogo também permite alternar entre **Atuais** e **Históricas**, preservando busca e filtros por país. Históricas são as 55 sedes com corridas do Mundial fora do calendário de 2026; isso não significa que estejam desativadas. Seus perfis apresentam cidade/país, configuração de referência datada, extensão, curvas, sentido, temporadas, corridas, último vencedor e ranking histórico. Não exibem fotos ou mapas sem uma fonte oficial aprovada. O catálogo não reutiliza as antigas imagens rejeitadas. Indianapolis distingue o circuito misto das 500 Milhas que também integraram o Mundial; Nürburgring distingue configuração de referência e totais de todas as configurações.
+
+
+## Ferramentas opcionais do bolão
+
+A corrida mantém seu formulário e acrescenta **Prepare seu palpite** (próxima sessão, prazos por pergunta, pista e notícias vinculadas) e **Explore o seu bolão**, com ferramentas recolhíveis. O seletor de pilotos oferece “Analisar antes de escolher”: até dois candidatos, largada e amostras importadas anteriores ao GP. Ausência de histórico não é apresentada como desempenho zero.
+
+O simulador altera somente o pódio em memória e mostra o efeito no ranking atual, preservando as parcelas das demais perguntas. Usa apenas palpites confirmados e nunca escreve resultados. O termômetro mostra distribuição por posição entre participantes atuais que responderam; popularidade não é probabilidade. Raio-X explica pontos e mostra situações oficiais disponíveis, sem inferir causas.
+
+O perfil de participante, acessível pelo ranking ou pela corrida, apresenta aproveitamento nas perguntas apuradas, evolução por GP, pistas, acertos por piloto e referência do grid na mesma amostra de corridas encerradas. A retrospectiva reconstrói o acumulado até a etapa escolhida, excluindo resultados posteriores; usa membros e apurações atuais, não afirma ser um snapshot imutável antigo. Compartilha texto no app e exporta cartão PNG na web. Nenhum módulo nativo novo foi incluído.
+
+Qualy e sprint são **perguntas extras opcionais**. O organizador pode aceitar sugestões ou criar uma pergunta e escolher a sessão. Todas as perguntas antigas continuam como Corrida, com os mesmos prazos e pontuação. Não há adesão obrigatória nem criação automática das novas extras. Pódio automático continua sendo exclusivamente da corrida. Horário de sessão precisa existir; a apuração das extras continua manual.
+
+Histórico de apuração registra primeira gravação e correções a partir da implantação, com autor real/instante e valores anteriores/novos. Membros consultam apenas seu bolão e não podem editar o histórico. A remoção de pergunta mantém o registro com o enunciado; excluir definitivamente o bolão também remove seu histórico. Empates compartilham posição no ranking do bolão e no texto de compartilhamento, sem novo desempate ou alteração de pontos.
+
+Pistas oferece seleção de trechos aprovados junto do mapa; Interlagos tem marcadores sobre o mapa oficial de 2026, conferidos visualmente. Outros traçados só recebem marcadores depois de conferência específica. O book permanece com 15 fotos de seis circuitos; não foram adicionadas imagens inadequadas para preencher a cobertura. Alertas, diário do palpite e desafio histórico ficaram fora do escopo, conforme solicitado.

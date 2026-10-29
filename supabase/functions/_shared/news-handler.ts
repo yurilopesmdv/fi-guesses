@@ -1,3 +1,4 @@
+import {newsCircuitId} from './news-circuits.ts';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { NEWS_SOURCES, parseNewsFeed, readFeedResponse, type NewsSource } from './news-feed.ts';
 const reply=(status:number,data:unknown)=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json'}});
@@ -24,7 +25,7 @@ export function createNewsHandler(db: Pick<SupabaseClient, 'rpc' | 'from'>, cron
     if(response.status===304){const r=await db.from('content_sources').update({checked_at:stamp,succeeded_at:stamp,last_error:null,next_fetch_at:new Date(Date.now()+source.ttl_minutes*60000).toISOString()}).eq('id',id);check(r.error);results.push({source:id,status:'unchanged'});continue;}
     if(!response.ok)throw Error(`Fonte respondeu HTTP ${response.status}.`);
     const parsed=parseNewsFeed(await readFeedResponse(response),id);
-    const posts=await Promise.all(parsed.posts.map(async post=>{const hash=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(post.url));return {...post,id:'rss-'+[...new Uint8Array(hash)].map(v=>v.toString(16).padStart(2,'0')).join(''),source_id:id,source_name:source.name,kind:'news',language:'pt-BR',published:true,updated_at:stamp};}));
+    const posts=await Promise.all(parsed.posts.map(async post=>{const hash=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(post.url));return {...post,id:'rss-'+[...new Uint8Array(hash)].map(v=>v.toString(16).padStart(2,'0')).join(''),circuit_id:newsCircuitId(post.title),source_id:id,source_name:source.name,kind:'news',language:'pt-BR',published:true,updated_at:stamp};}));
     if(posts.length){const r=await db.from('content_posts').upsert(posts,{onConflict:'url'});check(r.error);}
     const r=await db.from('content_sources').update({checked_at:stamp,succeeded_at:stamp,last_error:null,item_count:posts.length,etag:response.headers.get('etag'),last_modified:response.headers.get('last-modified'),ttl_minutes:parsed.ttl,next_fetch_at:new Date(Date.now()+parsed.ttl*60000).toISOString()}).eq('id',id);check(r.error);
     results.push({source:id,status:'ok',items:posts.length});

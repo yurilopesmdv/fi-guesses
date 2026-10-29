@@ -103,9 +103,11 @@ export const deleteQuestion = async (id: string) =>
 
 export const listPredictions = async (questionIds: string[]) =>
   questionIds.length ? (throwIf(await supabase.from('predictions').select('*').in('question_id', questionIds)) as Prediction[]) : [];
-export const savePrediction = async (questionId: string, answer: Answer) => {
-  const uid = (await supabase.auth.getUser()).data.user!.id;
-  throwIf(await supabase.from('predictions').upsert({ question_id: questionId, user_id: uid, answer }, { onConflict: 'question_id,user_id' }));
+export const savePrediction = async (questionId: string, answer: Answer, expectedUserId?: string) => {
+  const uid = (await supabase.auth.getUser()).data.user?.id;
+  if (!uid || (expectedUserId && uid !== expectedUserId)) throw Object.assign(new Error('Sessão alterada. Entre novamente para enviar.'), {status:401});
+  const response = await supabase.from('predictions').upsert({ question_id: questionId, user_id: uid, answer }, { onConflict: 'question_id,user_id' });
+  if (response.error) throw response.error;
 };
 
 export const listResults = async (questionIds: string[]) =>
@@ -200,3 +202,9 @@ export async function listContentPosts(kind: 'news' | 'curiosity' | null, offset
   return throwIf(await query.order('published_at', {ascending:false}).order('id', {ascending:false}).range(offset, offset + 19)) as import('./types').ContentPost[];
 }
 export const getContentSources = async () => throwIf(await supabase.from('content_sources').select('id,name,checked_at,succeeded_at,last_error').eq('enabled', true).order('name')) as import('./types').ContentSourceStatus[];
+
+export const getPoolAnalysis=async(poolId:string)=>throwIf(await supabase.rpc('pool_analysis',{p_pool:poolId})) as import('./poolInsights').PoolAnalysis|null;
+export const listResultHistory=async(poolId:string,raceId:string)=>throwIf(await supabase.from('result_history').select('id,question_id,question_prompt,previous_answer,answer,actor_id,changed_at').eq('pool_id',poolId).eq('race_id',raceId).order('changed_at',{ascending:false}).limit(100)) as {id:string;question_id:string|null;question_prompt:string;previous_answer:Answer|null;answer:Answer;actor_id:string|null;changed_at:string}[];
+export type DriverContextRow={name:string;date_utc:string;season:number;round:number;circuit_id:string|null;position:number;grid:number|null;status:string};
+export const getDriverRaceContext=async(driverId:string,race:Race)=>throwIf(await supabase.rpc('driver_race_context',{p_driver:driverId,p_season:race.season,p_before:race.date_utc,p_circuit:race.circuit_id??null})) as {recent:DriverContextRow[];circuit:DriverContextRow[]}|null;
+export const listCircuitNews=async(circuitId:string)=>throwIf(await supabase.from('content_posts').select('id,title,url,published_at').eq('kind','news').eq('published',true).eq('circuit_id',circuitId).order('published_at',{ascending:false}).limit(3)) as {id:string;title:string;url:string;published_at:string}[];

@@ -36,3 +36,6 @@ export const FLAGS: Record<string, string> = {
   Brazil: '🇧🇷', Malaysia: '🇲🇾', Qatar: '🇶🇦', UAE: '🇦🇪',
 };
 export const flag = (country: string | null) => (country && FLAGS[country]) || '🏁';
+
+export function questionDeadline(q:{session?:string},r:{quali_utc:string|null;sprint_utc:string|null;date_utc:string},minutes:number){const time=q.session==='qualifying'?r.quali_utc:q.session==='sprint'?r.sprint_utc:r.date_utc;return time?Date.parse(time)-minutes*60000:null;}
+export const sessionLabel=(session?:string)=>session==='qualifying'?'Classificação':session==='sprint'?'Sprint':'Corrida';
