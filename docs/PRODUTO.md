@@ -28,7 +28,7 @@ flowchart TD
   Home --> Geral[Ranking geral]
   Home --> Calendario[Corridas]
   Home --> Campeonato[Campeonato]
-  Home --> Live[Ao vivo]
+  Home --> Live[Notícias]
   Pool --> Palpite[Próxima corrida e palpites]
   Pool --> Ranking[Classificação]
   Pool --> CorridasBolao[Corridas do bolão]
@@ -40,7 +40,7 @@ flowchart TD
   Piloto <--> Equipe
 ```
 
-Rotas do Expo Router: `(tabs)` contém Bolões, Ranking, Corridas, F1/Campeonato e Ao vivo; `pool/[id]/(tabs)` contém próxima corrida, classificação, corridas e participantes. Detalhes ficam em `race/[id]`, `driver/[id]`, `team/[name]`, `pool/[id]/race/[raceId]` e `pool/[id]/admin/[raceId]`.
+Rotas do Expo Router: `(tabs)` contém Bolões, Ranking, Corridas, F1/Campeonato, Pistas e Notícias; `pool/[id]/(tabs)` contém próxima corrida, classificação, corridas e participantes. Detalhes ficam em `race/[id]`, `driver/[id]`, `team/[name]`, `pool/[id]/race/[raceId]` e `pool/[id]/admin/[raceId]`.
 
 ## Regras de palpite e apuração
 
@@ -71,9 +71,9 @@ Para o proprietário, a tela da corrida identifica Modo participante / seu palpi
 - Detalhe de GP e bolão: **Grid de largada** e **Resultado final da corrida** são seções independentes. O grid usa posições dos resultados históricos ou `starting_grid` OpenF1 (2023+). Enquanto indisponível, exibe aviso; a **qualy** pode aparecer em outra seção como referência, sem preencher o grid. Antes do resultado final, a chegada permanece indisponível. Depois, cada linha da chegada informa também de onde o piloto largou. No bolão aberto, mostra cinco posições com botão para expandir todos; o seletor de pilotos ordena por largada e mostra “Larga em P…”, também no pódio escolhido. Qualy e chegada nunca preenchem essa informação. Atualização manual e consulta a cada minuto em foco/app ativo; cache público de dois minutos. Histórico usa dados existentes sem reimportação, sujeito à cobertura da fonte. Programação em Brasília e F2/F3 próximas (janela de ±3 dias) permanecem disponíveis.
 - Piloto F1: foto quando disponível, carreira, rankings, desempenho por temporada/equipe, gráficos e comparação com outro piloto. Confronto direto considera corridas em que foram companheiros de equipe.
 - Equipe F1: história, títulos, pilotos, temporadas, gráficos e comparação de classificações entre equipes. A identidade é o nome normalizado; nomes diferentes de uma mesma linhagem não são fundidos.
-- Ao vivo: sessão mais recente, torre de tempos, pneus, setores, clima, mensagens da direção, telemetria selecionada e simulação do campeonato. A simulação aplica tabelas de pontos no cliente e não apura o bolão. O acesso em tempo real depende do provedor e de credenciais; não foi testado em uma sessão ativa nesta investigação.
+- Notícias: manchetes F1 em português, resumo do RSS e link para a fonte, em ordem cronológica. Filtros Todas, Notícias e Curiosidades; destaque para a publicação mais recente e paginação. Curiosidades próprias são calculadas do acervo, uma por dia, com acesso ao perfil da pista. Fonte e horários em Brasília são visíveis. Sem fotografias de notícias nesta entrega.
 
-O monitor Ao vivo fica **desabilitado por padrão**, com aviso sobre assinatura OpenF1. `EXPO_PUBLIC_LIVE_ENABLED=true` habilita o monitor em um novo bundle. Desligado, não monta o componente do monitor nem consulta autenticação, sessão ou telemetria OpenF1. Calendário, resultados e importação de fotos continuam disponíveis. Configuração e validações em [TASKS.md](TASKS.md).
+A rota antiga `/live` agora abre Notícias. Não importa nem monta o monitor OpenF1; calendário, grid e fotos de pilotos continuam independentes. A coleta ocorre no Supabase, inclusive sem o app aberto. Atualizar a lista no telefone lê o banco, sem acionar o coletor.
 
 ## Linguagem visual
 
@@ -95,7 +95,7 @@ Meus bolões separa Em andamento (primeiro, destaque verde) de Finalizados. Dent
 
 A aba Pistas reúne as 23 pistas do calendário F1 atual, com busca por pista/cidade/país, filtros por país e destaque da próxima etapa. A identidade visual usa exclusivamente o traçado oficial da Fórmula 1 em fundo escuro, na lista e no detalhe. O mapa abre em tela cheia com zoom. O detalhe também oferece o book **Por dentro da pista**, separado do mapa, com fotos de curvas e trechos do traçado F1, legenda, período e fonte oficial. Só entram fotos revisadas com o asfalto como assunto principal; quando há carros, são exclusivamente F1. Não entram outras categorias, turismo ou público como assunto. A seleção inicial reúne 15 fotos em seis circuitos; os demais mantêm o mapa até haver fotos adequadas. São exibidos até três trechos inicialmente, com expansão e navegação em tela cheia.
 
-Foram mantidos extensão, curvas, sentido, estreia, temporadas disputadas, total de GPs, maiores vencedores e empates, último vencedor e acesso ao resultado existente. Sobre contém cidade, país, última temporada, vencedores diferentes e recorde de vitórias; a ficha do GP informa voltas, distância e recorde de volta em corrida. Temporadas e edições são contadas separadamente. Históricas e Notícias estão interrompidas por solicitação do usuário durante esta correção visual.
+Foram mantidos extensão, curvas, sentido, estreia, temporadas disputadas, total de GPs, maiores vencedores e empates, último vencedor e acesso ao resultado existente. Sobre contém cidade, país, última temporada, vencedores diferentes e recorde de vitórias; a ficha do GP informa voltas, distância e recorde de volta em corrida. Temporadas e edições são contadas separadamente. A correção visual foi seguida pela retomada das históricas e de Notícias, descritas abaixo.
 
 
 O catálogo também permite alternar entre **Atuais** e **Históricas**, preservando busca e filtros por país. Históricas são as 55 sedes com corridas do Mundial fora do calendário de 2026; isso não significa que estejam desativadas. Seus perfis apresentam cidade/país, configuração de referência datada, extensão, curvas, sentido, temporadas, corridas, último vencedor e ranking histórico. Não exibem fotos ou mapas sem uma fonte oficial aprovada. O catálogo não reutiliza as antigas imagens rejeitadas. Indianapolis distingue o circuito misto das 500 Milhas que também integraram o Mundial; Nürburgring distingue configuração de referência e totais de todas as configurações.

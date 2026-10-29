@@ -26,6 +26,7 @@ before(async () => {
   await db.exec(`
     create role authenticated nologin;
     create role anon nologin;
+    create role service_role nologin bypassrls;
     create schema auth;
     create table auth.users (id uuid primary key, email text, raw_user_meta_data jsonb);
     create function auth.uid() returns uuid language sql stable as $$
@@ -36,7 +37,7 @@ before(async () => {
   `);
   for (const name of (await readdir(new URL('../supabase/migrations/', import.meta.url))).sort()) {
     // Ajuste exclusivo de pg_cron/pg_net: validado também na instância real.
-    if (name.startsWith('0018_')) continue;
+    if (name.startsWith('0018_') || name.startsWith('0026_')) continue;
     let sql = await readFile(new URL(`../supabase/migrations/${name}`, import.meta.url), 'utf8');
     // PGlite não inclui pg_cron/pg_net. A função de apuração dessa migration
     // é aplicada; apenas o agendamento externo fica fora deste teste.
@@ -293,4 +294,33 @@ test('históricas excluem calendário atual, incluem retorno em outro ano e mant
   assert.equal((await db.query('select count(*) from circuit_archive(2027)')).rows[0].count,1);
   await asUser(null);assert.equal((await db.query('select count(*) from circuit_archive(2026)')).rows[0].count,0);
   await asUser(null,'anon');await assert.rejects(db.query('select * from circuit_archive(2026)'),/permission denied/);
+});
+
+
+test('conteúdo só permite leitura publicada por autenticados e mantém coleta restrita',async()=>{
+ await asUser(null,'postgres');
+ await db.exec(`insert into content_posts(id,kind,title,summary,url,source_name,published,published_at) values
+ ('news-ok','news','Notícia','Resumo','https://example.test/ok','Fonte',true,now()-interval '1 hour'),
+ ('news-draft','news','Rascunho','','https://example.test/draft','Fonte',false,now()),
+ ('news-future','news','Futura','','https://example.test/future','Fonte',true,now()+interval '1 day');`);
+ await asUser(1);assert.deepEqual((await db.query('select id from content_posts')).rows.map(r=>r.id),['news-ok']);
+ const denied=async(sql,pattern)=>{await db.exec('savepoint denied_check');await assert.rejects(db.exec(sql),pattern);await db.exec('rollback to savepoint denied_check;release savepoint denied_check');};
+ await denied("insert into content_posts(id,kind,title,summary,url,source_name,published_at) values('x','news','x','','https://example.test/x','Fonte',now())",/row.level.security/);
+ for(const sql of ["select acquire_content_sync('00000000-0000-0000-0000-000000000001')",'select publish_circuit_curiosity()'])await denied(sql,/permission denied/);
+ await asUser(null,'anon');assert.equal((await db.query('select * from content_posts')).rows.length,0);
+ await asUser(null,'postgres');
+ const first='10000000-0000-0000-0000-000000000001',second='10000000-0000-0000-0000-000000000002';
+ assert.equal((await db.query('select acquire_content_sync($1) as acquired',[first])).rows[0].acquired,true);
+ assert.equal((await db.query('select acquire_content_sync($1) as acquired',[second])).rows[0].acquired,false);
+ await db.query('select release_content_sync($1)',[second]);assert.equal((await db.query('select acquire_content_sync($1) as acquired',[second])).rows[0].acquired,false);
+ await db.query('select release_content_sync($1)',[first]);assert.equal((await db.query('select acquire_content_sync($1) as acquired',[second])).rows[0].acquired,true);
+ await db.query('select release_content_sync($1)',[second]);
+});
+
+
+test('curiosidade diária usa contagens do acervo, preserva um post por dia e não confunde temporadas com corridas',async()=>{
+ await seedCircuit();await db.exec("update circuits set official_url='https://www.formula1.com/en/racing/2026/test' where id='test-circuit'");
+ await db.exec('select publish_circuit_curiosity();select publish_circuit_curiosity()');
+ const rows=(await db.query("select * from content_posts where kind='curiosity'")).rows;
+ assert.equal(rows.length,1);assert.equal(rows[0].circuit_id,'test-circuit');assert.equal(rows[0].source_name,'Acervo Bolão F1 · dados Jolpica');assert.match(rows[0].summary,/4 corridas do Mundial em 3 temporadas/);
 });

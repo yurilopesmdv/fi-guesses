@@ -179,3 +179,10 @@ A migration 0022 despublica fotografias e mapas anteriores. O importador agora e
 ### Book de trechos F1 (29/10/2026)
 
 A pedido do usuário, o book retorna com nova curadoria: somente trechos do traçado F1 de fontes oficiais, com carros exclusivamente F1 quando presentes. A migration 0022 e a remoção das fotos rejeitadas continuam válidas. Aplicar a nova 0023, então validar `node scripts/sync-circuit-book.mjs` e publicar com `--apply` após código validado e enviado ao GitHub. A transação mantém mapas e estatísticas, despublica fotos anteriores e publica somente o manifesto revisado. Não executar a importação antiga de fotografias. O manifesto esportivo de mapas permanece independente.
+
+
+### Coleta automática de notícias
+
+Após commit/push do código validado: aplicar 0025 e 0026, publicar `sync-news` e executar `node scripts/setup-content-cron.mjs --apply`. O script obtém a credencial de serviço pela Management API, grava/atualiza `content_project_url` e `content_service_role` no Vault e executa a primeira coleta. Sem --apply, não há leitura remota nem escrita. Nenhum valor secreto é impresso ou gravado em arquivo. O CI passa a publicar sync-series e sync-news antes do cliente. Segredos persistem entre deploys; sua rotação requer executar novamente o setup.
+
+Job `content-news-every-ten-minutes`: `*/10 * * * *`; invoca RPC administrativa sem valores secretos no comando cron. O token é lido no servidor no momento da chamada e permanece na fila pg_net até o envio, conforme operação padrão do serviço. Não conceder acesso de banco a usuários do app. Confirmar primeira coleta, execução real via fila, status de cada fonte e bloqueio 403 de membros antes de publicar o cliente. Falha de fonte mantém conteúdo anterior.

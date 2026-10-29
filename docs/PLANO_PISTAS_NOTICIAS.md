@@ -199,3 +199,8 @@ O usuário confirmou a correção dos mapas e solicitou novamente um book, agora
 ### Catálogo histórico retomado
 
 55 perfis históricos foram conciliados com os 23 atuais. A nova alternância não retira conteúdo dos perfis atuais. O acervo contém 459 edições e 462 vencedores, inclusive vitórias compartilhadas, e configurações técnicas datadas. Não foram restaurados os mapas comunitários e fotos do trabalho interrompido: nenhuma imagem histórica sem fonte oficial aprovada é publicada. Imagens de outras categorias continuam proibidas. Curadoria fotográfica completa das 23 atuais e mídias históricas permanecem pendentes; Notícias segue como próxima funcionalidade.
+
+
+### Notícias implementadas
+
+A rota `/live` passa a Notícias, com feed em português, resumos fornecidos nos RSS, links, filtros e curiosidade diária do acervo. Fontes iniciais: Motorsport Brasil e Grande Prêmio, exclusivamente seus feeds F1. Não importa artigos integrais, imagens ou RSS da Formula1.com. Referências verificadas: página oficial de RSS Motorsport, https://motorsport.uol.com.br/rss/ ; feeds https://motorsport.uol.com.br/rss/f1/news/ e https://grandepremio.com/br/f1/feed/ ; agendamento/Vault em https://supabase.com/docs/guides/functions/schedule-functions . Coleta a cada dez minutos respeitando TTL por fonte; Motorsport declara 100 minutos. O app só lê o banco. Estado de publicação e evidências estão em VALIDACAO_PRODUCAO.md.

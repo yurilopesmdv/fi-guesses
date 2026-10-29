@@ -20,7 +20,7 @@ export default function RootTabs() {
       <Tabs.Screen name="races" options={{ title: 'Corridas', tabBarIcon: icon('calendar') }} />
       <Tabs.Screen name="f1" options={{ title: 'F1', headerTitle: 'Campeonato', tabBarIcon: icon('speedometer') }} />
       <Tabs.Screen name="circuits" options={{ title: 'Pistas', tabBarIcon: icon('map') }} />
-      <Tabs.Screen name="live" options={{ title: 'Ao vivo', tabBarIcon: icon('radio') }} />
+      <Tabs.Screen name="live" options={{ title: 'Notícias', tabBarIcon: icon('newspaper') }} />
     </Tabs>
   );
 }

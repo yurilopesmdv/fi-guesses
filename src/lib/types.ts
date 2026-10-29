@@ -149,3 +149,6 @@ export type CircuitCalendar = { circuit_id: string; season: number; round: numbe
 export type CircuitLastRace = { season: number; round: number; race_name: string; date_utc: string; race_id: string | null; winners: { driver_id: string; driver_name: string; team: string | null; has_profile: boolean }[] };
 export type CircuitSummary = { circuit: Circuit; layout: CircuitLayout | null; stats: CircuitStats; last_race: CircuitLastRace | null; cover: CircuitMedia | null; map: CircuitMedia | null; calendar: CircuitCalendar[] };
 export type CircuitProfile = Omit<CircuitSummary, 'cover' | 'map'> & { media: CircuitMedia[]; winners: { driver_id: string; driver_name: string; wins: number; rank: number; has_profile: boolean }[] };
+
+export type ContentPost = { id: string; kind: 'news' | 'curiosity'; title: string; summary: string; url: string; source_name: string; author: string | null; circuit_id: string | null; published_at: string };
+export type ContentSourceStatus = { id: string; name: string; checked_at: string | null; succeeded_at: string | null; last_error: string | null };

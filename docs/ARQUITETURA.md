@@ -63,7 +63,7 @@ O layout raiz monta `AuthProvider` → `SeasonProvider` → Stack e aciona atual
 
 Após login, `SeasonProvider` busca corridas/pilotos F1 do ano do aparelho. Se não há calendário, importa da API. `useYear` carrega calendário, pilotos e campeonatos para um ano/categoria; importa F1 se faltam corridas ou classificação. `PoolProvider` carrega corridas e pilotos F1 pelo `pool.season`, depois de obter o bolão, e filtra GP único. O carregamento só termina quando os dados chegam; falhas exibem erro com nova tentativa em vez de calendário vazio. O detalhe independe do carregamento global da temporada atual.
 
-O estado fica em React Context, state e refs. Não há Redux, cache persistente de dados esportivos, fila offline nem assinatura Supabase Realtime. Telas de bolão recarregam ao receber foco; Ao vivo usa polling HTTP. Alguns erros são exibidos por Alert; outros são silenciados para manter o estado anterior, e alguns carregamentos não têm tratamento de rejeição.
+O estado fica em React Context, state e refs. Não há Redux, cache persistente de dados esportivos, fila offline nem assinatura Supabase Realtime. Telas de bolão e Notícias recarregam ao receber foco; Notícias não inicia polling OpenF1. Alguns erros são exibidos por Alert; outros são silenciados para manter o estado anterior, e alguns carregamentos não têm tratamento de rejeição.
 
 O layout de bolão agora exige sessão antes de consultar o bolão e apresenta estado de indisponibilidade quando ele foi excluído, houve falha ou o usuário não tem acesso. A tela administrativa também verifica proprietário antes de carregar o formulário. O ranking geral usa RPC SQL autenticada e atualização periódica de 30 s apenas em foco/primeiro plano, com atualização manual e tratamento de erro. Sua consulta agrega bolões além das associações do chamador, sem ampliar a leitura das tabelas de palpites.
 
@@ -109,7 +109,7 @@ As siglas de pilotos antigos são geradas por temporada; `driver_id` mantém ide
 
 ## Monitor ao vivo
 
-`src/lib/features.ts` define `LIVE_ENABLED` a partir de `EXPO_PUBLIC_LIVE_ENABLED === 'true'`, desabilitado por padrão. A rota Ao vivo mostra aviso de assinatura sem montar `LiveMonitor`; `useLive` e o adaptador também fazem bloqueio preventivo. Desabilitado, não há autenticação/settings, timers ou consultas de sessão/telemetria do monitor. O importador de fotos continua independente. Alterar a flag requer novo bundle. Os parágrafos seguintes descrevem o modo habilitado.
+A rota `/live` foi substituída por Notícias e não importa `useLive`. O adaptador e hook legados continuam protegidos por `LIVE_ENABLED`, false por padrão; não são montados pela navegação atual. A descrição seguinte registra o monitor legado, sem ativá-lo.
 
 `useLive` considera a sessão ativa da meia hora anterior à meia hora posterior aos horários publicados. Carrega a sessão mais recente, mantém resultados/voltas em memória e consulta a cada 8 s com acesso autenticado ou 15 s sem ele. Fora da sessão usa o resultado final. Não há WebSocket. A fila de requisições pode fazer um ciclo durar mais que o intervalo, sem trava contra sobreposição.
 
@@ -126,3 +126,10 @@ OpenF1: consulta sessões de três dias antes a um dia depois da largada, locali
 ## Catálogo de circuitos
 
 `(tabs)/circuits.tsx` e `circuit/[id].tsx` consomem RPCs via `repo.ts`; `circuits.ts` centraliza busca e formatação. `CircuitImage` usa cache do expo-image e variantes pequenas na lista; `CircuitViewer` usa Gesture Handler/Reanimated já presentes nos runtimes 57/58, sem módulo nativo novo. `CircuitLink` associa corridas pelo ID estável do circuito, validando disponibilidade no catálogo. F1 API e sua cópia Edge importam `circuit_id`; a sincronização administrativa atualiza vencedores após resultados F1. A lista mantém apenas o mapa oficial como identidade. `circuitMediaUrl` resolve URLs HTTPS diretamente da origem e caminhos legados pelo Storage. `CircuitBook` apresenta apenas fotos publicadas com `section_title`, separadas do mapa. O manifesto editorial `track-book.json` registra revisão visual de categoria, assunto, fonte e enquadramento; `sync-circuit-book.mjs` valida esses campos antes da publicação administrativa. O cliente não coleta imagens automaticamente. Fotos preservam o enquadramento com contain; zoom máximo considera a resolução disponível. Mapas mantêm zoom 4×.
+
+
+## Notícias automáticas
+
+Cron → `enqueue_content_sync` → `sync-news` → `content_posts` → app. Coleta exclusiva de feeds F1 em português, XML validado com fast-xml-parser 5.11.2 (empacotado no bundle Edge), limite 2 MB/20 s por fonte, DTD/entidades externas rejeitados, URLs restritas às fontes, datas reais e deduplicação por URL sem UTM. Não usa `content:encoded`, fotos ou corpo completo das matérias. Resumo limitado a 320 caracteres. ETag/Last-Modified e TTL respeitados (mínimo 10 minutos; Motorsport atualmente declara 100).
+
+JWT habilitado e credencial de serviço exigida pelo handler; usuários comuns não iniciam coleta. Trava de cinco minutos no banco impede execuções concorrentes, com liberação por proprietário. Falhas isoladas por fonte mantêm posts anteriores; notícias expiram em 45 dias. O cron roda a cada dez minutos e fontes só são consultadas após o TTL. Uma curiosidade por dia usa contagens SQL das pistas atuais, sem IA. Datas de publicação, coleta e atualização são distintas. `repo.ts` centraliza leitura paginada e status; o telefone não consulta feeds externos.

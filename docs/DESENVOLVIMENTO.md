@@ -95,3 +95,10 @@ Validar TypeScript, exportação web, fluxo móvel (lista → mapa → book → 
 
 
 Para atualizar o acervo histórico: `node --import tsx scripts/sync-circuit-archive.mjs` prepara metadados com resultados já versionados; `--refresh` consulta vencedores na fonte e `--apply` publica o bundle em transação. A operação não publica imagens históricas. Revisar cidades (a fonte esportiva contém estados/províncias em alguns campos locality), configuração de referência e variantes dos nomes. Executar o cenário SQL/RLS do arquivo e percorrer Atuais → Históricas → país/busca → perfil, preservando o book atual. A suíte passa a 41 testes.
+
+
+## Notícias
+
+`(tabs)/live.tsx` mantém a rota antiga, agora Notícias, sem monitor OpenF1. Leitura em repo.ts; nenhum coletor no telefone. RSS e handler estão em `supabase/functions/_shared/news-*.ts`. A suíte passa a 48 testes: 24 SQL/RLS, 6 HTTP esportivo, 2 status, 2 provider, 7 grid, 2 circuitos e 5 RSS/handler de notícias. O runner isolado omite apenas o agendamento 0026 (cron/net/Vault), validado no serviço real.
+
+Além de TypeScript/exportações/UI móvel, validar `node scripts/deploy-function.mjs sync-news --dry-run` e o typecheck específico dos dois módulos compartilhados (Edge Functions são excluídas do tsconfig principal). Testar feed válido, DTD/XML inválido/tamanho, URLs de outras categorias/fontes, datas futuras, deduplicação, falha isolada, 304, lease e autorização. No produto: `/live` → filtros → mais publicações → fonte; curiosidade → pista. Confirmar ausência de requisições do monitor OpenF1.
