@@ -1,209 +1,66 @@
-import { useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useRef, useState } from 'react';
+import { FlatList, Linking, Platform, Pressable, RefreshControl, Text, View } from 'react-native';
+import { Redirect, router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { COMPOUND, fmtLap, projectChampionship, type Standing } from '@/lib/openf1';
-import { useLive } from '@/lib/useLive';
-import { LIVE_ENABLED } from '@/lib/features';
-import { openDriver } from '@/lib/nav';
-import { useSeason } from '@/lib/useSeason';
-import { Card, H2, Loading, Muted, P, Pill, Row, Screen } from '@/ui/primitives';
-import { colors, radius, space } from '@/ui/theme';
+import * as WebBrowser from 'expo-web-browser';
+import { useAuth } from '@/lib/auth';
+import { getContentSources, listContentPosts } from '@/lib/repo';
+import type { ContentPost, ContentSourceStatus } from '@/lib/types';
+import { fmtDate } from '@/lib/format';
+import { Button, Card, H1, H2, Loading, Muted, P, Pill, Row } from '@/ui/primitives';
+import { colors, space } from '@/ui/theme';
 
-const FLAG_COLOR: Record<string, string> = { GREEN: colors.green, YELLOW: colors.gold, 'DOUBLE YELLOW': colors.gold, RED: colors.red, CHEQUERED: colors.text, CLEAR: colors.green, BLUE: '#3B82F6' };
-
-export default function Live() {
-  if (!LIVE_ENABLED) return (
-    <Screen>
-      <Card>
-        <H2>📡 Ao vivo indisponível</H2>
-        <P>O monitor ao vivo precisa de uma assinatura OpenF1.</P>
-        <Muted style={{ marginTop: space(1) }}>Aguardando ativação da assinatura. Enquanto isso, acompanhe a programação e os resultados nas abas Corridas e F1.</Muted>
-      </Card>
-    </Screen>
-  );
-  return <LiveMonitor />;
+type Filter = ContentPost['kind'] | null;
+const filters: {label:string;value:Filter}[] = [{label:'Todas',value:null},{label:'Notícias',value:'news'},{label:'Curiosidades',value:'curiosity'}];
+export default function NewsScreen() {
+  const auth=useAuth(),insets=useSafeAreaInsets();
+  const [filter,setFilter]=useState<Filter>(null),[posts,setPosts]=useState<ContentPost[]>([]),[sources,setSources]=useState<ContentSourceStatus[]>([]);
+  const [loading,setLoading]=useState(true),[refreshing,setRefreshing]=useState(false),[more,setMore]=useState(false),[hasMore,setHasMore]=useState(false);
+  const [error,setError]=useState(''),[linkError,setLinkError]=useState('');
+  const version=useRef(0);
+  const load=useCallback(async()=>{
+    const request=++version.current;
+    try {
+      const [items,status]=await Promise.all([listContentPosts(filter),getContentSources()]);
+      if(request!==version.current)return;
+      setPosts(items);setSources(status);setHasMore(items.length===20);setError('');
+    } catch {if(request===version.current)setError('Não foi possível atualizar as publicações. Tente novamente.');}
+    finally{if(request===version.current){setLoading(false);setRefreshing(false);setMore(false);}}
+  },[filter]);
+  useFocusEffect(useCallback(()=>{if(auth.session){setLoading(true);void load();}return()=>{version.current++;};},[auth.session,load]));
+  const select=(value:Filter)=>{if(value===filter)return;version.current++;setPosts([]);setLoading(true);setError('');setFilter(value);};
+  const next=async()=>{
+    if(more||refreshing||loading)return;setMore(true);const request=version.current;
+    try{const items=await listContentPosts(filter,posts.length);if(request!==version.current)return;setPosts(previous=>[...new Map([...previous,...items].map(p=>[p.id,p])).values()]);setHasMore(items.length===20);setError('');}
+    catch{if(request===version.current)setError('Não foi possível carregar mais publicações.');}
+    finally{if(request===version.current)setMore(false);}
+  };
+  const open=async(post:ContentPost)=>{
+    setLinkError('');try{if(Platform.OS==='web')await Linking.openURL(post.url);else await WebBrowser.openBrowserAsync(post.url,{toolbarColor:colors.bg,controlsColor:colors.red,showTitle:true});}
+    catch{setLinkError('Não foi possível abrir a fonte. Verifique a conexão e tente novamente.');}
+  };
+  if(!auth.loading&&!auth.session)return <Redirect href="/login"/>;
+  const checks=sources.map(s=>s.succeeded_at).filter((v):v is string=>!!v).sort();
+  const latestCheck=checks.at(-1),offline=sources.some(s=>s.last_error),stale=latestCheck&&Date.now()-Date.parse(latestCheck)>3*3600000;
+  return <FlatList style={{flex:1,backgroundColor:colors.bg}} data={posts} keyExtractor={p=>p.id} initialNumToRender={6} windowSize={5}
+    contentContainerStyle={{padding:space(2),paddingBottom:insets.bottom+space(3)}}
+    refreshControl={<RefreshControl refreshing={refreshing} tintColor={colors.red} onRefresh={()=>{setRefreshing(true);void load();}}/>}
+    ListHeaderComponent={<View style={{gap:12,marginBottom:16}}>
+      <Muted style={{color:colors.red,fontWeight:'800',letterSpacing:2}}>DENTRO DA FÓRMULA 1</Muted><H1>Notícias e histórias</H1>
+      <Muted>As últimas da F1 em português, com resumo e acesso à fonte.</Muted>
+      <Row>{filters.map(option=><Pressable key={option.label} accessibilityRole="button" accessibilityState={{selected:filter===option.value}} onPress={()=>select(option.value)} style={{flex:1,minHeight:44,borderRadius:24,alignItems:'center',justifyContent:'center',backgroundColor:filter===option.value?colors.red:colors.card,borderWidth:1,borderColor:filter===option.value?colors.red:colors.border}}><Text style={{color:colors.text,fontWeight:'700'}}>{option.label}</Text></Pressable>)}</Row>
+      {latestCheck&&<Muted style={{fontSize:12}}>Fontes verificadas em {fmtDate(latestCheck)} · Brasília</Muted>}
+      {(offline||stale)&&<Muted style={{color:colors.gold}}>Há fontes sem atualização recente. As últimas publicações disponíveis foram mantidas.</Muted>}
+      {!!error&&<Card><Muted>{error}</Muted><Button title="Tentar novamente" onPress={()=>{setRefreshing(true);void load();}}/></Card>}
+      {!!linkError&&<Card><Muted>{linkError}</Muted></Card>}
+    </View>}
+    ListEmptyComponent={loading?<Loading/>:!error?<Card><H2>{filter==='curiosity'?'As histórias estão chegando':'Nenhuma publicação disponível ainda'}</H2><Muted>Volte em breve ou puxe para atualizar.</Muted></Card>:undefined}
+    renderItem={({item,index})=><Card style={index===0?{borderColor:colors.red}:undefined}>
+      <Row style={{justifyContent:'space-between',marginBottom:12}}><Pill color={item.kind==='curiosity'?colors.card2:colors.red}>{item.kind==='curiosity'?'CURIOSIDADE':index===0?'EM DESTAQUE':'FÓRMULA 1'}</Pill><Muted style={{fontSize:12}}>{fmtDate(item.published_at)}</Muted></Row>
+      <Pressable accessibilityRole="link" accessibilityLabel={`Ler na fonte: ${item.title}`} onPress={()=>void open(item)}><Text style={{fontSize:index===0?25:21,fontWeight:'800',lineHeight:index===0?31:27,color:colors.text}}>{item.title}</Text></Pressable>
+      {!!item.summary&&<P style={{marginTop:12,lineHeight:23}}>{item.summary}</P>}
+      <Muted style={{marginTop:14,fontSize:12}}>{item.source_name}{item.author?` · ${item.author}`:''}{item.kind==='news'?' · Resumo da fonte':''}</Muted>
+      {item.kind==='curiosity'&&item.circuit_id?<Button title="Conhecer esta pista" variant="ghost" onPress={()=>router.push(`/circuit/${item.circuit_id}`)}/>:<Pressable accessibilityRole="link" onPress={()=>void open(item)}><Text style={{color:colors.red,fontWeight:'800',paddingVertical:16}}>Ler na fonte ↗</Text></Pressable>}
+    </Card>}
+    ListFooterComponent={hasMore&&!loading?<Button title="Mais publicações" variant="ghost" loading={more} onPress={()=>void next()}/>:undefined}/>;
 }
-
-function LiveMonitor() {
-  const insets = useSafeAreaInsets();
-  const [sel, setSel] = useState<number | null>(null);
-  const [proj, setProj] = useState<'off' | 'drivers' | 'teams'>('off');
-  const live = useLive(sel);
-  const { drivers: seasonDrivers } = useSeason();
-  const { session, isLive, hasAccess, standings, raceControl, weather, loading, error, car } = live;
-
-  if (loading) return <Loading />;
-
-  const sessionLabel = session ? `${session.session_name === 'Race' ? 'Corrida' : session.session_name === 'Qualifying' ? 'Classificação' : session.session_name} · ${session.location}` : '';
-  const isSprint = session?.session_name === 'Sprint';
-  const isPointsSession = session?.session_name === 'Race' || isSprint;
-  const projection = projectChampionship(standings, live.champ, live.champTeams, isSprint);
-  const best = standings.reduce<number | null>((m, s) => (s.bestLap != null && (m == null || s.bestLap < m) ? s.bestLap : m), null);
-
-  return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.bg }} contentContainerStyle={{ padding: space(2), paddingBottom: insets.bottom + space(3) }}
-      refreshControl={<RefreshControl refreshing={false} tintColor={colors.red} onRefresh={live.refresh} />}>
-      <Card>
-        <Row style={{ justifyContent: 'space-between' }}>
-          <View style={{ flex: 1 }}>
-            <Text style={s.title}>{session?.country_name ?? 'OpenF1'} {session?.year ?? ''}</Text>
-            <Muted>{sessionLabel}</Muted>
-          </View>
-          {isLive ? <Pill color={colors.red}>● AO VIVO</Pill> : <Pill>encerrada</Pill>}
-        </Row>
-        {weather && (
-          <Row style={{ marginTop: space(1), flexWrap: 'wrap' }}>
-            <Pill>🌡️ ar {weather.air_temperature.toFixed(0)}°</Pill>
-            <Pill>🛣️ pista {weather.track_temperature.toFixed(0)}°</Pill>
-            <Pill>💧 {weather.humidity}%</Pill>
-            <Pill>💨 {weather.wind_speed.toFixed(1)} m/s</Pill>
-            {weather.rainfall > 0 && <Pill color="#1e3a8a">🌧️ chuva</Pill>}
-          </Row>
-        )}
-        {isLive && live.leaderLap > 0 && <Muted style={{ marginTop: 6 }}>Volta {live.leaderLap}{best ? ` · melhor volta ${fmtLap(best)}` : ''} · atualiza a cada {hasAccess ? 8 : 15} s</Muted>}
-        {!isLive && <Muted style={{ marginTop: 6 }}>Fora de sessão: mostrando a última sessão completa.{hasAccess ? '' : ' Sem assinatura OpenF1, o ao vivo não está habilitado.'}</Muted>}
-        {error && <Muted style={{ color: colors.gold, marginTop: 6 }}>{error}</Muted>}
-      </Card>
-
-      {raceControl.length > 0 && (
-        <Card>
-          <H2>🚩 Direção de prova</H2>
-          {raceControl.slice(0, 5).map((rc, i) => (
-            <Row key={i} style={{ alignItems: 'flex-start', marginBottom: 6 }}>
-              <View style={{ width: 8, height: 8, borderRadius: 4, marginTop: 6, backgroundColor: FLAG_COLOR[rc.flag ?? ''] ?? colors.muted }} />
-              <View style={{ flex: 1 }}>
-                <P style={{ fontSize: 14 }}>{rc.message}</P>
-                <Muted style={{ fontSize: 12 }}>{rc.lap_number ? `volta ${rc.lap_number} · ` : ''}{new Date(rc.date).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' })}</Muted>
-              </View>
-            </Row>
-          ))}
-        </Card>
-      )}
-
-      <Card style={{ padding: space(1) }}>
-        <Row style={[s.row, { paddingVertical: 4 }]}>
-          <Text style={[s.th, { width: 26 }]}>P</Text>
-          <Text style={[s.th, { width: 58 }]}>Piloto</Text>
-          <Text style={[s.th, { width: 44 }]}>Pneu</Text>
-          <Text style={[s.th, { flex: 1 }]}>Gap</Text>
-          <Text style={[s.th, { flex: 1 }]}>Interv.</Text>
-          <Text style={[s.th, { width: 66, textAlign: 'right' }]}>Última</Text>
-        </Row>
-        {standings.map((st) => (
-          <DriverRow key={st.driver.driver_number} st={st} best={best} selected={sel === st.driver.driver_number} onPress={() => setSel(sel === st.driver.driver_number ? null : st.driver.driver_number)} car={sel === st.driver.driver_number ? car : null} isLive={isLive} onProfile={() => openDriver(seasonDrivers.find((d) => d.code === st.driver.name_acronym))} />
-        ))}
-      </Card>
-      {isPointsSession && live.champ.length > 0 && (
-        <Card style={{ borderColor: '#A855F7' }}>
-          <Row style={{ justifyContent: 'space-between' }}>
-            <View style={{ flex: 1 }}>
-              <H2>🔮 Se a {isSprint ? 'sprint' : 'corrida'} acabasse agora</H2>
-              <Muted style={{ marginTop: -6 }}>Simulação com as posições atuais — não é o resultado oficial.</Muted>
-            </View>
-          </Row>
-          <Row style={{ marginTop: space(1), marginBottom: space(1) }}>
-            {(['drivers', 'teams'] as const).map((t) => (
-              <Pressable key={t} onPress={() => setProj(proj === t ? 'off' : t)} style={{ flex: 1 }}>
-                <View style={{ padding: 8, borderRadius: 10, alignItems: 'center', backgroundColor: proj === t ? '#A855F7' : colors.card2 }}>
-                  <Text style={{ color: colors.text, fontWeight: '800' }}>{t === 'drivers' ? 'Pilotos' : 'Construtores'}</Text>
-                </View>
-              </Pressable>
-            ))}
-          </Row>
-          {proj === 'drivers' && projection.drivers.slice(0, 10).map((d, i) => (
-            <Row key={d.driver.driver_number} style={{ justifyContent: 'space-between', paddingVertical: 4 }}>
-              <Row style={{ flex: 1 }}>
-                <Text style={{ color: colors.muted, fontWeight: '800', width: 24 }}>{i + 1}</Text>
-                <View style={{ width: 4, height: 16, borderRadius: 2, backgroundColor: `#${d.driver.team_colour}` }} />
-                <P style={{ fontWeight: '700' }}>{d.driver.name_acronym}</P>
-                {d.posStart != null && d.posStart !== i + 1 && <Muted style={{ color: d.posStart > i + 1 ? colors.green : colors.red }}>{d.posStart > i + 1 ? `▲${d.posStart - i - 1}` : `▼${i + 1 - d.posStart}`}</Muted>}
-              </Row>
-              <Muted>{d.start}{d.gain ? ` +${d.gain}` : ''}</Muted>
-              <Text style={{ color: colors.text, fontWeight: '900', width: 48, textAlign: 'right' }}>{d.total}</Text>
-            </Row>
-          ))}
-          {proj === 'teams' && projection.constructors.map((t, i) => (
-            <Row key={t.team} style={{ justifyContent: 'space-between', paddingVertical: 4 }}>
-              <Row style={{ flex: 1 }}>
-                <Text style={{ color: colors.muted, fontWeight: '800', width: 24 }}>{i + 1}</Text>
-                <P style={{ fontWeight: '700' }}>{t.team}</P>
-                {t.posStart != null && t.posStart !== i + 1 && <Muted style={{ color: t.posStart > i + 1 ? colors.green : colors.red }}>{t.posStart > i + 1 ? `▲${t.posStart - i - 1}` : `▼${i + 1 - t.posStart}`}</Muted>}
-              </Row>
-              <Muted>{t.start}{t.gain ? ` +${t.gain}` : ''}</Muted>
-              <Text style={{ color: colors.text, fontWeight: '900', width: 48, textAlign: 'right' }}>{t.total}</Text>
-            </Row>
-          ))}
-          {proj === 'off' && <Muted>Toque em Pilotos ou Construtores pra ver.</Muted>}
-        </Card>
-      )}
-      <Muted style={{ textAlign: 'center' }}>Dados: OpenF1 · atraso ~3 s ao vivo</Muted>
-    </ScrollView>
-  );
-}
-
-function DriverRow({ st, best, selected, onPress, car, isLive, onProfile }: { st: Standing; best: number | null; selected: boolean; onPress: () => void; car: any; isLive: boolean; onProfile: () => void }) {
-  const c = st.compound ? COMPOUND[st.compound] : null;
-  const isBest = st.bestLap != null && st.bestLap === best;
-  return (
-    <Pressable onPress={onPress}>
-      <Row style={[s.row, selected && { backgroundColor: colors.card2 }]}>
-        <Text style={[s.pos, { width: 26 }]}>{st.position ?? '–'}</Text>
-        <Row style={{ width: 58, gap: 6 }}>
-          <View style={{ width: 4, height: 20, borderRadius: 2, backgroundColor: `#${st.driver.team_colour}` }} />
-          <Text style={s.acr}>{st.driver.name_acronym}</Text>
-        </Row>
-        <Row style={{ width: 44, gap: 4 }}>
-          {c && <View style={[s.tyre, { borderColor: c.color }]}><Text style={{ color: c.color, fontWeight: '900', fontSize: 11 }}>{c.label}</Text></View>}
-          <Muted style={{ fontSize: 11 }}>{st.tyreAge}</Muted>
-        </Row>
-        <Text style={[s.td, { flex: 1 }]}>{st.position === 1 ? 'líder' : st.gap}</Text>
-        <Text style={[s.td, { flex: 1 }]}>{st.position === 1 ? '' : st.interval}</Text>
-        <Text style={[s.td, { width: 66, textAlign: 'right', color: isBest ? '#A855F7' : colors.text }]}>{fmtLap(st.lastLap)}</Text>
-      </Row>
-      {selected && (
-        <View style={s.detail}>
-          <Row style={{ justifyContent: 'space-between' }}>
-            <Pressable onPress={onProfile}><Text style={{ color: colors.red, fontWeight: '700' }}>{st.driver.full_name} · perfil ›</Text></Pressable>
-            <Muted>{st.pits} pit{st.pits === 1 ? '' : 's'} · {st.lapCount} voltas</Muted>
-          </Row>
-          <Row style={{ marginTop: 6, justifyContent: 'space-between' }}>
-            <Stat label="S1" value={fmtLap(st.sectors[0])} />
-            <Stat label="S2" value={fmtLap(st.sectors[1])} />
-            <Stat label="S3" value={fmtLap(st.sectors[2])} />
-            <Stat label="Melhor" value={fmtLap(st.bestLap)} color="#A855F7" />
-            <Stat label="Speed trap" value={st.speedTrap ? `${st.speedTrap} km/h` : '—'} />
-          </Row>
-          {isLive && car && (
-            <Row style={{ marginTop: 8, justifyContent: 'space-between' }}>
-              <Stat label="Velocidade" value={`${car.speed} km/h`} color={colors.gold} />
-              <Stat label="Marcha" value={String(car.n_gear)} />
-              <Stat label="RPM" value={String(car.rpm)} />
-              <Stat label="Acel." value={`${car.throttle}%`} color={colors.green} />
-              <Stat label="Freio" value={car.brake ? 'ON' : 'off'} color={car.brake ? colors.red : colors.muted} />
-              <Stat label="DRS" value={car.drs >= 10 ? 'ABERTO' : 'fechado'} color={car.drs >= 10 ? colors.green : colors.muted} />
-            </Row>
-          )}
-          {isLive && !car && <Muted style={{ marginTop: 6 }}>Telemetria: carregando…</Muted>}
-        </View>
-      )}
-    </Pressable>
-  );
-}
-
-const Stat = ({ label, value, color = colors.text }: { label: string; value: string; color?: string }) => (
-  <View style={{ alignItems: 'center' }}>
-    <Muted style={{ fontSize: 10 }}>{label}</Muted>
-    <Text style={{ color, fontWeight: '800', fontVariant: ['tabular-nums'], fontSize: 13 }}>{value}</Text>
-  </View>
-);
-
-const s = StyleSheet.create({
-  title: { color: colors.text, fontSize: 20, fontWeight: '800' },
-  row: { paddingVertical: 8, paddingHorizontal: 6, borderBottomWidth: 1, borderBottomColor: colors.border, gap: 4, borderRadius: 8 },
-  th: { color: colors.muted, fontSize: 10, fontWeight: '700' },
-  pos: { color: colors.text, fontWeight: '900', fontSize: 15 },
-  acr: { color: colors.text, fontWeight: '800', fontSize: 14 },
-  td: { color: colors.text, fontSize: 13, fontVariant: ['tabular-nums'] },
-  tyre: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
-  detail: { backgroundColor: colors.card2, borderRadius: radius, padding: space(1.5), marginBottom: 6 },
-});

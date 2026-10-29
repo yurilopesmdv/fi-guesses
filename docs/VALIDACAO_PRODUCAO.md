@@ -119,3 +119,12 @@ TypeScript, 40 testes, exportações web e Android SDK 57 passaram. Navegação 
 Integração Supabase real: 23 mapas, 15 fotos exatamente iguais ao manifesto, 23 perfis completos, Albert Park com 14 curvas. Anônimo negado (401), inserção de mídia por membro negada (403), atualização por membro sem efeito. Conta temporária removida.
 
 Deploy GitHub [40863674418](https://github.com/yurilopesmdv/fi-guesses/actions/runs/40863674418) concluído. EAS SDK 58 grupo `982e9836-0c5a-4c47-b4d4-18b6c1815766`, Android `01a1875f-343f-76df-8d03-32c83e168f34`, iOS `01a1875f-343f-7f72-9fb5-08e2a7fdd384`. APK SDK 57 grupo `a44ee40d-eb35-4808-a876-a73259d16068`, Android `01a1875d-c8ab-7835-a122-b996fe5cd4ff`. Manifestos e bundles dos três retornaram 200 com os IDs esperados. Web deployment `ldp8kewgxz`; domínio de produção confirmou o book com foto de Curva do Sol carregada, expansão de seis trechos, navegação, mapa oficial e créditos, sem erro JavaScript. Não foi feito teste físico em iPhone/Android.
+
+
+## Pistas atuais e históricas separadas — 29/10/2026
+
+Código `836da75`, compatibilidade SDK 57 `cf7227b`. Migration 0024 aplicada; importação de 55 sedes, 459 edições e 462 vencedores. Nenhuma mídia histórica foi publicada. Supabase real: 23 atuais e 55 históricas sem sobreposição, 55 perfis conferidos contra os totais versionados, 23 mapas oficiais e 15 fotos do book preservados, leitura anônima negada. Conta temporária removida.
+
+41 testes, TypeScript, exportações web/Android SDK 57 e interface móvel passaram. Fluxo local e publicado: abre em Atuais; alterna para Históricas, busca Caesars Palace, abre perfil de 1981–1982 e retorna às atuais; mapa, book e dados de Interlagos preservados. Sem erros JavaScript.
+
+Deploy [40910934042](https://github.com/yurilopesmdv/fi-guesses/actions/runs/40910934042) concluído. Grupo SDK 58 `9eed3127-2dc7-4fb7-8040-217d88ca4d74`, Android `01a1887a-ec8e-78fb-ae40-d31980530b67`, iOS `01a1887a-ec8e-7197-936e-0cbb670f9101`; grupo SDK 57 `480c2241-c14d-4091-99db-62c2be9ce1a0`, Android `01a18878-f409-7bda-8974-f697d6c1f18c`. Web deployment `6wqvri7uq8`. Manifestos/bundles 200 e domínio de produção confirmado por navegação real em Chromium móvel. Sem teste físico nesta entrega.

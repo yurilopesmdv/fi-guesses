@@ -13,7 +13,7 @@ const env = { ...(existsSync(envFile) ? parseEnv(readFileSync(envFile, 'utf8')) 
 const result = await build({
   absWorkingDir: root, entryPoints: [`supabase/functions/${slug}/index.ts`],
   bundle: true, format: 'esm', platform: 'neutral', target: 'es2022',
-  external: ['npm:*'], write: false, logLevel: 'silent',
+  mainFields: ['module', 'main'], external: ['npm:*'], write: false, logLevel: 'silent',
 });
 const source = result.outputFiles[0].contents;
 if (args.includes('--dry-run')) {

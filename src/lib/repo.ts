@@ -192,3 +192,11 @@ export const findRaceCircuit = async (race: Race) => {
   }
   return (throwIf(await supabase.from('circuit_seasons').select('circuit_id').eq('season',race.season).eq('round',race.round).maybeSingle()) as { circuit_id: string } | null)?.circuit_id ?? null;
 };
+
+export async function listContentPosts(kind: 'news' | 'curiosity' | null, offset = 0) {
+  let query = supabase.from('content_posts').select('id,kind,title,summary,url,source_name,author,circuit_id,published_at')
+    .eq('published', true).lte('published_at', new Date().toISOString());
+  if (kind) query = query.eq('kind', kind);
+  return throwIf(await query.order('published_at', {ascending:false}).order('id', {ascending:false}).range(offset, offset + 19)) as import('./types').ContentPost[];
+}
+export const getContentSources = async () => throwIf(await supabase.from('content_sources').select('id,name,checked_at,succeeded_at,last_error').eq('enabled', true).order('name')) as import('./types').ContentSourceStatus[];
