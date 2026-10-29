@@ -37,7 +37,7 @@ before(async () => {
   `);
   for (const name of (await readdir(new URL('../supabase/migrations/', import.meta.url))).sort()) {
     // Ajuste exclusivo de pg_cron/pg_net: validado também na instância real.
-    if (name.startsWith('0018_') || name.startsWith('0026_')) continue;
+    if (name.startsWith('0018_') || name.startsWith('0026_') || name.startsWith('0027_')) continue;
     let sql = await readFile(new URL(`../supabase/migrations/${name}`, import.meta.url), 'utf8');
     // PGlite não inclui pg_cron/pg_net. A função de apuração dessa migration
     // é aplicada; apenas o agendamento externo fica fora deste teste.

@@ -99,6 +99,6 @@ Para atualizar o acervo histórico: `node --import tsx scripts/sync-circuit-arch
 
 ## Notícias
 
-`(tabs)/live.tsx` mantém a rota antiga, agora Notícias, sem monitor OpenF1. Leitura em repo.ts; nenhum coletor no telefone. RSS e handler estão em `supabase/functions/_shared/news-*.ts`. A suíte passa a 48 testes: 24 SQL/RLS, 6 HTTP esportivo, 2 status, 2 provider, 7 grid, 2 circuitos e 5 RSS/handler de notícias. O runner isolado omite apenas o agendamento 0026 (cron/net/Vault), validado no serviço real.
+`(tabs)/live.tsx` mantém a rota antiga, agora Notícias, sem monitor OpenF1. Leitura em repo.ts; nenhum coletor no telefone. RSS e handler estão em `supabase/functions/_shared/news-*.ts`. A suíte passa a 48 testes: 24 SQL/RLS, 6 HTTP esportivo, 2 status, 2 provider, 7 grid, 2 circuitos e 5 RSS/handler de notícias. O runner isolado omite apenas o agendamento 0026/0027 (cron/net/Vault), validado no serviço real.
 
 Além de TypeScript/exportações/UI móvel, validar `node scripts/deploy-function.mjs sync-news --dry-run` e o typecheck específico dos dois módulos compartilhados (Edge Functions são excluídas do tsconfig principal). Testar feed válido, DTD/XML inválido/tamanho, URLs de outras categorias/fontes, datas futuras, deduplicação, falha isolada, 304, lease e autorização. No produto: `/live` → filtros → mais publicações → fonte; curiosidade → pista. Confirmar ausência de requisições do monitor OpenF1.

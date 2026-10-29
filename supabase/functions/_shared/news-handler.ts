@@ -2,10 +2,10 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { NEWS_SOURCES, parseNewsFeed, readFeedResponse, type NewsSource } from './news-feed.ts';
 const reply=(status:number,data:unknown)=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json'}});
 const check=(error:unknown)=>{if(error)throw Error('Falha ao persistir a coleta.');};
-export function createNewsHandler(db: Pick<SupabaseClient, 'rpc' | 'from'>, serviceKey: string, fetcher: typeof fetch = fetch) {
+export function createNewsHandler(db: Pick<SupabaseClient, 'rpc' | 'from'>, cronSecret: string, fetcher: typeof fetch = fetch) {
  return async (request: Request) => {
  if(request.method!=='POST')return reply(405,{error:'Use POST.'});
- if(!serviceKey||request.headers.get('Authorization')!==`Bearer ${serviceKey}`)return reply(403,{error:'Coleta restrita ao servidor.'});
+ if(!cronSecret||request.headers.get('X-Content-Sync-Secret')!==cronSecret)return reply(403,{error:'Coleta restrita ao servidor.'});
  const owner=crypto.randomUUID(),lease=await db.rpc('acquire_content_sync',{p_owner:owner});
  if(lease.error)return reply(500,{error:'Não foi possível iniciar a coleta.'});
  if(!lease.data)return reply(202,{status:'already_running'});
