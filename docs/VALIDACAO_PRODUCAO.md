@@ -108,3 +108,14 @@ SDK 58, grupo `fa475880-3514-4b81-be31-48ff4d3556ee`: Android `01a185d7-ffd9-79d
 Web deployment `c8crzbwx7w`. O domínio principal ainda serviu o deployment anterior após o sucesso do workflow; `eas deploy:alias --prod --id c8crzbwx7w --non-interactive` promoveu explicitamente a versão correta. Depois disso, HTML e hashes do domínio principal corresponderam ao novo deployment.
 
 Teste real em https://bolao-f1.expo.app com conta temporária: catálogo de 23 mapas oficiais sem capa fotográfica, busca Brasil, perfil de Interlagos sem galeria, carregamento real do mapa diretamente de media.formula1.com, zoom e fonte, sem erros JavaScript. Teste também passou no domínio imutável do deployment. As contas temporárias foram removidas. As primeiras tentativas detectaram cache anterior e uma imagem ainda carregando após 700 ms; o alias foi corrigido e a verificação repetida com carregamento concluído. Nenhum teste em aparelho físico ou novo binário; atualização pelos projetos/canal já distribuídos, sem novo QR code.
+
+
+## Book de trechos exclusivos da F1 — 29/10/2026
+
+Código `e224d09` na main, compatibilidade APK SDK 57 `1d5e4be`. Migration 0023 aplicada antes do cliente; manifesto com 15 fotos aprovadas em seis circuitos (Interlagos 6, Zandvoort 3, Albert Park 2, Spa 2, Red Bull Ring 1, Austin 1). Fontes oficiais dos circuitos/promotores e Formula1.com; carros visíveis exclusivamente F1. Fotos antigas permanecem despublicadas. A lista mantém identidade pelos 23 mapas oficiais. Esta seleção não representa book completo das 23 pistas.
+
+TypeScript, 40 testes, exportações web e Android SDK 57 passaram. Navegação em Chromium 390×844/360×800: busca, detalhe, Sobre, indicadores, expansão do book, foto 1→2, mapa/zoom/créditos. As 15 origens responderam HTTP 200 pelo cliente Node; o cliente Python recebeu 403 em Interlagos, mas a imagem carregou no navegador real e na validação web publicada. Não houve alteração para contornar bloqueio nem cópia das imagens para Storage.
+
+Integração Supabase real: 23 mapas, 15 fotos exatamente iguais ao manifesto, 23 perfis completos, Albert Park com 14 curvas. Anônimo negado (401), inserção de mídia por membro negada (403), atualização por membro sem efeito. Conta temporária removida.
+
+Deploy GitHub [40863674418](https://github.com/yurilopesmdv/fi-guesses/actions/runs/40863674418) concluído. EAS SDK 58 grupo `982e9836-0c5a-4c47-b4d4-18b6c1815766`, Android `01a1875f-343f-76df-8d03-32c83e168f34`, iOS `01a1875f-343f-7f72-9fb5-08e2a7fdd384`. APK SDK 57 grupo `a44ee40d-eb35-4808-a876-a73259d16068`, Android `01a1875d-c8ab-7835-a122-b996fe5cd4ff`. Manifestos e bundles dos três retornaram 200 com os IDs esperados. Web deployment `ldp8kewgxz`; domínio de produção confirmou o book com foto de Curva do Sol carregada, expansão de seis trechos, navegação, mapa oficial e créditos, sem erro JavaScript. Não foi feito teste físico em iPhone/Android.
