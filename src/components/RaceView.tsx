@@ -57,6 +57,8 @@ export function RaceView({ race }: { race: Race }) {
   useFocusEffect(load);
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 30000); return () => clearInterval(t); }, []);
 
+  useEffect(()=>{let active=true;if(pool&&questions?.some(q=>Object.hasOwn(outbox.acceptedAnswers,q.id)))void listStandings(pool.id).then(rows=>{if(active)setMembers(rows);}).catch(()=>{});return()=>{active=false;};},[pool?.id,outbox.acceptedAnswers,questions]);
+
   const onAnswer = (q: Question, answer: Answer) => {
     void outbox.enqueue(q.id,answer,new Date(questionDeadline(q,race,pool?.lock_minutes_before??0)??lockAt).toISOString()).catch(e=>Alert.alert('Rascunho pendente',e.message));
   };
