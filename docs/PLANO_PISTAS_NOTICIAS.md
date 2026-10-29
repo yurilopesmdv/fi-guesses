@@ -189,3 +189,8 @@ A curadoria final das fotos e a validação de reutilização por arquivo contin
 ## Correção solicitada em 29/10/2026
 
 O usuário rejeitou a seleção fotográfica publicada e determinou a remoção de todas as galerias. A especificação vigente passa a ser: somente traçado oficial como identidade visual, com fundo escuro, preservando estatísticas e dados. As metas antigas de quantidade de fotografias e as escolhas de Commons/Flickr deste levantamento estão revogadas. Históricas e Notícias foram interrompidas; o trabalho não publicado está preservado em stash na branch `feat/pistas-historicas`.
+
+
+### Book solicitado após a correção visual (29/10/2026)
+
+O usuário confirmou a correção dos mapas e solicitou novamente um book, agora de curvas e trechos reais da pista, exclusivamente F1. Fontes oficiais, asfalto como assunto principal, sem turismo, público como assunto, enquadramentos distantes ou carros de outras categorias. A seleção antiga permanece revogada. O mapa oficial continua como identidade na lista e no perfil. A curadoria inicial tem 15 fotos de seis circuitos, com expansão e visualizador; não representa cobertura fotográfica completa das 23 pistas. Ausência de foto aprovada não será preenchida com material inadequado. Históricas e Notícias foram retomadas como próximas demandas; ainda não estão publicadas.

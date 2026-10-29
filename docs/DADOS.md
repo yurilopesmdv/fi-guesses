@@ -143,3 +143,5 @@ No Storage, policies restritivas impedem insert/update/delete em `circuits` por 
 A migration `0021` revoga explicitamente EXECUTE de `anon` nos dois RPCs de leitura: o Supabase real concede esse privilégio por default mesmo após revogar PUBLIC. O teste isolado reproduz esse default ao criar os RPCs.
 
 A migration `0022` despublica todas as fotografias e mapas que não usam a origem oficial. Nos novos metadados, `storage_path`/`thumbnail_path` guardam URLs HTTPS diretas de media.formula1.com; o resolver do cliente permite explicitamente esse domínio. O contrato e as demais estatísticas permanecem iguais.
+
+A migration `0023` acrescenta `section_title`, `section_turns` e `section_description` a `circuit_media`, mantendo RLS. Também corrige Albert Park para 14 curvas e remove notas antigas sobre galerias. O book é publicado separadamente por `scripts/sync-circuit-book.mjs --apply`, em transação: despublica fotos anteriores e insere somente o manifesto revisado; mapas e estatísticas são preservados. A revisão fica no JSON versionado, sem ser enviada ao banco. URLs HTTPS oficiais são usadas diretamente; não há cópia dos arquivos para o Storage.

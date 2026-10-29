@@ -174,3 +174,8 @@ Migrations até `0019` registradas, função versão 8 ativa com JWT e cron com 
 Após a correção solicitada em 29/10/2026, o catálogo usa somente os 23 traçados oficiais do domínio media.formula1.com. `data/circuits/official-maps.json` contém as URLs e dimensões verificadas (1920×1080 a 3840×2160), autoria Formula 1 e direitos reservados, sem atribuir licença aberta. Os arquivos são exibidos diretamente da origem, sem copiá-los para o Storage.
 
 A migration 0022 despublica fotografias e mapas anteriores. O importador agora exige exatamente um mapa oficial por pista e rejeita galerias. `prepared-media.json` e o bundle de 2026 contêm apenas os mapas oficiais; o upload não envia URLs externas. Para atualizar dados de pista: validar URLs/dimensões em `official-maps.json`, copiar os metadados para `prepared-media.json`, executar `sync-circuits.mjs 2026 --metadata-only` e então `--apply`. Não usar o preparador antigo de fotos: ele interrompe quando o manifesto usa entrega pela origem oficial. Fotografias antigas não são retornadas pelo catálogo nem usadas pela interface.
+
+
+### Book de trechos F1 (29/10/2026)
+
+A pedido do usuário, o book retorna com nova curadoria: somente trechos do traçado F1 de fontes oficiais, com carros exclusivamente F1 quando presentes. A migration 0022 e a remoção das fotos rejeitadas continuam válidas. Aplicar a nova 0023, então validar `node scripts/sync-circuit-book.mjs` e publicar com `--apply` após código validado e enviado ao GitHub. A transação mantém mapas e estatísticas, despublica fotos anteriores e publica somente o manifesto revisado. Não executar a importação antiga de fotografias. O manifesto esportivo de mapas permanece independente.

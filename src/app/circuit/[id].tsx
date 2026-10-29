@@ -7,6 +7,7 @@ import { circuitCountry, circuitDirection, circuitLength } from '@/lib/circuits'
 import type { CircuitProfile } from '@/lib/types';
 import { flag, fmtDate } from '@/lib/format';
 import { CircuitImage } from '@/components/circuits/CircuitImage';
+import { CircuitBook } from '@/components/circuits/CircuitBook';
 import { CircuitViewer } from '@/components/circuits/CircuitViewer';
 import { Button, Card, H1, H2, Loading, Muted, P, Pill, Row, Screen } from '@/ui/primitives';
 import { colors, radius, space } from '@/ui/theme';
@@ -17,7 +18,7 @@ export default function CircuitScreen(){
   const [profile,setProfile]=useState<CircuitProfile|null>(null);
   const [loading,setLoading]=useState(true);
   const [error,setError]=useState('');
-  const [viewer,setViewer]=useState<number|null>(null);
+  const [viewer,setViewer]=useState<{kind:'map'|'photo';index:number}|null>(null);
   const load=useCallback(async()=>{
     try{setError('');const value=await getCircuitProfile(id);if(!value)throw new Error('Esta pista ainda não está disponível no catálogo.');setProfile(value);}
     catch(e:any){setError(e.message || 'Não foi possível carregar a pista.');}
@@ -28,6 +29,7 @@ export default function CircuitScreen(){
   if(loading)return <Screen scroll={false}><Loading/></Screen>;
   if(!profile)return <Screen><Muted>{error}</Muted><Button title="Tentar novamente" onPress={()=>void load()}/></Screen>;
   const {circuit:c,layout,stats,last_race:last,winners}=profile;
+  const photos=profile.media.filter(m=>m.kind==='photo'&&m.section_title);
   const maps=profile.media.filter((m)=>m.kind==='map');
   return <>
     <Stack.Screen options={{title:c.name}}/>
@@ -45,13 +47,14 @@ export default function CircuitScreen(){
       <Card>
         <H2>O traçado</H2>
         <Muted>Mapa oficial da Fórmula 1 · curvas e setores.</Muted>
-        {maps[0]?<Pressable accessibilityRole="button" accessibilityLabel="Abrir mapa da pista em tela cheia" onPress={()=>setViewer(0)} style={{marginTop:12,borderRadius:8,overflow:'hidden'}}>
+        {maps[0]?<Pressable accessibilityRole="button" accessibilityLabel="Abrir mapa da pista em tela cheia" onPress={()=>setViewer({kind:'map',index:0})} style={{marginTop:12,borderRadius:8,overflow:'hidden'}}>
           <CircuitImage media={maps[0]} height={230} fit="contain"/>
           <Text style={{color:colors.red,fontWeight:'700',paddingVertical:12}}>Ampliar traçado ↗</Text>
         </Pressable>:<Muted>Mapa indisponível.</Muted>}
         {layout?.notes&&<Muted>{layout.notes}</Muted>}
         {maps[0]?.period&&<Muted>{maps[0].period}</Muted>}
       </Card>
+      <CircuitBook media={photos} onOpen={index=>setViewer({kind:'photo',index})}/>
       <Card>
         <H2>Último GP nesta pista</H2>
         {last?<><Muted>{last.race_name} · {last.season} · {fmtDate(last.date_utc)}</Muted>{last.winners.map((winner)=><Pressable key={winner.driver_id} accessibilityRole={winner.has_profile?"button":undefined} disabled={!winner.has_profile} onPress={()=>router.push(`/driver/${winner.driver_id}`)}><P style={{fontSize:20,fontWeight:'800',marginTop:12}}>🏆 {winner.driver_name}</P><Muted>{winner.team}</Muted></Pressable>)}
@@ -80,7 +83,7 @@ export default function CircuitScreen(){
       <Card><H2>Uma pista, muitas histórias</H2><P>{c.description}</P><Pressable accessibilityRole="link" onPress={()=>void Linking.openURL(c.official_url)}><Text style={{color:colors.red,paddingVertical:14,fontWeight:'700'}}>Conheça a fonte oficial ↗</Text></Pressable></Card>
       {stats.synced_at&&<Muted style={{textAlign:'center'}}>Histórico atualizado em {fmtDate(stats.synced_at)} · Traçado da fonte oficial Fórmula 1.</Muted>}
     </Screen>
-    <CircuitViewer media={maps} index={viewer} onClose={()=>setViewer(null)} onIndex={setViewer}/>
+    <CircuitViewer media={viewer?.kind==='photo'?photos:maps} index={viewer?.index??null} onClose={()=>setViewer(null)} onIndex={index=>setViewer(v=>v?{...v,index}:null)}/>
   </>;
 }
 function Metric({label,value}:{label:string;value:string}){return <View style={{width:'48%',flexGrow:1,padding:14,borderRadius:12,backgroundColor:colors.card,borderWidth:1,borderColor:colors.border}}><Text style={{color:colors.muted,fontSize:10,fontWeight:'800',letterSpacing:.5}}>{label}</Text><P style={{fontWeight:'800',fontSize:21,marginTop:6}}>{value}</P></View>;}
