@@ -32,6 +32,7 @@ export const FLAGS: Record<string, string> = {
   Australia: '🇦🇺', China: '🇨🇳', Japan: '🇯🇵', Bahrain: '🇧🇭', 'Saudi Arabia': '🇸🇦', USA: '🇺🇸', 'United States': '🇺🇸',
   Canada: '🇨🇦', Monaco: '🇲🇨', Spain: '🇪🇸', Austria: '🇦🇹', UK: '🇬🇧', 'Great Britain': '🇬🇧', Belgium: '🇧🇪',
   Hungary: '🇭🇺', Netherlands: '🇳🇱', Italy: '🇮🇹', Azerbaijan: '🇦🇿', Singapore: '🇸🇬', Mexico: '🇲🇽',
+  Germany:'🇩🇪', Portugal:'🇵🇹', France:'🇫🇷', Russia:'🇷🇺', Sweden:'🇸🇪', Switzerland:'🇨🇭', Morocco:'🇲🇦', India:'🇮🇳', Argentina:'🇦🇷', 'South Africa':'🇿🇦', Turkey:'🇹🇷', Korea:'🇰🇷',
   Brazil: '🇧🇷', Malaysia: '🇲🇾', Qatar: '🇶🇦', UAE: '🇦🇪',
 };
 export const flag = (country: string | null) => (country && FLAGS[country]) || '🏁';

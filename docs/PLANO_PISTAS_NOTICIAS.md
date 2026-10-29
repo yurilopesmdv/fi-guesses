@@ -194,3 +194,8 @@ O usuário rejeitou a seleção fotográfica publicada e determinou a remoção 
 ### Book solicitado após a correção visual (29/10/2026)
 
 O usuário confirmou a correção dos mapas e solicitou novamente um book, agora de curvas e trechos reais da pista, exclusivamente F1. Fontes oficiais, asfalto como assunto principal, sem turismo, público como assunto, enquadramentos distantes ou carros de outras categorias. A seleção antiga permanece revogada. O mapa oficial continua como identidade na lista e no perfil. A curadoria inicial tem 15 fotos de seis circuitos, com expansão e visualizador; não representa cobertura fotográfica completa das 23 pistas. Ausência de foto aprovada não será preenchida com material inadequado. Históricas e Notícias foram retomadas como próximas demandas; ainda não estão publicadas.
+
+
+### Catálogo histórico retomado
+
+55 perfis históricos foram conciliados com os 23 atuais. A nova alternância não retira conteúdo dos perfis atuais. O acervo contém 459 edições e 462 vencedores, inclusive vitórias compartilhadas, e configurações técnicas datadas. Não foram restaurados os mapas comunitários e fotos do trabalho interrompido: nenhuma imagem histórica sem fonte oficial aprovada é publicada. Imagens de outras categorias continuam proibidas. Curadoria fotográfica completa das 23 atuais e mídias históricas permanecem pendentes; Notícias segue como próxima funcionalidade.

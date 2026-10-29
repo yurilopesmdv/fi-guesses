@@ -92,3 +92,6 @@ O book editorial fica em `data/circuits/track-book.json`, separado da importaç�
 `node scripts/sync-circuit-book.mjs` valida sem rede nem escrita; `--apply` publica o manifesto pela Management API, após commit/push e aplicação da migration 0023. A operação despublica todas as fotos anteriores e preserva mapas. Os arquivos permanecem na origem oficial, sem upload para Storage. O livro inicial contém 15 fotos de Interlagos, Zandvoort, Albert Park, Red Bull Ring, Spa e Austin.
 
 Validar TypeScript, exportação web, fluxo móvel (lista → mapa → book → ampliar/navegar → créditos), carga real das imagens e SDK 57. A suíte contém 40 testes: 21 SQL/RLS, 6 HTTP, 2 status, 2 provider, 7 grid e 2 helpers de circuitos. Em produção conferir 23 mapas, somente fotos do manifesto publicadas e bloqueio de escrita por membros.
+
+
+Para atualizar o acervo histórico: `node --import tsx scripts/sync-circuit-archive.mjs` prepara metadados com resultados já versionados; `--refresh` consulta vencedores na fonte e `--apply` publica o bundle em transação. A operação não publica imagens históricas. Revisar cidades (a fonte esportiva contém estados/províncias em alguns campos locality), configuração de referência e variantes dos nomes. Executar o cenário SQL/RLS do arquivo e percorrer Atuais → Históricas → país/busca → perfil, preservando o book atual. A suíte passa a 41 testes.

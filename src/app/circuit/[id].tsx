@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/auth';
 import { getCircuitProfile } from '@/lib/repo';
 import { circuitCountry, circuitDirection, circuitLength } from '@/lib/circuits';
 import type { CircuitProfile } from '@/lib/types';
-import { flag, fmtDate } from '@/lib/format';
+import { flag, fmtDate, fmtDay } from '@/lib/format';
 import { CircuitImage } from '@/components/circuits/CircuitImage';
 import { CircuitBook } from '@/components/circuits/CircuitBook';
 import { CircuitViewer } from '@/components/circuits/CircuitViewer';
@@ -41,23 +41,24 @@ export default function CircuitScreen(){
       <View style={{flexDirection:'row',flexWrap:'wrap',gap:8,marginBottom:16}}>
         <Metric label="EXTENSÃO" value={layout?circuitLength(layout.length_m):'—'}/><Metric label="CURVAS" value={String(layout?.turns??'—')}/>
         <Metric label="ESTREIA NO MUNDIAL" value={String(stats.first_season??'—')}/><Metric label="TEMPORADAS DISPUTADAS" value={String(stats.seasons)}/>
-        <Metric label="GRANDS PRIX" value={String(stats.races)}/><Metric label="SENTIDO" value={layout?circuitDirection(layout.direction):'—'}/>
+        <Metric label="CORRIDAS NO MUNDIAL" value={String(stats.races)}/><Metric label="SENTIDO" value={layout?circuitDirection(layout.direction):'—'}/>
       </View>
       {!stats.complete&&<Muted>Acervo histórico parcial. Os totais podem aumentar com novas importações.</Muted>}
       <Card>
-        <H2>O traçado</H2>
-        <Muted>Mapa oficial da Fórmula 1 · curvas e setores.</Muted>
+        <H2>{maps.length?'O traçado':'Traçado histórico de referência'}</H2>
+        {maps.length>0&&<Muted>Mapa oficial da Fórmula 1 · curvas e setores.</Muted>}
         {maps[0]?<Pressable accessibilityRole="button" accessibilityLabel="Abrir mapa da pista em tela cheia" onPress={()=>setViewer({kind:'map',index:0})} style={{marginTop:12,borderRadius:8,overflow:'hidden'}}>
           <CircuitImage media={maps[0]} height={230} fit="contain"/>
           <Text style={{color:colors.red,fontWeight:'700',paddingVertical:12}}>Ampliar traçado ↗</Text>
-        </Pressable>:<Muted>Mapa indisponível.</Muted>}
+        </Pressable>:null}
         {layout?.notes&&<Muted>{layout.notes}</Muted>}
         {maps[0]?.period&&<Muted>{maps[0].period}</Muted>}
+        {layout?.source_url.includes('github.com/f1db/')&&<Pressable accessibilityRole="link" onPress={()=>void Linking.openURL(layout.source_url)}><Text style={{color:colors.red,paddingVertical:12}}>Dados do traçado: F1DB · CC BY 4.0 ↗</Text></Pressable>}
       </Card>
       <CircuitBook media={photos} onOpen={index=>setViewer({kind:'photo',index})}/>
       <Card>
         <H2>Último GP nesta pista</H2>
-        {last?<><Muted>{last.race_name} · {last.season} · {fmtDate(last.date_utc)}</Muted>{last.winners.map((winner)=><Pressable key={winner.driver_id} accessibilityRole={winner.has_profile?"button":undefined} disabled={!winner.has_profile} onPress={()=>router.push(`/driver/${winner.driver_id}`)}><P style={{fontSize:20,fontWeight:'800',marginTop:12}}>🏆 {winner.driver_name}</P><Muted>{winner.team}</Muted></Pressable>)}
+        {last?<><Muted>{last.race_name} · {last.season} · {fmtDay(last.date_utc)}</Muted>{last.winners.map((winner)=><Pressable key={winner.driver_id} accessibilityRole={winner.has_profile?"button":undefined} disabled={!winner.has_profile} onPress={()=>router.push(`/driver/${winner.driver_id}`)}><P style={{fontSize:20,fontWeight:'800',marginTop:12}}>🏆 {winner.driver_name}</P><Muted>{winner.team}</Muted></Pressable>)}
           {last.race_id&&<Button title="Ver resultado completo" variant="ghost" onPress={()=>router.push(`/race/${last.race_id}`)}/>}</>:<Muted>Ainda não há resultado de um GP disputado nesta pista.</Muted>}
       </Card>
       <Card>
@@ -70,18 +71,18 @@ export default function CircuitScreen(){
       <Card>
         <H2>Sobre a pista</H2>
         <Detail label="Cidade" value={c.locality}/><Detail label="País" value={circuitCountry(c.country)}/>
-        <Detail label="Primeiro GP no Mundial" value={String(stats.first_season??'—')}/><Detail label="Última temporada disputada" value={String(stats.last_season??'—')}/>
+        <Detail label="Primeira corrida no Mundial" value={String(stats.first_season??'—')}/><Detail label="Última temporada disputada" value={String(stats.last_season??'—')}/>
         <Detail label="Temporadas com corrida" value={String(stats.seasons)}/><Detail label="Corridas já realizadas" value={String(stats.races)}/>
         <Detail label="Vencedores diferentes" value={String(stats.different_winners)}/><Detail label="Recorde de vitórias de um piloto" value={String(stats.record_wins)}/>
         <Muted style={{marginTop:12}}>Temporadas e corridas são contagens diferentes: a pista pode ficar anos fora do calendário ou receber dois GPs no mesmo ano.</Muted>
       </Card>
-      {layout&&<Card><H2>Ficha do GP · {layout.season}</H2>
+      {layout&&(layout.gp_laps||layout.gp_distance_km||layout.lap_record_time)?<Card><H2>Ficha do GP · {layout.season}</H2>
         <Detail label="Voltas previstas" value={String(layout.gp_laps??'—')}/><Detail label="Distância prevista" value={layout.gp_distance_km?`${layout.gp_distance_km.toLocaleString('pt-BR')} km`:'—'}/>
         {layout.lap_record_time&&<><Detail label="Recorde de volta em corrida" value={layout.lap_record_time}/><Muted>{layout.lap_record_driver} · {layout.lap_record_year}</Muted></>}
         <Pressable accessibilityRole="link" onPress={()=>void Linking.openURL(layout.source_url)}><Text style={{color:colors.red,paddingVertical:12}}>Consultar ficha oficial ↗</Text></Pressable>
-      </Card>}
-      <Card><H2>Uma pista, muitas histórias</H2><P>{c.description}</P><Pressable accessibilityRole="link" onPress={()=>void Linking.openURL(c.official_url)}><Text style={{color:colors.red,paddingVertical:14,fontWeight:'700'}}>Conheça a fonte oficial ↗</Text></Pressable></Card>
-      {stats.synced_at&&<Muted style={{textAlign:'center'}}>Histórico atualizado em {fmtDate(stats.synced_at)} · Traçado da fonte oficial Fórmula 1.</Muted>}
+      </Card>:null}
+      <Card><H2>Uma pista, muitas histórias</H2><P>{c.description}</P><Pressable accessibilityRole="link" onPress={()=>void Linking.openURL(c.official_url)}><Text style={{color:colors.red,paddingVertical:14,fontWeight:'700'}}>{c.official_url.includes('wikipedia.org')?'Consultar referência histórica ↗':'Conheça a fonte oficial ↗'}</Text></Pressable></Card>
+      {stats.synced_at&&<Muted style={{textAlign:'center'}}>Histórico atualizado em {fmtDate(stats.synced_at)}{maps.length?' · Traçado da fonte oficial Fórmula 1.':' · Estatísticas do Mundial; configuração histórica identificada acima.'}</Muted>}
     </Screen>
     <CircuitViewer media={viewer?.kind==='photo'?photos:maps} index={viewer?.index??null} onClose={()=>setViewer(null)} onIndex={index=>setViewer(v=>v?{...v,index}:null)}/>
   </>;
