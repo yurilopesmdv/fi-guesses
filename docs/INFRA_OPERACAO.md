@@ -190,6 +190,6 @@ Job `content-news-every-ten-minutes`: `*/10 * * * *`; invoca RPC administrativa 
 
 ### Evolução do bolão
 
-Migrations novas 0028–0030 precedem o cliente. Configurar apenas o redirect de recuperação com `configure-recovery.mjs --apply`, preservando opções e URLs do Auth existentes. A recuperação usa página HTTPS de produção, atendendo também solicitações feitas no APK/Expo Go. O teste administrativo gera link sem enviar e-mail.
+Migrations novas 0028–0031 precedem o cliente. Configurar apenas o redirect de recuperação com `configure-recovery.mjs --apply`, preservando opções e URLs do Auth existentes. A recuperação usa página HTTPS de produção, atendendo também solicitações feitas no APK/Expo Go. O teste administrativo gera link sem enviar e-mail.
 
 Publicar sync-news para passar a vincular notícias por GP e executar o backfill conservador para itens existentes. As ferramentas de consulta não usam assinatura ao vivo, notificações ou fornecedor de IA. Compatibilidade OTA mantida com as dependências já presentes nos SDKs 57 e 58; nenhum novo módulo nativo. Logs de rascunhos, tokens e links privados de recuperação não devem ser impressos.
