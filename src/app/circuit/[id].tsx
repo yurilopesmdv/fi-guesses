@@ -7,6 +7,8 @@ import { circuitCountry, circuitDirection, circuitLength } from '@/lib/circuits'
 import type { CircuitProfile } from '@/lib/types';
 import { flag, fmtDate, fmtDay } from '@/lib/format';
 import { CircuitImage } from '@/components/circuits/CircuitImage';
+import { CircuitMap } from '@/components/circuits/CircuitMap';
+import { CircuitSegments } from '@/components/circuits/CircuitSegments';
 import { CircuitBook } from '@/components/circuits/CircuitBook';
 import { CircuitViewer } from '@/components/circuits/CircuitViewer';
 import { Button, Card, H1, H2, Loading, Muted, P, Pill, Row, Screen } from '@/ui/primitives';
@@ -47,12 +49,10 @@ export default function CircuitScreen(){
       <Card>
         <H2>{maps.length?'O traçado':'Traçado histórico de referência'}</H2>
         {maps.length>0&&<Muted>Mapa oficial da Fórmula 1 · curvas e setores.</Muted>}
-        {maps[0]?<Pressable accessibilityRole="button" accessibilityLabel="Abrir mapa da pista em tela cheia" onPress={()=>setViewer({kind:'map',index:0})} style={{marginTop:12,borderRadius:8,overflow:'hidden'}}>
-          <CircuitImage media={maps[0]} height={230} fit="contain"/>
-          <Text style={{color:colors.red,fontWeight:'700',paddingVertical:12}}>Ampliar traçado ↗</Text>
-        </Pressable>:null}
+        {maps[0]&&<CircuitMap map={maps[0]} photos={photos} onMap={()=>setViewer({kind:'map',index:0})} onPhoto={index=>setViewer({kind:'photo',index})}/>}
         {layout?.notes&&<Muted>{layout.notes}</Muted>}
         {maps[0]?.period&&<Muted>{maps[0].period}</Muted>}
+        <CircuitSegments media={photos} onOpen={index=>setViewer({kind:'photo',index})}/>
         {layout?.source_url.includes('github.com/f1db/')&&<Pressable accessibilityRole="link" onPress={()=>void Linking.openURL(layout.source_url)}><Text style={{color:colors.red,paddingVertical:12}}>Dados do traçado: F1DB · CC BY 4.0 ↗</Text></Pressable>}
       </Card>
       <CircuitBook media={photos} onOpen={index=>setViewer({kind:'photo',index})}/>

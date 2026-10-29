@@ -1,7 +1,8 @@
+import { DriverContext } from './insights/DriverContext';
 import { useMemo, useState } from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { Driver, StartingGrid } from '@/lib/types';
+import type { Driver, Race, StartingGrid } from '@/lib/types';
 import { driversByStartingGrid, startingPositionLabel } from '@/lib/raceGrid';
 import { canOpenDriver, openDriver } from '@/lib/nav';
 import { Button, Input, Muted } from '@/ui/primitives';
@@ -11,14 +12,16 @@ type Props = {
   visible: boolean;
   drivers: Driver[];
   startingGrid?: StartingGrid | null;
+  race?: Race;
   title?: string;
   onSelect: (code: string) => void;
   onClose: () => void;
 };
 
 /** Lista de pilotos com busca por nome, código, número ou equipe. */
-export function DriverPicker({ visible, drivers, title = 'Escolha o piloto', onSelect, onClose, startingGrid }: Props) {
+export function DriverPicker({ visible, drivers, title = 'Escolha o piloto', onSelect, onClose, startingGrid, race }: Props) {
   const [q, setQ] = useState('');
+  const [codes,setCodes]=useState<string[]>([]);
   const insets = useSafeAreaInsets();
   const list = useMemo(() => {
     const t = q.trim().toLowerCase();
@@ -35,12 +38,13 @@ export function DriverPicker({ visible, drivers, title = 'Escolha o piloto', onS
         <Text style={s.title}>{title}</Text>
         {startingGrid && <Muted>Ordenados pela largada. Escolha quem você acha que vai chegar na posição do palpite.</Muted>}
         <Input placeholder="Buscar: nome, número, equipe…" value={q} onChangeText={setQ} autoFocus autoCorrect={false} />
+        {race&&codes.length>0&&<DriverContext drivers={drivers} codes={codes} race={race} grid={startingGrid} onClose={()=>setCodes([])}/>}
         <FlatList
           data={list}
           keyExtractor={(d) => d.code}
           keyboardShouldPersistTaps="handled"
           ListEmptyComponent={<Muted style={{ textAlign: 'center', marginTop: space(3) }}>Nenhum piloto encontrado</Muted>}
-          renderItem={({ item }) => <DriverRow d={item} startingGrid={startingGrid} onPress={() => { onSelect(item.code); setQ(''); onClose(); }} />}
+          renderItem={({ item }) => <View><DriverRow d={item} startingGrid={startingGrid} onPress={() => { onSelect(item.code); setQ(''); onClose(); }}/>{race&&<Pressable accessibilityRole="button" accessibilityLabel={`Analisar ${item.name}`} onPress={()=>setCodes(prev=>prev.includes(item.code)?prev.filter(c=>c!==item.code):[...prev.slice(-1),item.code])}><Text style={{color:colors.red,fontWeight:'700',padding:10}}>{codes.includes(item.code)?'✓ Em comparação':'Analisar antes de escolher'}</Text></Pressable>}</View>}
         />
         <Button title="Fechar" variant="ghost" onPress={onClose} />
       </View>

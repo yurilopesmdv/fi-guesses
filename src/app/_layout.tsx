@@ -1,5 +1,6 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { PredictionOutboxProvider } from '@/lib/predictionOutbox';
 import { AuthProvider } from '@/lib/auth';
 import { SeasonProvider } from '@/lib/useSeason';
 import { useOtaUpdate } from '@/lib/useOtaUpdate';
@@ -9,7 +10,7 @@ export default function RootLayout() {
   useOtaUpdate();
   return (
     <AuthProvider>
-      <SeasonProvider>
+      <PredictionOutboxProvider><SeasonProvider>
         <StatusBar style="light" />
         <Stack
           screenOptions={{
@@ -21,6 +22,7 @@ export default function RootLayout() {
           }}
         >
           <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="recover" options={{title:'Recuperar acesso'}} />
           <Stack.Screen name="login" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="pool/[id]" options={{ headerShown: false }} />
@@ -30,7 +32,7 @@ export default function RootLayout() {
           <Stack.Screen name="team/[name]" options={{ title: 'Equipe' }} />
           <Stack.Screen name="join/[code]" options={{ headerShown: false }} />
         </Stack>
-      </SeasonProvider>
+      </SeasonProvider></PredictionOutboxProvider>
     </AuthProvider>
   );
 }

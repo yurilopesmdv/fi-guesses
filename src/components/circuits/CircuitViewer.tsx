@@ -40,6 +40,7 @@ export function CircuitViewer({ media, index, onClose, onIndex }: { media: Circu
       </View>
       <View style={{padding:space(2),gap:8}}>
         <P style={{fontWeight:'700'}}>{current?.caption}</P>
+        {current?.section_description&&<Muted>{current.section_description}</Muted>}
         {current?.period && <Muted>{current.period}</Muted>}
         <Muted>Amplie com dois dedos ou dois toques. Arraste para explorar.</Muted>
         <Row><View style={{flex:1}}><Button title="− Zoom" variant="ghost" onPress={()=>{scale.value=Math.max(1,scale.value-.5);if(scale.value===1){x.value=0;y.value=0;}}}/></View><View style={{flex:1}}><Button title="Ajustar" variant="ghost" onPress={()=>{scale.value=1;x.value=0;y.value=0;}}/></View><View style={{flex:1}}><Button title="Zoom +" variant="ghost" onPress={()=>{scale.value=Math.min(maxZoom,scale.value+.5);}}/></View></Row>

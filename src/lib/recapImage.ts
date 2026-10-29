@@ -1,0 +1,11 @@
+/** SVG próprio, sem fotos/licenças externas. Download no navegador; nativo mantém Share texto. */
+export function recapSvg(title:string,lines:string[]){
+ const escape=(value:string)=>value.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
+ const rows=lines.flatMap(line=>{const words=line.split(' '),parts:string[]=[];let current='';for(const word of words){if((current+' '+word).length>54){parts.push(current);current=word;}else current=(current+' '+word).trim();}if(current)parts.push(current);return parts;});
+ return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="${Math.max(600,320+rows.length*46)}"><rect width="100%" height="100%" fill="#0B0B0F"/><rect x="48" y="48" width="8" height="120" fill="#E10600"/><text x="80" y="90" fill="#E10600" font-family="sans-serif" font-size="26">BOLÃO F1 · RETROSPECTIVA</text><text x="80" y="150" fill="#F4F4F6" font-family="sans-serif" font-weight="bold" font-size="36">${escape(title.slice(0,43))}</text>${rows.map((line,i)=>`<text x="80" y="${240+i*46}" fill="#F4F4F6" font-family="sans-serif" font-size="27">${escape(line)}</text>`).join('')}<text x="80" y="${Math.max(550,290+rows.length*46)}" fill="#9A9AAB" font-family="sans-serif" font-size="22">Conforme perguntas já apuradas · bolao-f1.expo.app</text></svg>`;
+}
+export async function downloadRecap(title:string,lines:string[]){
+ if(typeof document==='undefined')return;
+ const source=URL.createObjectURL(new Blob([recapSvg(title,lines)],{type:'image/svg+xml;charset=utf-8'}));
+ try{const image=new Image();await new Promise<void>((resolve,reject)=>{image.onload=()=>resolve();image.onerror=()=>reject(Error('Não foi possível montar o cartão.'));image.src=source;});const canvas=document.createElement('canvas');canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;const context=canvas.getContext('2d');if(!context)throw Error('Exportação de imagem indisponível.');context.drawImage(image,0,0);const blob=await new Promise<Blob>((resolve,reject)=>canvas.toBlob(value=>value?resolve(value):reject(Error('Não foi possível gerar a imagem.')),'image/png'));const target=URL.createObjectURL(blob),a=document.createElement('a');a.href=target;a.download='retrospectiva-bolao-f1.png';a.click();setTimeout(()=>URL.revokeObjectURL(target),10000);}finally{URL.revokeObjectURL(source);}
+}

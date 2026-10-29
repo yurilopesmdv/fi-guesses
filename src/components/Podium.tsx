@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { startingPositionLabel } from '@/lib/raceGrid';
 import { DriverPicker } from './DriverPicker';
-import type { Driver, PodiumAnswer, StartingGrid } from '@/lib/types';
+import type { Race, Driver, PodiumAnswer, StartingGrid } from '@/lib/types';
 import { colors, radius, space } from '@/ui/theme';
 
 const SLOTS: { key: keyof PodiumAnswer; label: string; color: string }[] = [
@@ -15,12 +15,13 @@ type Props = {
   value: PodiumAnswer;
   drivers: Driver[];
   startingGrid?: StartingGrid | null;
+  race?: Race;
   onChange?: (v: PodiumAnswer) => void;
   /** pódio oficial — quando presente, pinta acerto (3), quase (1) e erro */
   result?: PodiumAnswer | null;
 };
 
-export function Podium({ value, drivers, onChange, result, startingGrid }: Props) {
+export function Podium({ value, drivers, onChange, result, startingGrid, race }: Props) {
   const [picking, setPicking] = useState<keyof PodiumAnswer | null>(null);
   const byCode = Object.fromEntries(drivers.map((d) => [d.code, d]));
   const podium = result ? [result.p1, result.p2, result.p3] : [];
@@ -61,7 +62,7 @@ export function Podium({ value, drivers, onChange, result, startingGrid }: Props
       <DriverPicker
         visible={picking !== null}
         drivers={drivers}
-        startingGrid={startingGrid}
+        startingGrid={startingGrid} race={race}
         title={picking ? `Quem chega em ${SLOTS.find((x) => x.key === picking)!.label}?` : ''}
         onClose={() => setPicking(null)}
         onSelect={(code) => {

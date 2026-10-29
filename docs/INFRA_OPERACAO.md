@@ -186,3 +186,10 @@ A pedido do usuário, o book retorna com nova curadoria: somente trechos do tra�
 Após commit/push do código validado: aplicar 0025, 0026 e 0027, publicar `sync-news` e executar `node scripts/setup-content-cron.mjs --apply`. O script obtém a credencial de serviço pela Management API, grava/atualiza `content_project_url`, `content_service_role` e `content_cron_secret` no Vault, além de `CONTENT_SYNC_SECRET` nas secrets da Edge Function e executa a primeira coleta. Sem --apply, não há leitura remota nem escrita. Nenhum valor secreto é impresso ou gravado em arquivo. O CI passa a publicar sync-series e sync-news antes do cliente. Segredos persistem entre deploys; sua rotação requer executar novamente o setup.
 
 Job `content-news-every-ten-minutes`: `*/10 * * * *`; invoca RPC administrativa sem valores secretos no comando cron. O token é lido no servidor no momento da chamada e permanece na fila pg_net até o envio, conforme operação padrão do serviço. Não conceder acesso de banco a usuários do app. Confirmar primeira coleta, execução real via fila, status de cada fonte e bloqueio 403 de membros antes de publicar o cliente. Falha de fonte mantém conteúdo anterior.
+
+
+### Evolução do bolão
+
+Migrations novas 0028–0030 precedem o cliente. Configurar apenas o redirect de recuperação com `configure-recovery.mjs --apply`, preservando opções e URLs do Auth existentes. A recuperação usa página HTTPS de produção, atendendo também solicitações feitas no APK/Expo Go. O teste administrativo gera link sem enviar e-mail.
+
+Publicar sync-news para passar a vincular notícias por GP e executar o backfill conservador para itens existentes. As ferramentas de consulta não usam assinatura ao vivo, notificações ou fornecedor de IA. Compatibilidade OTA mantida com as dependências já presentes nos SDKs 57 e 58; nenhum novo módulo nativo. Logs de rascunhos, tokens e links privados de recuperação não devem ser impressos.

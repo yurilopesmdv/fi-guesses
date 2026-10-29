@@ -1,6 +1,7 @@
+import { ranked } from '@/lib/poolInsights';
 import { useCallback, useState } from 'react';
-import { Share, Text, View } from 'react-native';
-import { useFocusEffect } from 'expo-router';
+import { Pressable, Share, Text, View } from 'react-native';
+import { router, useFocusEffect } from 'expo-router';
 import { useUserId } from '@/lib/auth';
 import { listRaceScores, listStandings } from '@/lib/repo';
 import type { Standing } from '@/lib/types';
@@ -13,13 +14,13 @@ const MEDAL = ['🥇', '🥈', '🥉'];
 export default function Standings() {
   const { pool, races } = usePool();
   const uid = useUserId();
-  const [rows, setRows] = useState<Standing[] | null>(null);
+  const [rows, setRows] = useState<(Standing & {rank:number})[] | null>(null);
   const [lastRace, setLastRace] = useState<Record<string, number>>({});
 
   useFocusEffect(useCallback(() => {
     if (!pool) return;
     Promise.all([listStandings(pool.id), listRaceScores(pool.id)]).then(([st, sc]) => {
-      setRows(st);
+      setRows(ranked(st));
       // pontos da corrida mais recente apurada
       const scored = new Set(sc.map((x) => x.race_id));
       const last = [...races].reverse().find((r) => scored.has(r.id));
@@ -30,7 +31,7 @@ export default function Standings() {
   if (!pool || rows === null) return <Screen scroll={false}><Loading /></Screen>;
 
   const share = () => Share.share({
-    message: `🏁 ${pool.name} — ranking\n` + rows.map((r, i) => `${MEDAL[i] ?? `${i + 1}.`} ${r.name} — ${r.total} pts`).join('\n'),
+    message: `🏁 ${pool.name} — ranking\n` + rows.map((r, i) => `${MEDAL[r.rank-1] ?? `${r.rank}.`} ${r.name} — ${r.total} pts`).join('\n'),
   });
 
   return (
@@ -39,9 +40,9 @@ export default function Standings() {
         <Muted style={{ marginBottom: space(1) }}>💰 {pool.stake_label} · {rows.length} participantes</Muted>
       )}
       {rows.map((r, i) => (
-        <Card key={r.user_id} style={r.user_id === uid ? { borderColor: colors.red } : undefined}>
+        <Pressable key={r.user_id} accessibilityRole="button" accessibilityLabel={`Ver desempenho de ${r.name}`} onPress={()=>router.push(`/pool/${pool.id}/analysis?userId=${r.user_id}`)}><Card style={r.user_id === uid ? { borderColor: colors.red } : undefined}>
           <Row>
-            <Text style={{ fontSize: 22, width: 36 }}>{MEDAL[i] ?? `${i + 1}º`}</Text>
+            <Text style={{ fontSize: 22, width: 36 }}>{MEDAL[r.rank-1] ?? `${r.rank}º`}</Text>
             <Text style={{ fontSize: 22 }}>{r.avatar}</Text>
             <View style={{ flex: 1 }}>
               <P style={{ fontWeight: '800', fontSize: 17 }}>{r.name}</P>
@@ -49,7 +50,7 @@ export default function Standings() {
             </View>
             <Text style={{ color: colors.gold, fontSize: 24, fontWeight: '900' }}>{r.total}</Text>
           </Row>
-        </Card>
+        </Card></Pressable>
       ))}
       <Button title="Compartilhar ranking" variant="ghost" onPress={share} />
     </Screen>

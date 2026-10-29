@@ -133,3 +133,14 @@ OpenF1: consulta sessões de três dias antes a um dia depois da largada, locali
 Cron → `enqueue_content_sync` → `sync-news` → `content_posts` → app. Coleta exclusiva de feeds F1 em português, XML validado com fast-xml-parser 5.11.2 (empacotado no bundle Edge), limite 2 MB/20 s por fonte, DTD/entidades externas rejeitados, URLs restritas às fontes, datas reais e deduplicação por URL sem UTM. Não usa `content:encoded`, fotos ou corpo completo das matérias. Resumo limitado a 320 caracteres. ETag/Last-Modified e TTL respeitados (mínimo 10 minutos; Motorsport atualmente declara 100).
 
 JWT habilitado no gateway e segredo próprio `CONTENT_SYNC_SECRET` exigido pelo handler; usuários comuns não iniciam coleta. Trava de cinco minutos no banco impede execuções concorrentes, com liberação por proprietário. Falhas isoladas por fonte mantêm posts anteriores; notícias expiram em 45 dias. O cron roda a cada dez minutos e fontes só são consultadas após o TTL. Uma curiosidade por dia usa contagens SQL das pistas atuais, sem IA. Datas de publicação, coleta e atualização são distintas. `repo.ts` centraliza leitura paginada e status; o telefone não consulta feeds externos.
+
+
+## Preparação e análise do bolão
+
+`predictionQueue.ts` implementa fila serial persistida, com versões por edição, descarte só após confirmação, status de rejeição/expiração e reenvio de falhas transitórias. `PredictionOutboxProvider` fica sob AuthProvider, usa AsyncStorage por UID, cancela o worker ao trocar de conta e exige o UID esperado no envio. Rascunhos locais não entram no termômetro, pontuação, simulação ou retrospectiva. Falhas de armazenamento permitem envio online com aviso.
+
+`poolInsights.ts` centraliza cálculo visual compatível com SQL, empates, simulação e reconstrução por data. `PicksBoard` usa o mesmo cálculo; o pódio continua 3/1. `RacePreparation`, `DriverContext` e `RaceTools` são componentes opcionais das telas existentes. A rota `pool/[id]/analysis` fica sob o guard/provider do bolão; não há nova aba principal.
+
+`news-circuits.ts` associa notícias apenas quando o título contém referência explícita a um GP; dois circuitos explícitos ficam sem associação. O coletor grava circuit_id e um backfill administrativo só preenche vínculos nulos. `CircuitMap` sobrepõe marcadores conferidos apenas ao arquivo oficial correspondente, sem alterar a imagem. `recapImage.ts` produz PNG no navegador; nativo usa Share de texto.
+
+Recuperação usa redirect HTTPS canônico `/recover`, configurado separadamente e preservando redirects atuais. A página consome tokens/código, remove credenciais da barra de endereço e permite updateUser(password), sem redirecionamento automático que interrompa a troca. Nenhum segredo é incluído no bundle.

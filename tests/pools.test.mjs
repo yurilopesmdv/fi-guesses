@@ -324,3 +324,20 @@ test('curiosidade diária usa contagens do acervo, preserva um post por dia e n�
  const rows=(await db.query("select * from content_posts where kind='curiosity'")).rows;
  assert.equal(rows.length,1);assert.equal(rows[0].circuit_id,'test-circuit');assert.equal(rows[0].source_name,'Acervo Bolão F1 · dados Jolpica');assert.match(rows[0].summary,/4 corridas do Mundial em 3 temporadas/);
 });
+
+test('sessões opcionais preservam corrida antiga e recusam sprint sem programação',async()=>{
+ await db.exec(`update races set quali_utc=now()-interval '1 hour' where id='${raceC}'`);await asUser(4);
+ const legacy=(await db.query("select id,session,question_is_open(id) as open from questions where pool_id=$1 and kind='podium'",[poolC])).rows[0];assert.equal(legacy.session,'race');assert.equal(legacy.open,true);
+ const q=(await db.query("insert into questions(pool_id,race_id,kind,prompt,session) values($1,$2,'driver','Qualy opcional','qualifying') returning id",[poolC,raceC])).rows[0];assert.equal((await db.query('select question_is_open($1) as open',[q.id])).rows[0].open,false);
+ await db.exec('savepoint rejected_session');await assert.rejects(db.query("insert into questions(pool_id,race_id,kind,prompt,session) values($1,$2,'driver','Sprint sem horário','sprint')",[poolC,raceC]),/programação/);await db.exec('rollback to savepoint rejected_session;release savepoint rejected_session');
+ await db.exec('savepoint rejected_pick');await assert.rejects(db.query('insert into predictions(question_id,user_id,answer) values($1,$2,$3)',[q.id,uid(4),{driver:'AAA'}]),/row.level.security/);await db.exec('rollback to savepoint rejected_pick;release savepoint rejected_pick');
+});
+test('histórico de apuração usa autor real, não aceita escrita do membro e respeita bolão',async()=>{
+ await asUser(1);const q=(await db.query("insert into questions(pool_id,race_id,kind,prompt) values($1,$2,'driver','Piloto de teste') returning id",[poolA,raceA])).rows[0];
+ await db.query('insert into results(question_id,answer,set_by) values($1,$2,$3)',[q.id,{driver:'VER'},uid(2)]);await db.query('update results set answer=$1 where question_id=$2',[{driver:'NOR'},q.id]);
+ const events=(await db.query('select * from result_history where question_id=$1',[q.id])).rows;assert.equal(events.length,2);assert(events.every(e=>e.actor_id===uid(1)));assert(events.some(e=>e.previous_answer?.driver==='VER'&&e.answer.driver==='NOR'));
+ await asUser(2);assert.equal((await db.query('select * from result_history where question_id=$1',[q.id])).rows.length,2);
+ await db.exec('savepoint denied_audit');await assert.rejects(db.query('delete from result_history where question_id=$1 returning id',[q.id]).then(r=>{if(r.rows.length===0)throw Error('row level security');}),/row.level.security|permission denied/);await db.exec('rollback to savepoint denied_audit;release savepoint denied_audit');
+ await asUser(5);assert.equal((await db.query('select * from result_history')).rows.length,0);
+});
+test('análise do bolão não abre dados para não membros ou anônimos',async()=>{await asUser(1);assert((await db.query('select pool_analysis($1) as data',[poolA])).rows[0].data.questions.length>0);await asUser(5);assert.equal((await db.query('select pool_analysis($1) as data',[poolA])).rows[0].data,null);await asUser(null,'anon');await assert.rejects(db.query('select pool_analysis($1)',[poolA]),/permission denied/);});

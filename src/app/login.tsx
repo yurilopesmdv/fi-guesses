@@ -12,6 +12,8 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
+  const [recoveryMessage,setRecoveryMessage]=useState('');
+  const recover=async()=>{if(!email.includes('@')){setRecoveryMessage('Informe seu e-mail no campo acima.');return;}setBusy(true);const redirectTo='https://bolao-f1.expo.app/recover';try{const r=await supabase.auth.resetPasswordForEmail(email.trim(),{redirectTo});if(r.error)throw r.error;setRecoveryMessage('Se houver uma conta com esse e-mail, você receberá um link para trocar a senha no navegador.');}catch{setRecoveryMessage('Não foi possível solicitar o link agora. Tente novamente em alguns minutos.');}finally{setBusy(false);}};
 
   const submit = async () => {
     if (!email.includes('@') || password.length < 6 || (mode === 'up' && !name.trim())) {
@@ -36,6 +38,7 @@ export default function Login() {
         <Input placeholder="E-mail" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" />
         <Input placeholder="Senha" value={password} onChangeText={setPassword} secureTextEntry autoComplete={mode === 'in' ? 'password' : 'new-password'} />
         <Button title={mode === 'in' ? 'Entrar' : 'Criar conta'} onPress={submit} loading={busy} />
+        {mode==='in'&&<><Pressable accessibilityRole="button" disabled={busy} onPress={()=>void recover()} style={{padding:16}}><Text style={{color:colors.text,textAlign:'center'}}>Esqueci minha senha</Text></Pressable>{!!recoveryMessage&&<Muted>{recoveryMessage}</Muted>}</>}
         <Pressable onPress={() => setMode(mode === 'in' ? 'up' : 'in')} style={{ padding: space(2), alignItems: 'center' }}>
           <Text style={{ color: colors.muted }}>
             {mode === 'in' ? 'Não tem conta? ' : 'Já tem conta? '}

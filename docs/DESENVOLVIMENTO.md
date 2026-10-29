@@ -102,3 +102,10 @@ Para atualizar o acervo histórico: `node --import tsx scripts/sync-circuit-arch
 `(tabs)/live.tsx` mantém a rota antiga, agora Notícias, sem monitor OpenF1. Leitura em repo.ts; nenhum coletor no telefone. RSS e handler estão em `supabase/functions/_shared/news-*.ts`. A suíte passa a 48 testes: 24 SQL/RLS, 6 HTTP esportivo, 2 status, 2 provider, 7 grid, 2 circuitos e 5 RSS/handler de notícias. O runner isolado omite apenas o agendamento 0026/0027 (cron/net/Vault), validado no serviço real.
 
 Além de TypeScript/exportações/UI móvel, validar `node scripts/deploy-function.mjs sync-news --dry-run` e o typecheck específico dos dois módulos compartilhados (Edge Functions são excluídas do tsconfig principal). Testar feed válido, DTD/XML inválido/tamanho, URLs de outras categorias/fontes, datas futuras, deduplicação, falha isolada, 304, lease e autorização. No produto: `/live` → filtros → mais publicações → fonte; curiosidade → pista. Confirmar ausência de requisições do monitor OpenF1.
+
+
+## Evolução opcional do bolão
+
+Plano e aceitação em PLANO_EVOLUCAO_BOLAO.md. Suíte com 63 testes: os 48 anteriores, três SQL/RLS novos, seis de fila e seis de análises. Conferir concorrência, restauração e expiração da fila, falha de armazenamento com envio online, conta esperada, empates, simulação substituindo somente a parcela do pódio, reconstrução de etapa antiga e perguntas antigas default race.
+
+Para operação, após commit/push: aplicar 0028–0030, publicar sync-news, executar `node scripts/configure-recovery.mjs --apply` e `node --import tsx scripts/backfill-news-circuits.mjs --apply`. O primeiro só acrescenta o callback canônico à lista atual do Auth. O segundo só preenche vínculos nulos de notícias. Não envia e-mails; no teste de recuperação usar link gerado administrativamente para uma conta temporária. Validar web e SDK 57; imagem da retrospectiva é PNG web, texto nativo. Nenhuma funcionalidade excluída foi habilitada.
