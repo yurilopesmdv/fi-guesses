@@ -94,3 +94,17 @@ Workflow Deploy `40785743754` concluído com sucesso: backend e Edge Function, O
 Compatibilidade APK: commit `90db1a7`, branch `compat/android-sdk57`, enviado antes do OTA Android. Grupo `fa62d413-f5b9-4d57-b405-f7ba5ab5b0df`, update `01a184ca-6c46-745d-b731-db306a634c12`. Os três manifestos e bundles retornaram HTTP 200 com os novos IDs. Nenhum módulo nativo novo/APK novo. Atualização pelo canal preview existente ao fechar e reabrir; Expo Go conserva o projeto já escaneado.
 
 No domínio publicado, com usuário temporário: lista real de 23 pistas, busca Brasil, perfil de Interlagos, avanço da galeria, mapa com zoom e créditos, sem erros JavaScript. Sem teste em aparelho físico; gestos nativos validados por compilação, não por hardware. Históricas e Notícias permanecem como próximas etapas.
+
+## Correção visual de Pistas — 29/10/2026
+
+Por solicitação do usuário, todas as fotografias e galerias foram removidas das telas, incluindo capas dos cartões. Somente o traçado oficial da Fórmula 1 identifica cada pista, sobre fundo escuro, com ampliação/zoom. Dados, indicadores, maiores vencedores e ficha do GP foram preservados. Históricas e Notícias foram interrompidas e o trabalho não publicado foi preservado em stash.
+
+Código `6d9997d`, enviado à main antes da publicação. Migration 0022 aplicada e registrada: fotografias e mapas anteriores despublicados; 23 mapas oficiais publicados e nenhuma fotografia publicada. Metadados e importador agora exigem exatamente um mapa do domínio media.formula1.com por pista. GET dos 23 arquivos oficiais aprovado, dimensões de 1920×1080 a 3840×2160. URLs diretas da origem, sem cópia para o Storage nem atribuição de licença aberta.
+
+TypeScript, 40 testes e exportação web aprovados; TypeScript SDK 57 e compilação Android pelo OTA aprovados. Navegação isolada em 390×844/360×800: ausência de galeria, mapa oficial em fundo escuro, zoom, fontes e estatísticas. CI `40815774130` e Deploy `40815774059` concluídos com sucesso.
+
+SDK 58, grupo `fa475880-3514-4b81-be31-48ff4d3556ee`: Android `01a185d7-ffd9-79dc-a088-a90171f65529`, iOS `01a185d7-ffd9-7cc4-913d-4d64bb003ed2`. APK SDK 57: commit `5db47b7` enviado na branch compat/android-sdk57 antes do OTA, grupo `8c9066b2-9f0f-4d19-8b6f-e2664ff89d44`, update Android `01a185d6-7f26-7be8-944a-ca2da7d574a2`. Os três manifestos e bundles responderam HTTP 200 com os novos IDs.
+
+Web deployment `c8crzbwx7w`. O domínio principal ainda serviu o deployment anterior após o sucesso do workflow; `eas deploy:alias --prod --id c8crzbwx7w --non-interactive` promoveu explicitamente a versão correta. Depois disso, HTML e hashes do domínio principal corresponderam ao novo deployment.
+
+Teste real em https://bolao-f1.expo.app com conta temporária: catálogo de 23 mapas oficiais sem capa fotográfica, busca Brasil, perfil de Interlagos sem galeria, carregamento real do mapa diretamente de media.formula1.com, zoom e fonte, sem erros JavaScript. Teste também passou no domínio imutável do deployment. As contas temporárias foram removidas. As primeiras tentativas detectaram cache anterior e uma imagem ainda carregando após 700 ms; o alias foi corrigido e a verificação repetida com carregamento concluído. Nenhum teste em aparelho físico ou novo binário; atualização pelos projetos/canal já distribuídos, sem novo QR code.
