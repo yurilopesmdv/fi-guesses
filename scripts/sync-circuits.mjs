@@ -39,9 +39,8 @@ if(args.has('--apply')){
   const bundle=JSON.parse(readFileSync(target,'utf8'));
   if(bundle.season!==season||!bundle.circuits.length)throw new Error('Bundle inválido.');
   for(const circuit of bundle.circuits){
-    const photos=bundle.circuit_media.filter((m)=>m.circuit_id===circuit.id&&m.kind==='photo'&&m.published);
     const maps=bundle.circuit_media.filter((m)=>m.circuit_id===circuit.id&&m.kind==='map'&&m.published);
-    if(photos.length<(config.circuits.find(c=>c.id===circuit.id)?.minimum_photos??4)||!maps.length)throw new Error(`${circuit.id}: galeria ou mapa ainda não estão completos.`);
+    if(maps.length!==1||!maps.every(m=>m.storage_path.startsWith('https://media.formula1.com/')))throw new Error(`${circuit.id}: exige exatamente um traçado da fonte oficial.`);
   }
   const env={...(existsSync('.env')?parseEnv(readFileSync('.env','utf8')):{}),...process.env};
   if(!env.EXPO_PUBLIC_SUPABASE_URL||!env.SUPABASE_ACCESS_TOKEN)throw new Error('Configuração administrativa ausente.');

@@ -13,6 +13,8 @@ cache = Path('/tmp/bolao-f1-circuit-media')
 cache.mkdir(parents=True, exist_ok=True)
 source = Path('data/circuits/media-sources.json')
 rows = json.loads(source.read_text())
+if any(row.get('delivery') == 'official-origin' for row in rows):
+    raise SystemExit('O catálogo usa URLs diretas da fonte oficial. Use data/circuits/official-maps.json; não copie para o Storage.')
 def prepare(row):
     if not row.get('approved'):
         raise ValueError('Mídia sem aprovação: ' + row['id'])

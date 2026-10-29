@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { Linking, Pressable, ScrollView, Text, View } from 'react-native';
+import { Linking, Pressable, Text, View } from 'react-native';
 import { Redirect, Stack, router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/lib/auth';
 import { getCircuitProfile } from '@/lib/repo';
@@ -17,7 +17,7 @@ export default function CircuitScreen(){
   const [profile,setProfile]=useState<CircuitProfile|null>(null);
   const [loading,setLoading]=useState(true);
   const [error,setError]=useState('');
-  const [viewer,setViewer]=useState<{kind:'photo'|'map';index:number}|null>(null);
+  const [viewer,setViewer]=useState<number|null>(null);
   const load=useCallback(async()=>{
     try{setError('');const value=await getCircuitProfile(id);if(!value)throw new Error('Esta pista ainda não está disponível no catálogo.');setProfile(value);}
     catch(e:any){setError(e.message || 'Não foi possível carregar a pista.');}
@@ -28,14 +28,10 @@ export default function CircuitScreen(){
   if(loading)return <Screen scroll={false}><Loading/></Screen>;
   if(!profile)return <Screen><Muted>{error}</Muted><Button title="Tentar novamente" onPress={()=>void load()}/></Screen>;
   const {circuit:c,layout,stats,last_race:last,winners}=profile;
-  const photos=profile.media.filter((m)=>m.kind==='photo');
   const maps=profile.media.filter((m)=>m.kind==='map');
   return <>
     <Stack.Screen options={{title:c.name}}/>
     <Screen>
-      <View style={{borderRadius:radius,overflow:'hidden',marginBottom:space(2)}}>
-        <Pressable accessibilityRole="button" accessibilityLabel="Ampliar foto da pista" onPress={()=>photos.length&&setViewer({kind:'photo',index:0})}><CircuitImage media={photos[0]??null} height={230}/></Pressable>
-      </View>
       <Muted>{flag(c.country)} {c.locality} · {circuitCountry(c.country)}</Muted>
       <H1>{c.name}</H1>
       <Row style={{flexWrap:'wrap',marginVertical:space(1)}}><Pill color={colors.red}>FÓRMULA 1</Pill>{layout&&<Pill>Traçado · {layout.season}</Pill>}</Row>
@@ -48,8 +44,8 @@ export default function CircuitScreen(){
       {!stats.complete&&<Muted>Acervo histórico parcial. Os totais podem aumentar com novas importações.</Muted>}
       <Card>
         <H2>O traçado</H2>
-        <Muted>Curvas, largada e os trechos que dão identidade à pista.</Muted>
-        {maps[0]?<Pressable accessibilityRole="button" accessibilityLabel="Abrir mapa da pista em tela cheia" onPress={()=>setViewer({kind:'map',index:0})} style={{marginTop:12,borderRadius:8,overflow:'hidden'}}>
+        <Muted>Mapa oficial da Fórmula 1 · curvas e setores.</Muted>
+        {maps[0]?<Pressable accessibilityRole="button" accessibilityLabel="Abrir mapa da pista em tela cheia" onPress={()=>setViewer(0)} style={{marginTop:12,borderRadius:8,overflow:'hidden'}}>
           <CircuitImage media={maps[0]} height={230} fit="contain"/>
           <Text style={{color:colors.red,fontWeight:'700',paddingVertical:12}}>Ampliar traçado ↗</Text>
         </Pressable>:<Muted>Mapa indisponível.</Muted>}
@@ -69,15 +65,6 @@ export default function CircuitScreen(){
         </Row></Pressable>)}
       </Card>
       <Card>
-        <H2>Explore a pista</H2>
-        <Muted>{photos.length} imagens · toque para ampliar</Muted>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{marginTop:12}} contentContainerStyle={{gap:12}}>
-          {photos.map((m,i)=><Pressable key={m.id} accessibilityRole="button" accessibilityLabel={`Ampliar: ${m.caption}`} onPress={()=>setViewer({kind:'photo',index:i})} style={{width:250,borderRadius:10,overflow:'hidden'}}>
-            <CircuitImage media={m} thumbnail height={158}/><P style={{fontSize:13,paddingTop:8}}>{m.caption}</P>{m.period&&<Muted style={{fontSize:12}}>{m.period}</Muted>}
-          </Pressable>)}
-        </ScrollView>
-      </Card>
-      <Card>
         <H2>Sobre a pista</H2>
         <Detail label="Cidade" value={c.locality}/><Detail label="País" value={circuitCountry(c.country)}/>
         <Detail label="Primeiro GP no Mundial" value={String(stats.first_season??'—')}/><Detail label="Última temporada disputada" value={String(stats.last_season??'—')}/>
@@ -91,9 +78,9 @@ export default function CircuitScreen(){
         <Pressable accessibilityRole="link" onPress={()=>void Linking.openURL(layout.source_url)}><Text style={{color:colors.red,paddingVertical:12}}>Consultar ficha oficial ↗</Text></Pressable>
       </Card>}
       <Card><H2>Uma pista, muitas histórias</H2><P>{c.description}</P><Pressable accessibilityRole="link" onPress={()=>void Linking.openURL(c.official_url)}><Text style={{color:colors.red,paddingVertical:14,fontWeight:'700'}}>Conheça a fonte oficial ↗</Text></Pressable></Card>
-      {stats.synced_at&&<Muted style={{textAlign:'center'}}>Histórico atualizado em {fmtDate(stats.synced_at)} · Fotos e mapas com créditos no visualizador.</Muted>}
+      {stats.synced_at&&<Muted style={{textAlign:'center'}}>Histórico atualizado em {fmtDate(stats.synced_at)} · Traçado da fonte oficial Fórmula 1.</Muted>}
     </Screen>
-    <CircuitViewer media={viewer?.kind==='map'?maps:photos} index={viewer?.index??null} onClose={()=>setViewer(null)} onIndex={(index)=>setViewer((v)=>v?{...v,index}:null)}/>
+    <CircuitViewer media={maps} index={viewer} onClose={()=>setViewer(null)} onIndex={setViewer}/>
   </>;
 }
 function Metric({label,value}:{label:string;value:string}){return <View style={{width:'48%',flexGrow:1,padding:14,borderRadius:12,backgroundColor:colors.card,borderWidth:1,borderColor:colors.border}}><Text style={{color:colors.muted,fontSize:10,fontWeight:'800',letterSpacing:.5}}>{label}</Text><P style={{fontWeight:'800',fontSize:21,marginTop:6}}>{value}</P></View>;}

@@ -2,7 +2,8 @@
 import {readFileSync,existsSync} from 'node:fs';
 import {parseEnv} from 'node:util';
 const rows=JSON.parse(readFileSync('data/circuits/prepared-media.json','utf8'));
-const paths=[...new Set(rows.flatMap((row)=>[row.storage_path,row.thumbnail_path]))];
+const paths=[...new Set(rows.flatMap((row)=>[row.storage_path,row.thumbnail_path]).filter(path=>!path.startsWith('https://media.formula1.com/')))];
+if(!paths.length){console.log('Traçados servidos diretamente pela fonte oficial; nenhum upload necessário.');process.exit(0);}
 for(const path of paths)if(!existsSync(`/tmp/bolao-f1-circuit-media/${path}`))throw new Error(`Arquivo local ausente: ${path}`);
 if(!process.argv.includes('--apply')){console.log(`${paths.length} arquivos locais validados. Use --apply para enviar.`);process.exit(0);}
 const env={...(existsSync('.env')?parseEnv(readFileSync('.env','utf8')):{}),...process.env};

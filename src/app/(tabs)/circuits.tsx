@@ -50,7 +50,7 @@ export default function CircuitsScreen() {
       ListEmptyComponent={loading?<Loading/>:<Muted>{query?'Nenhuma pista encontrada. Tente outro nome.':!error?'As pistas desta temporada ainda não estão disponíveis.':''}</Muted>}
       renderItem={({item})=><Pressable accessibilityRole="button" accessibilityLabel={`Conhecer ${item.circuit.name}`} onPress={()=>router.push(`/circuit/${item.circuit.id}`)}>
         <View style={{backgroundColor:colors.card,borderRadius:radius,overflow:'hidden',marginBottom:space(2),borderWidth:1,borderColor:item.circuit.id===next?colors.red:colors.border}}>
-          <CircuitImage media={item.cover} thumbnail height={180}/>
+          <CircuitImage media={item.map} thumbnail height={180} fit="contain"/>
           {item.circuit.id===next && <View style={{position:'absolute',top:12,left:12}}><Pill color={colors.red}>PRÓXIMA PARADA</Pill></View>}
           <View style={{padding:space(2),gap:8}}>
             <Row style={{justifyContent:'space-between'}}><Muted>{flag(item.circuit.country)} {item.circuit.locality} · {circuitCountry(item.circuit.country)}</Muted><Text style={{color:colors.red,fontSize:22}}>›</Text></Row>
@@ -60,7 +60,6 @@ export default function CircuitsScreen() {
               {item.stats.first_season && <Muted>Estreia em {item.stats.first_season}</Muted>}
             </Row>
             <Row style={{marginTop:6,gap:space(2)}}>
-              {item.map && <View style={{width:104,borderRadius:8,overflow:'hidden'}}><CircuitImage media={item.map} thumbnail height={62} fit="contain"/></View>}
               <View style={{flex:1}}><P style={{fontWeight:'700'}}>{item.stats.seasons} temporadas disputadas</P><Muted>{item.stats.races} GPs na história{!item.stats.complete?' · acervo parcial':''}</Muted></View>
             </Row>
           </View>

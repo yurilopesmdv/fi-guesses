@@ -10,7 +10,7 @@ export function CircuitImage({ media, thumbnail = false, height = 210, fit = 'co
   const [failed, setFailed] = useState(false);
   const [revision, setRevision] = useState(0);
   useEffect(() => { setFailed(false); }, [media?.id]);
-  return <View style={{ height, backgroundColor: media?.kind === 'map' ? '#f7f7f8' : colors.card2, justifyContent:'center',overflow:'hidden' }}>
+  return <View style={{ height, backgroundColor: colors.bg, justifyContent:'center',overflow:'hidden' }}>
     {media && !failed ? <Image key={`${media.id}:${revision}`} source={{uri:circuitMediaUrl(thumbnail ? media.thumbnail_path : media.storage_path)}} accessibilityLabel={media.caption}
       style={{width:'100%',height:'100%'}} contentFit={fit} cachePolicy="memory-disk" transition={180} onError={() => setFailed(true)} />
       : <View style={{padding:16}}><Muted>{failed ? 'Não foi possível carregar esta imagem.' : 'Imagem indisponível.'}</Muted>
