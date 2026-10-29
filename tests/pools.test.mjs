@@ -280,3 +280,17 @@ test('atualização do servidor corrige vencedor atual, ignora sprint e preserva
   assert.deepEqual(rows.map(r=>r.driver_id),['beta']);
   assert.equal((await db.query("select count(*) from circuit_race_winners where circuit_id='test-circuit' and season=1973")).rows[0].count,1);
 });
+
+
+test('históricas excluem calendário atual, incluem retorno em outro ano e mantêm rascunhos e anônimos fora',async()=>{
+  await seedCircuit();
+  await db.exec(`insert into circuits(id,name,locality,country,official_url,published) values('archive-circuit','Histórica','Cidade','Portugal','https://example.test',true);
+    insert into circuit_seasons values('archive-circuit',2027,1,'Retorno','2027-03-01');
+    insert into circuit_race_winners values('archive-circuit',2021,1,'GP Antigo','2021-03-01','alpha','Alfa','Equipe A');`);
+  await asUser(1);
+  const rows=(await db.query('select * from circuit_archive(2026)')).rows;
+  assert.deepEqual(rows.map(x=>x.circuit_archive.circuit.id),['archive-circuit']);
+  assert.equal((await db.query('select count(*) from circuit_archive(2027)')).rows[0].count,1);
+  await asUser(null);assert.equal((await db.query('select count(*) from circuit_archive(2026)')).rows[0].count,0);
+  await asUser(null,'anon');await assert.rejects(db.query('select * from circuit_archive(2026)'),/permission denied/);
+});

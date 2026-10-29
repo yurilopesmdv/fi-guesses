@@ -177,6 +177,8 @@ export async function getQualifyingOrder(race: Race, drivers: Driver[], refresh 
 // ---------- catálogo de pistas ----------
 export const listCircuits = async (season: number) =>
   throwIf(await supabase.rpc('circuit_catalog', { p_season: season })) as import('./types').CircuitSummary[];
+export const listCircuitArchive = async (season: number) =>
+  throwIf(await supabase.rpc('circuit_archive', { p_current_season: season })) as import('./types').CircuitSummary[];
 export const getCircuitProfile = async (id: string) =>
   throwIf(await supabase.rpc('circuit_profile', { p_id: id })) as import('./types').CircuitProfile | null;
 export const circuitMediaUrl = (path: string) => path.startsWith('https://')
