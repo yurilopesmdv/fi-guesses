@@ -153,8 +153,10 @@ A migration `0024_circuit_archive.sql` acrescenta `circuit_archive(p_current_sea
 As migrations 0025/0026/0027 acrescentam conteúdo: `content_sources` (URLs públicas/status/ETag/TTL), `content_posts` (notícias/curiosidades publicadas em pt-BR), `content_sync_state` (lease exclusiva do servidor). RLS permite leitura de conteúdo publicado, já datado, por autenticados e nenhuma escrita do cliente. RPCs de aquisição/liberação e curiosidade são exclusivas de service_role. `enqueue_content_sync` lê apenas os segredos próprios no Vault e enfileira a Edge Function. Credenciais nunca são armazenadas em app_settings.
 
 
-## Evolução opcional do bolão (0028–0030)
+## Evolução opcional do bolão (0028–0031)
 
 0028 adiciona `questions.session` com default race, preservando dados antigos. `question_lock_at`/`question_is_open` usam horário da sessão escolhida menos a antecedência já configurada. Sessão sem horário é rejeitada; podium fora de race é rejeitado. SQL de pontuação e ranking geral não muda. A tabela `result_history` é alimentada por trigger de INSERT/UPDATE de resultados, com `auth.uid()` como autor real. RLS só permite leitura a membros; nenhuma escrita pelo cliente. `question_prompt` preserva a identificação quando a pergunta é removida. Sem backfill de eventos que não existiram.
 
 0029 acrescenta `pool_analysis`, security invoker com verificação explícita de membro, retornando perguntas/palpites/resultados/corridas do bolão em JSON. Evita truncamento por paginação REST nas análises. 0030 acrescenta `driver_race_context`: identidade por driver_id, categoria F1, corrida principal e data anterior ao GP/ao instante atual. Últimas cinco provas da temporada e até 20 resultados importados no circuito; amostras parciais ficam explícitas. RPCs novos sem acesso anônimo.
+
+0031 move a auditoria para AFTER INSERT/UPDATE e separa o ajuste de set_at. Evita eventos duplicados em upserts e não registra correção quando a resposta não mudou.
