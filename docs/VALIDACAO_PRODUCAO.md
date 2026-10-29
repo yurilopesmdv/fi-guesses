@@ -128,3 +128,18 @@ Código `836da75`, compatibilidade SDK 57 `cf7227b`. Migration 0024 aplicada; im
 41 testes, TypeScript, exportações web/Android SDK 57 e interface móvel passaram. Fluxo local e publicado: abre em Atuais; alterna para Históricas, busca Caesars Palace, abre perfil de 1981–1982 e retorna às atuais; mapa, book e dados de Interlagos preservados. Sem erros JavaScript.
 
 Deploy [40910934042](https://github.com/yurilopesmdv/fi-guesses/actions/runs/40910934042) concluído. Grupo SDK 58 `9eed3127-2dc7-4fb7-8040-217d88ca4d74`, Android `01a1887a-ec8e-78fb-ae40-d31980530b67`, iOS `01a1887a-ec8e-7197-936e-0cbb670f9101`; grupo SDK 57 `480c2241-c14d-4091-99db-62c2be9ce1a0`, Android `01a18878-f409-7bda-8974-f697d6c1f18c`. Web deployment `6wqvri7uq8`. Manifestos/bundles 200 e domínio de produção confirmado por navegação real em Chromium móvel. Sem teste físico nesta entrega.
+
+
+## Notícias F1 automáticas — 29/10/2026
+
+Código `bb912df` + correção `4430e68` na main; compatibilidade APK SDK 57 `4be2cb4`. Migrations 0025–0027 aplicadas. A comparação inicial do token de serviço retornou 403 no handler; foi substituída por segredo dedicado `CONTENT_SYNC_SECRET` configurado na Edge Function e Vault, mantendo JWT habilitado no gateway. Nenhuma migration aplicada foi editada. A versão corrigida coletou com HTTP 200 antes da publicação do cliente.
+
+Primeira coleta: 58 notícias (49 Motorsport Brasil, 9 Grande Prêmio) e uma curiosidade diária derivada do acervo; datas reais, sem artigos integrais ou imagens. As duas fontes registraram sucesso e nenhum erro. Motorsport declara TTL 100 minutos, respeitado pelo coletor. Cron `*/10 * * * *` ativo: execução automática de 29/10 às 13h40 de Brasília com status succeeded; fila pg_net confirmou requisições 944/945 com HTTP 200, sem timeout. Lease liberada. Segredos apenas no Vault/Edge, sem valores em app_settings, arquivos ou logs.
+
+Validação real com conta temporária: leitura autenticada dos 59 posts; anônimo 401, escrita de membro 403 e chamada do coletor por membro 403. Conta removida. As 48 verificações passaram (24 SQL/RLS, 6 HTTP esportivo, 2 status, 2 provider, 7 grid, 2 circuitos e 5 RSS/handler). Passaram TypeScript principal, typecheck estrito dos módulos compartilhados de notícias, bundles das duas Edge Functions, exportação web e Android SDK 57. UI móvel local: feeds reais como fixtures, filtros, paginação, curiosidade → pista e nenhuma consulta do monitor OpenF1.
+
+Deploy [40913753504](https://github.com/yurilopesmdv/fi-guesses/actions/runs/40913753504) concluído; banco, sync-series e sync-news publicados antes do cliente. Grupo SDK 58 `2e57630a-049c-4c02-be90-b2a7cfda9582`, Android `01a1888a-2588-7fc4-a300-b7d702ce0f87`, iOS `01a1888a-2588-7d9b-b30b-eb1c137e5526`; grupo APK SDK 57 `4a935b59-1a4e-4bb7-8c8d-f0ba4300e457`, Android `01a18888-a432-72e1-b2c1-5940cd0e6e7a`. Web deployment `z8pjosug0x`. Manifestos e bundles dos três runtimes retornaram 200 com os IDs esperados.
+
+Web de produção conferida em Chromium móvel: rota /live com manchete real e resumos, paginação, filtro Curiosidades, acesso à pista; depois Atuais 23 → Históricas 55 → Caesars Palace → Atuais → Interlagos, book com seis trechos/foto carregada, mapa oficial/zoom/créditos. Nenhum erro JavaScript e nenhuma requisição OpenF1. Conta temporária removida. O grid anterior permanece no bundle. Não houve teste físico em aparelho.
+
+Limite fotográfico explícito: 15 fotos de seis pistas atuais; as demais mantêm mapa oficial, e históricas ficam sem fotografias/diagramas não aprovados. Critérios e exclusões em [Curadoria do book F1](pesquisas/book-f1-curadoria.md).
