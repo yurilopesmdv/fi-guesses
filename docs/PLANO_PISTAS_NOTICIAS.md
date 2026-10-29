@@ -185,3 +185,7 @@ A curadoria final das fotos e a validação de reutilização por arquivo contin
 ## Curadoria da primeira entrega
 
 90 fotos e 23 mapas com variantes WebP, autoria, licença e período individualizados em `data/circuits`. A meta de quatro fotos foi atendida em 22 pistas; Madring recebe duas imagens verificadas. Não se completou a quantidade com fotos de outras pistas ou imagens de pessoas sem o circuito. A descrição de cada foto informa época/categoria; os mapas foram conferidos separadamente das fotografias. Estatísticas usam 708 registros de vencedores, com paginação completa da fonte. A seção Sobre e a ficha do GP foram adicionadas sem remover as seções previstas.
+
+## Correção solicitada em 29/10/2026
+
+O usuário rejeitou a seleção fotográfica publicada e determinou a remoção de todas as galerias. A especificação vigente passa a ser: somente traçado oficial como identidade visual, com fundo escuro, preservando estatísticas e dados. As metas antigas de quantidade de fotografias e as escolhas de Commons/Flickr deste levantamento estão revogadas. Históricas e Notícias foram interrompidas; o trabalho não publicado está preservado em stash na branch `feat/pistas-historicas`.

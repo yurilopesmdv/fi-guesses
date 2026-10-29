@@ -29,7 +29,7 @@ export function CircuitViewer({ media, index, onClose, onIndex }: { media: Circu
     <GestureHandlerRootView style={{flex:1,backgroundColor:colors.bg,paddingTop:insets.top,paddingBottom:insets.bottom}}>
       <Row style={{padding:space(2),justifyContent:'space-between'}}><P style={{fontWeight:'800'}}>{current?.kind==='map'?'Traçado da pista':`Galeria · ${(index??0)+1} / ${media.length}`}</P>
         <Pressable accessibilityRole="button" accessibilityLabel="Fechar imagem" hitSlop={12} onPress={onClose}><Text style={{color:colors.text,fontWeight:'800',fontSize:18,padding:8}}>✕</Text></Pressable></Row>
-      <View style={{flex:1,overflow:'hidden',backgroundColor:current?.kind==='map'?'#f7f7f8':colors.bg}}>
+      <View style={{flex:1,overflow:'hidden',backgroundColor:colors.bg}}>
         <GestureDetector gesture={Gesture.Simultaneous(pinch,pan,tap)}>
           <Animated.View style={[{flex:1,justifyContent:'center'},style]}>
             {current && !failed ? <Image source={{uri:circuitMediaUrl(current.storage_path)}} accessibilityLabel={current.caption} style={{width:'100%',height:'100%'}} contentFit="contain" cachePolicy="memory-disk" onError={()=>setFailed(true)} />

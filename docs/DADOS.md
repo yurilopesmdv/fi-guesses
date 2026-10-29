@@ -141,3 +141,5 @@ Na interface, Em andamento vem primeiro, com criação mais recente primeiro den
 No Storage, policies restritivas impedem insert/update/delete em `circuits` por clientes mesmo havendo policies permissivas legadas. URLs de imagens são públicas, inclusive créditos; não armazenar dados privados no bucket. A migration precede o cliente e o importador; não alterar arquivo após aplicado.
 
 A migration `0021` revoga explicitamente EXECUTE de `anon` nos dois RPCs de leitura: o Supabase real concede esse privilégio por default mesmo após revogar PUBLIC. O teste isolado reproduz esse default ao criar os RPCs.
+
+A migration `0022` despublica todas as fotografias e mapas que não usam a origem oficial. Nos novos metadados, `storage_path`/`thumbnail_path` guardam URLs HTTPS diretas de media.formula1.com; o resolver do cliente permite explicitamente esse domínio. O contrato e as demais estatísticas permanecem iguais.
