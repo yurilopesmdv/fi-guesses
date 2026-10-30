@@ -1,7 +1,8 @@
 // Sincroniza F1 (Jolpica), F2 e F3 (site/API oficiais) no banco e apura o pódio dos bolões de F1 automaticamente.
 // Chamada pelo pg_cron (agendado) e pelo botão "Atualizar" do app. Body: { series?: 'f1'|'f2'|'f3'|'all', season?: number }
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { fetchHeadshots, fetchSeasonBundle } from '../_shared/f1api.ts';
+import { fetchHeadshots, fetchRaceStints, fetchSeasonBundle } from '../_shared/f1api.ts';
+import { ensureStints } from '../_shared/race-detail.ts';
 import { fetchF2F3Bundle } from '../_shared/f2f3.ts';
 import { createSyncHandler } from '../_shared/sync-handler.ts';
 
@@ -30,6 +31,11 @@ async function syncOne(series: 'f1' | 'f2' | 'f3', season: number) {
   if (series === 'f1' && season === new Date().getFullYear()) {
     const photos = await fetchHeadshots().catch(() => ({}));
     for (const [code, url] of Object.entries(photos)) await db.from('drivers').update({ headshot_url: url }).match({ series: 'f1', season, code });
+  }
+  // Guarda os pneus dos últimos GPs enquanto a OpenF1 está liberada (bloqueia durante sessões ao vivo). Falha não afeta a sync.
+  if (series === 'f1' && season >= 2023) {
+    const done = b.races.filter((r) => Date.parse(r.date_utc) < Date.now() && r.round <= b.last_round_with_results).slice(-2);
+    for (const r of done) await ensureStints(db, fetchRaceStints, season, r.round, r.date_utc).catch(() => null);
   }
   return { races: b.races.length, results: b.race_results.length, last_round: b.last_round_with_results };
 }

@@ -5,6 +5,7 @@ import { RaceTools } from '@/components/insights/RaceTools';
 import { usePredictionOutbox } from '@/lib/predictionOutbox';
 import { CircuitLink } from '@/components/circuits/CircuitLink';
 import { CircuitInsight } from '@/components/circuits/CircuitInsight';
+import { RaceStory } from '@/components/RaceStory';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
@@ -146,6 +147,7 @@ export function RaceView({ race }: { race: Race }) {
       )}
       <RaceTools poolId={pool.id} race={race} questions={questions} predictions={confirmedPredictions} results={results} members={members} drivers={drivers} uid={uid} grid={startingGrid} official={official}/>
       <RaceClassification race={race} drivers={drivers} results={official} />
+      <RaceStory race={race} drivers={drivers} results={official} />
       <CircuitInsight race={race} />
 
     </Screen>

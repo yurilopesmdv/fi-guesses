@@ -194,6 +194,22 @@ export const getDriverTeammates = async (driverId: string) => throwIf(await supa
 export type DriverAges={date_of_birth:string|null;nationality:string|null;debut:string|null;first_win:string|null;last_win:string|null;last_race:string|null};
 export const getDriverAges = async (driverId: string) => throwIf(await supabase.rpc('driver_age_milestones', { p_driver_id: driverId })) as DriverAges | null;
 
+export type LapData={laps:number;positions:Record<string,(number|null)[]>};
+export type Stint={driver_code:string;stint:number;compound:string|null;lap_start:number;lap_end:number|null};
+export const getRaceLapData = async (season: number, round: number): Promise<LapData | null> => {
+  const meta = throwIf(await supabase.from('race_laps_meta').select('laps').eq('season', season).eq('round', round).maybeSingle()) as { laps: number } | null;
+  if (!meta) return null;
+  const rows = throwIf(await supabase.from('race_lap_positions').select('driver_id,positions').eq('season', season).eq('round', round)) as { driver_id: string; positions: (number | null)[] }[];
+  return { laps: meta.laps, positions: Object.fromEntries(rows.map((r) => [r.driver_id, r.positions])) };
+};
+export const getRaceStints = async (season: number, round: number) =>
+  throwIf(await supabase.from('race_stints').select('driver_code,stint,compound,lap_start,lap_end').eq('season', season).eq('round', round).order('stint')) as Stint[];
+/** Pede ao servidor para buscar e guardar voltas/pneus do GP (só na primeira consulta). */
+export const requestRaceDetail = async (season: number, round: number) => {
+  const { error } = await supabase.functions.invoke('race-detail', { body: { season, round } });
+  if (error) throw new Error('Não foi possível buscar os detalhes deste GP agora.');
+};
+
 // ---------- equipe ----------
 export const getTeamProfile = async (team: string) => throwIf(await supabase.rpc('team_profile', { p_team: team })) as TeamProfile;
 export const searchTeams = async (q: string) => throwIf(await supabase.rpc('team_search', { p_q: q })) as TeamSearchRow[];

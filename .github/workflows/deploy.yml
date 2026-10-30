@@ -89,3 +89,7 @@ jobs:
       - name: Coletor de notícias
         if: steps.changes.outputs.supabase == 'true' || github.event_name == 'workflow_dispatch'
         run: node scripts/deploy-function.mjs sync-news "$SUPABASE_PROJECT_REF"
+
+      - name: Detalhes de GP (voltas e pneus)
+        if: steps.changes.outputs.supabase == 'true' || github.event_name == 'workflow_dispatch'
+        run: node scripts/deploy-function.mjs race-detail "$SUPABASE_PROJECT_REF"

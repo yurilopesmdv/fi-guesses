@@ -1,5 +1,6 @@
 import { CircuitLink } from '@/components/circuits/CircuitLink';
 import { CircuitInsight } from '@/components/circuits/CircuitInsight';
+import { RaceStory } from '@/components/RaceStory';
 import { useEffect, useState } from 'react';
 import { Text } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
@@ -42,6 +43,7 @@ export default function RaceScreen() {
       <StartingGrid race={race} drivers={drivers} results={results} />
       <CircuitInsight race={race} />
       <RaceClassification race={race} drivers={drivers} results={results} />
+      <RaceStory race={race} drivers={drivers} results={results} />
     </Screen>
   );
 }

@@ -554,3 +554,8 @@ test('chegadas apertadas exigem tempo do 1º e do 2º',async()=>{
  await asUser(1);const v=(await db.query("select history_feats('closest_finish',2026,2026) v")).rows[0].v;
  assert.deepEqual(v.rows.map(r=>[r.driver_id,r.extra]),[['max_verstappen',10]]);
 });
+test('cache de voltas e pneus é legível e não aceita escrita do cliente',async()=>{
+ await asUser(null,'postgres');await db.query("insert into race_laps_meta values(2024,21,69,now())");await db.query("insert into race_lap_positions values(2024,21,'max_verstappen','{11,10,1}')");
+ await asUser(1);assert.equal((await db.query('select * from race_lap_positions')).rows[0].positions.length,3);
+ await rejectsInTx("insert into race_stints(season,round,driver_code,stint,lap_start) values(2024,21,'VER',1,1)",/permission denied|row-level security/);
+});

@@ -192,24 +192,31 @@ export async function fetchRaceQualifying(season: number, round: number) {
   }));
 }
 
-/** Consulta pública de grid, independente do monitor Ao vivo e de suas credenciais. */
-export async function fetchPublishedGrid(dateUtc: string, season: number) {
-  const read = async (path: string) => {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 10000);
-    try {
-      const res = await fetch(`https://api.openf1.org/v1/${path}`, { signal: controller.signal });
-      if (res.status === 404) return []; // fonte ainda não publicou esta sessão
-      if (!res.ok) throw new Error(`Grid F1 indisponível (${res.status})`);
-      return await res.json() as any[];
-    } finally { clearTimeout(timer); }
-  };
+// OpenF1 histórico é público, mas fica bloqueado sem assinatura durante sessões ao vivo: quem chama trata o erro.
+async function openf1(path: string) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10000);
+  try {
+    const res = await fetch(`https://api.openf1.org/v1/${path}`, { signal: controller.signal });
+    if (res.status === 404) return []; // fonte ainda não publicou esta sessão
+    if (!res.ok) throw new Error(`OpenF1 indisponível (${res.status})`);
+    return await res.json() as any[];
+  } finally { clearTimeout(timer); }
+}
+/** Sessões do fim de semana e a corrida principal mais próxima da data (nunca a Sprint). */
+async function openf1RaceWeekend(dateUtc: string, season: number) {
   const day = Date.parse(dateUtc);
   const from = new Date(day - 3 * 86400000).toISOString();
   const to = new Date(day + 86400000).toISOString();
-  const sessions = await read(`sessions?year=${season}&date_start>=${encodeURIComponent(from)}&date_start<=${encodeURIComponent(to)}`);
-  // Não confundir Sprint com a corrida principal nem associar um GP distante.
+  const sessions = await openf1(`sessions?year=${season}&date_start>=${encodeURIComponent(from)}&date_start<=${encodeURIComponent(to)}`);
   const race = sessions.filter((s) => s.session_name === 'Race' && Math.abs(Date.parse(s.date_start) - day) <= 86400000).sort((a, b) => Math.abs(Date.parse(a.date_start) - day) - Math.abs(Date.parse(b.date_start) - day))[0];
+  return { sessions, race };
+}
+
+/** Consulta pública de grid, independente do monitor Ao vivo e de suas credenciais. */
+export async function fetchPublishedGrid(dateUtc: string, season: number) {
+  const read = openf1;
+  const { sessions, race } = await openf1RaceWeekend(dateUtc, season);
   if (!race) return [];
   // starting_grid é indexado pela Qualifying do GP, não pela sessão Race.
   // Sprint Qualifying tem outro nome e nunca fornece o grid da corrida principal.
@@ -227,6 +234,43 @@ export async function fetchPublishedGrid(dateUtc: string, season: number) {
       team_color: d?.team_colour ? `#${d.team_colour}` : undefined,
     };
   });
+}
+
+/** Stints de pneus da corrida principal (OpenF1, 2023+). Sigla do piloto pela própria sessão. */
+export async function fetchRaceStints(dateUtc: string, season: number) {
+  const { race } = await openf1RaceWeekend(dateUtc, season);
+  if (!race) return [];
+  const [stints, drivers] = await Promise.all([openf1(`stints?session_key=${race.session_key}`), openf1(`drivers?session_key=${race.session_key}`)]);
+  return stints.filter((x) => x.lap_start != null).map((x) => ({
+    driver_code: String(drivers.find((d) => d.driver_number === x.driver_number)?.name_acronym ?? x.driver_number),
+    stint: Number(x.stint_number), compound: x.compound ? String(x.compound).toUpperCase() : null,
+    lap_start: Number(x.lap_start), lap_end: x.lap_end != null ? Number(x.lap_end) : null,
+  }));
+}
+
+/** Posição de cada piloto ao fim de cada volta (Jolpica, 1996+). Carga sob demanda, ~12 consultas por GP. */
+export async function fetchRaceLaps(season: number, round: number) {
+  const byDriver = new Map<string, number[]>();
+  let laps = 0;
+  for (let offset = 0; ; offset += 100) {
+    const data = await get(`${season}/${round}/laps.json`, offset);
+    for (const lap of (data.RaceTable.Races[0]?.Laps ?? []) as any[]) {
+      const n = Number(lap.number); laps = Math.max(laps, n);
+      for (const t of lap.Timings as any[]) { const row = byDriver.get(t.driverId) ?? []; row[n] = Number(t.position); byDriver.set(t.driverId, row); }
+    }
+    if (offset + 100 >= Number(data.total)) break;
+  }
+  return { laps, positions: Object.fromEntries(byDriver) as Record<string, number[]> };
+}
+
+/** Voltas das paradas nos boxes (Jolpica, 2011+) e voltas completadas por piloto. */
+export async function fetchRacePitstops(season: number, round: number) {
+  const [stops, results] = await Promise.all([get(`${season}/${round}/pitstops.json`), get(`${season}/${round}/results.json`)]);
+  const laps: Record<string, number> = {};
+  for (const r of (results.RaceTable.Races[0]?.Results ?? []) as any[]) laps[r.Driver.driverId] = Number(r.laps) || 0;
+  const pits: Record<string, number[]> = {};
+  for (const p of (stops.RaceTable.Races[0]?.PitStops ?? []) as any[]) (pits[p.driverId] ??= []).push(Number(p.lap));
+  return { laps, pits };
 }
 
 /** Metadados e identidade dos circuitos presentes no calendário. */
