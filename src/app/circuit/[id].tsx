@@ -12,6 +12,7 @@ import { CircuitSegments } from '@/components/circuits/CircuitSegments';
 import { CircuitBook } from '@/components/circuits/CircuitBook';
 import { CircuitViewer } from '@/components/circuits/CircuitViewer';
 import { FollowButton } from '@/components/FollowButton';
+import { CircuitCompare } from '@/components/circuits/CircuitCompare';
 import { Button, Card, H1, H2, Loading, Muted, P, Pill, Row, Screen } from '@/ui/primitives';
 import { colors, radius, space } from '@/ui/theme';
 
@@ -83,6 +84,7 @@ export default function CircuitScreen(){
         {layout.lap_record_time&&<><Detail label="Recorde de volta em corrida" value={layout.lap_record_time}/><Muted>{layout.lap_record_driver} · {layout.lap_record_year}</Muted></>}
         <Pressable accessibilityRole="link" onPress={()=>void Linking.openURL(layout.source_url)}><Text style={{color:colors.red,paddingVertical:12}}>Consultar ficha oficial ↗</Text></Pressable>
       </Card>:null}
+      <CircuitCompare a={profile}/>
       <Card><H2>Uma pista, muitas histórias</H2><P>{c.description}</P><Pressable accessibilityRole="link" onPress={()=>void Linking.openURL(c.official_url)}><Text style={{color:colors.red,paddingVertical:14,fontWeight:'700'}}>{c.official_url.includes('wikipedia.org')?'Consultar referência histórica ↗':'Conheça a fonte oficial ↗'}</Text></Pressable></Card>
       {stats.synced_at&&<Muted style={{textAlign:'center'}}>Histórico atualizado em {fmtDate(stats.synced_at)}{maps.length?' · Traçado da fonte oficial Fórmula 1.':' · Estatísticas do Mundial; configuração histórica identificada acima.'}</Muted>}
     </Screen>

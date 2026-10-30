@@ -461,3 +461,12 @@ test('carreira por equipe separa passagens e sequências contam largadas consecu
  assert.equal(v.streaks.wins.best,2);assert.equal(v.streaks.podiums.best,4);assert.equal(v.streaks.points.best,5);
  await asUser(null,'anon');await rejectsInTx("select driver_career_shape('teste')",/permission denied/);
 });
+test('vencedores em comum entre pistas combinam acervo e resultados importados',async()=>{
+ await seedFollowData();await asUser(null,'postgres');
+ await db.query("insert into circuits(id,name,locality,country,official_url,published) values('spa','Spa','Stavelot','Belgium','https://example.test',true)");
+ await db.query("insert into circuit_race_winners(circuit_id,season,round,race_name,date_utc,driver_id,driver_name) values('spa',2020,7,'GP Bélgica','2020-08-30','max_verstappen','Max Verstappen'),('spa',2021,12,'GP Bélgica','2021-08-29','hamilton','Lewis Hamilton'),('interlagos',2019,20,'GP Brasil','2019-11-17','max_verstappen','Max Verstappen')");
+ await db.query("update races set circuit_id='interlagos' where id=$1",[raceA]);
+ await asUser(1);const v=(await db.query("select circuit_winners_overlap('interlagos','spa') v")).rows[0].v;
+ assert.deepEqual(v.common.map(c=>[c.driver_id,c.a,c.b]),[['max_verstappen',2,1]]);assert.equal(v.only_a,0);assert.equal(v.only_b,1);
+ assert.equal((await db.query("select circuit_winners_overlap('interlagos','oculta') v")).rows[0].v,null);
+});

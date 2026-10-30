@@ -161,6 +161,10 @@ export type CareerStreak={best:number;from:number;to:number};
 export type DriverCareerShape={stints:CareerStint[];streaks:Partial<Record<'wins'|'podiums'|'points',CareerStreak>>};
 export const getDriverCareerShape = async (driverId: string) => throwIf(await supabase.rpc('driver_career_shape', { p_driver_id: driverId })) as DriverCareerShape | null;
 
+export const listCircuitNames = async () => throwIf(await supabase.from('circuits').select('id,name,country,locality').order('name')) as { id: string; name: string; country: string; locality: string }[];
+export type CircuitOverlap={common:{driver_id:string;name:string;a:number;b:number}[];only_a:number;only_b:number};
+export const getCircuitWinnersOverlap = async (a: string, b: string) => throwIf(await supabase.rpc('circuit_winners_overlap', { p_a: a, p_b: b })) as CircuitOverlap | null;
+
 // ---------- equipe ----------
 export const getTeamProfile = async (team: string) => throwIf(await supabase.rpc('team_profile', { p_team: team })) as TeamProfile;
 export const searchTeams = async (q: string) => throwIf(await supabase.rpc('team_search', { p_q: q })) as TeamSearchRow[];
