@@ -156,6 +156,11 @@ export const getDriverCircuitMap = async (driverId: string) => throwIf(await sup
 
 export const getCircuitRaceInsight = async (raceId: string) => throwIf(await supabase.rpc('circuit_race_insight', { p_race: raceId })) as import('./types').CircuitRaceInsight | null;
 
+export type CareerStint={team:string;color:string|null;from:number;to:number;races:number;wins:number;podiums:number;points:number};
+export type CareerStreak={best:number;from:number;to:number};
+export type DriverCareerShape={stints:CareerStint[];streaks:Partial<Record<'wins'|'podiums'|'points',CareerStreak>>};
+export const getDriverCareerShape = async (driverId: string) => throwIf(await supabase.rpc('driver_career_shape', { p_driver_id: driverId })) as DriverCareerShape | null;
+
 // ---------- equipe ----------
 export const getTeamProfile = async (team: string) => throwIf(await supabase.rpc('team_profile', { p_team: team })) as TeamProfile;
 export const searchTeams = async (q: string) => throwIf(await supabase.rpc('team_search', { p_q: q })) as TeamSearchRow[];

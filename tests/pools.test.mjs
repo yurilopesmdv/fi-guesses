@@ -450,3 +450,14 @@ test('raio-x da pista usa só provas anteriores ao GP e o grid da temporada',asy
  const later=(await db.query('select circuit_race_insight($1) v',[raceC])).rows[0].v;assert.equal(later.editions,2);
  await asUser(null,'anon');await rejectsInTx('select circuit_race_insight($1)',[raceA],/permission denied/);
 });
+test('carreira por equipe separa passagens e sequências contam largadas consecutivas',async()=>{
+ await asUser(null,'postgres');
+ const ids=[];for(let i=1;i<=5;i++){ids.push((await db.query("insert into races(season,round,name,date_utc) values(2030,$1,$2,$3) returning id",[i,`R${i}`,`2030-0${i}-01`])).rows[0].id);}
+ const teams=['A','A','B','A','A'],pos=[1,2,1,1,9],pts=[25,18,25,25,2];
+ await db.query("insert into drivers(series,season,code,name,driver_id,team,team_color) values('f1',2030,'TST','Teste','teste','A','#111')");
+ for(let i=0;i<5;i++)await db.query("insert into race_results(series,session,season,round,position,driver_code,team,points,status) values('f1','race',2030,$1,$2,'TST',$3,$4,'Finished')",[i+1,pos[i],teams[i],pts[i]]);
+ await asUser(1);const v=(await db.query("select driver_career_shape('teste') v")).rows[0].v;
+ assert.deepEqual(v.stints.map(s=>[s.team,s.races]),[['A',2],['B',1],['A',2]]);
+ assert.equal(v.streaks.wins.best,2);assert.equal(v.streaks.podiums.best,4);assert.equal(v.streaks.points.best,5);
+ await asUser(null,'anon');await rejectsInTx("select driver_career_shape('teste')",/permission denied/);
+});

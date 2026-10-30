@@ -131,7 +131,8 @@ Escolher o primeiro lote pelos três eixos: retorno a cada GP (perfil/acompanham
 - H03/H18: Pistas com Lista/Mapa: mapa-base estático no tema (Natural Earth 50m, domínio público, scripts/gen-world-map.mjs → assets/images/world-map.png), atalhos Mundo/Europa/Américas/Ásia e Oceania, pinos agrupados conforme o zoom, painel com as pistas; respeita Atuais/Históricas, busca e país; lista equivalente mantida. Sem módulo nativo. Testar: aba Pistas → Mapa.
 - H04: perfil do piloto → “Vitórias e pódios pelo mundo” (carrega ao abrir; pino lista as provas). Migration 0035.
 - H05/H07: “Raio-X da pista” na corrida (pública e do bolão): conversão do grid, vitória mais de trás, ganho médio e retrospecto do grid atual na pista, só com GPs anteriores. Migration 0036.
-- Próximos: H09 regularidade, H15 carreira por equipe, H20 vencedores em comum, H13 rivalidade por pista.
+- H15/H11: piloto → “Trajetória”: passagens por equipe (equipe do resultado) em linha do tempo e melhores sequências de vitórias/pódios/pontos em largadas consecutivas. Migration 0037. H09 já coberto pela distribuição de resultados existente.
+- Próximos: H20 vencedores em comum, H13 rivalidade por pista, H06 largada→chegada, depois fase D.
 
 ### Plano detalhado do restante (30/10/2026)
 

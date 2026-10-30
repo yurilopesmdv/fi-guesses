@@ -6,6 +6,7 @@ import { Image } from 'expo-image';
 import { BarChart, HBars, ResultStrip } from '@/components/driver/charts';
 import { FollowButton } from '@/components/FollowButton';
 import { DriverWorldMap } from '@/components/driver/DriverWorldMap';
+import { CareerShape } from '@/components/driver/CareerShape';
 import { DriverSearch } from '@/components/driver/DriverSearch';
 import { flag } from '@/lib/format';
 import { openTeam } from '@/lib/nav';
@@ -160,6 +161,8 @@ export default function DriverScreen() {
           )}
         </Card>
       )}
+
+      <CareerShape driverId={id} />
 
       {/* Gráficos */}
       <H2 style={{ marginTop: space(1) }}>📊 Evolução</H2>
