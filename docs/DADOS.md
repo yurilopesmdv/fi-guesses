@@ -166,3 +166,9 @@ As migrations 0025/0026/0027 acrescentam conteúdo: `content_sources` (URLs púb
 `my_profile_overview()` não recebe usuário: resolve exclusivamente `auth.uid()`, sem execução anônima. Retorna perfil próprio, posição/total gerais e métricas agregadas dos bolões em que é membro. O security definer permite ordenar contra todos os participantes de cada bolão sem abrir perguntas/participações de outros bolões. `pool_lifecycles` define finalização; a pontuação usa `score_answer` e `pool_standings`, preservando ranking e exclusão.
 
 O cliente filtra agregados por ano/bolão, sem baixar perguntas/palpites. Participação conta respostas completas em perguntas encerradas, criadas antes do fechamento e com ingresso do usuário a tempo; resultados parciais de pódio contribuem somente com os slots apurados para o denominador e não concedem pódio exato. A consulta não altera tabelas ou pontuação.
+
+## Acompanhamentos e identidade de equipe (0033)
+
+`constructor_id` passa a existir em `drivers`, `race_results` e `constructor_standings` (somente F1). A sincronização envia o `constructorId` da Jolpica; linhas antigas e clientes que ainda não enviam a coluna são preenchidos por `team_constructor_id(team)`, inversa exata de `teamName()` em `f1api.ts` (conferida contra os 205 nomes de equipe existentes). Ao mudar `TEAM_NAMES`, atualizar também essa função em nova migration.
+
+`follows(user_id, kind, entity_id)` guarda pilotos (`driver_id`), equipes (`constructor_id`) e pistas publicadas (`circuits.id`). RLS só do dono (ler/inserir/remover), PK impede duplicatas, trigger valida a entidade e limita 60 por usuário. Seguir não altera palpites, visibilidade ou notificações. `my_follows_overview()` (security invoker, sem anônimo) resume último GP, campeonato, próxima etapa (só para ativos no grid atual) e último vencedor por pista.

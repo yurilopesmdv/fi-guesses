@@ -4,6 +4,7 @@ import { Redirect, Stack, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/lib/auth';
 import { Image } from 'expo-image';
 import { BarChart, HBars, ResultStrip } from '@/components/driver/charts';
+import { FollowButton } from '@/components/FollowButton';
 import { DriverSearch } from '@/components/driver/DriverSearch';
 import { flag } from '@/lib/format';
 import { openTeam } from '@/lib/nav';
@@ -65,6 +66,7 @@ export default function DriverScreen() {
           {career.titles > 0 && <Pill color="#3b2f00">🏆 {career.titles}× campeão mundial</Pill>}
           {p.teams && <Muted>{p.teams}</Muted>}
         </Row>
+        <Row style={{ marginTop: space(1) }}><FollowButton kind="driver" entityId={id} label={driver.name} /></Row>
       </Card>
 
       {/* Carreira */}

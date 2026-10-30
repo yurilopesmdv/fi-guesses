@@ -161,3 +161,15 @@ export type ProfilePoolSummary = {
 export type MyProfileOverview = {
  profile:Profile;global:{rank:number;total:number;pools_played:number}|null;pools:ProfilePoolSummary[];generated_at:string;
 };
+
+export type FollowKind='driver'|'team'|'circuit';
+export type FollowRaceRef={race_id:string;season:number;round:number;name:string;country?:string|null;date_utc:string};
+export type FollowStanding={season:number;position:number;points:number;wins:number};
+export type FollowedDriver={driver_id:string;name:string;code:string;number:number|null;team:string|null;team_color:string|null;headshot_url:string|null;active:boolean;
+ standing:FollowStanding|null;last_race:(FollowRaceRef&{grid:number|null;position:number;points:number;status:string|null;team:string|null})|null};
+export type FollowedTeam={constructor_id:string;team:string;team_color:string;active:boolean;standing:FollowStanding|null;
+ last_race:(FollowRaceRef&{drivers:{code:string;name:string|null;driver_id:string|null;grid:number|null;position:number;points:number;status:string|null}[]})|null};
+export type FollowedCircuit={circuit_id:string;name:string;locality:string;country:string;next_race:FollowRaceRef|null;
+ last_winner:{season:number;name:string;date_utc:string;driver_id:string;driver_name:string;team:string|null}|null};
+export type MyFollowsOverview={season:number;next_race:{id:string;name:string;country:string|null;circuit_id:string|null;date_utc:string;round:number;season:number}|null;
+ drivers:FollowedDriver[];teams:FollowedTeam[];circuits:FollowedCircuit[];synced_at:string|null;generated_at:string};

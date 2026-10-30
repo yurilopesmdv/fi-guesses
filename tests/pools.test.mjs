@@ -369,3 +369,54 @@ test('participação considera prazo da sessão, ingresso e resposta completa; a
  await asUser(null,'postgres');await db.query('update predictions set answer=$1 where question_id=$2',[{},q.id]);await asUser(4);entry=(await db.query('select my_profile_overview() as value')).rows[0].value.pools[0];assert.equal(entry.answered_questions,0);
  await asUser(1);entry=(await db.query('select my_profile_overview() as value')).rows[0].value.pools.find(p=>p.id===poolA);assert.equal(entry.max_points,3);assert.equal(entry.exact_podiums,0);assert.equal(entry.status,'ongoing');
 });
+
+async function seedFollowData(){
+ await asUser(null,'postgres');
+ await db.query(`insert into drivers(series,season,code,name,driver_id,team,team_color) values
+  ('f1',2026,'VER','Max Verstappen','max_verstappen','Red Bull','#3671C6'),('f1',2026,'LAW','Liam Lawson','lawson','Racing Bulls','#6692FF'),
+  ('f1',2015,'RAI','Kimi Räikkönen','raikkonen','Ferrari','#E80020'),('f1',2025,'GRO','Romain Grosjean','grosjean','Lotus','#FFB800'),
+  ('f2',2026,'BOR','Piloto F2','f2_x','Red Bull','#000')`);
+ await db.query(`insert into race_results(series,session,season,round,position,driver_code,team,grid,points,status) values
+  ('f1','race',2026,1,1,'VER','Red Bull',3,25,'Finished'),('f1','race',2026,1,2,'LAW','Racing Bulls',8,18,'Finished'),
+  ('f1','race',2025,1,4,'GRO','Lotus',2,12,'Finished')`);
+ await db.query(`insert into driver_standings(series,season,position,driver_code,team,points,wins) values('f1',2026,1,'VER','Red Bull',25,1)`);
+ await db.query(`insert into constructor_standings(series,season,position,team,points,wins) values('f1',2026,1,'Red Bull',25,1),('f1',2026,2,'Racing Bulls',18,0)`);
+ await db.query(`insert into circuits(id,name,locality,country,official_url,published) values('interlagos','Interlagos','São Paulo','Brazil','https://example.test',true),('oculta','Oculta','X','Y','https://example.test',false)`);
+ await db.query(`update races set circuit_id='interlagos' where id=$1`,[raceC]);
+}
+test('equipes recebem constructor_id estável da fonte ou do nome atual, somente na F1',async()=>{
+ await seedFollowData();
+ const ids=Object.fromEntries((await db.query("select series||':'||code k,constructor_id from drivers")).rows.map(r=>[r.k,r.constructor_id]));
+ assert.equal(ids['f1:VER'],'red_bull');assert.equal(ids['f1:LAW'],'rb');assert.equal(ids['f1:GRO'],'lotus_f1');assert.equal(ids['f2:BOR'],null);
+ await db.query("insert into drivers(series,season,code,name,driver_id,team,constructor_id) values('f1',2026,'NEW','Novo','novo','Nome Novo','fonte_x')");
+ assert.equal((await db.query("select constructor_id from drivers where code='NEW'")).rows[0].constructor_id,'fonte_x');
+ await db.query("update drivers set team='Ferrari' where code='LAW' and season=2026");
+ assert.equal((await db.query("select constructor_id from drivers where code='LAW'")).rows[0].constructor_id,'ferrari');
+ assert.equal((await db.query("select constructor_id from race_results where driver_code='GRO'")).rows[0].constructor_id,'lotus_f1');
+ assert.equal((await db.query("select team_constructor_id('Brabham-Alfa Romeo') v")).rows[0].v,'brabham-alfa_romeo');
+});
+async function rejectsInTx(sql,params,re){if(re===undefined){re=params;params=[];}await db.exec('savepoint expected_error');await assert.rejects(db.query(sql,params),re);await db.exec('rollback to savepoint expected_error');}
+test('acompanhamentos são privados, únicos, validados e resumem último GP, campeonato e carreira encerrada',async()=>{
+ await seedFollowData();
+ await asUser(1);
+ for(const [kind,id] of [['driver','max_verstappen'],['driver','grosjean'],['team','red_bull'],['circuit','interlagos']])await db.query('insert into follows(kind,entity_id) values($1,$2)',[kind,id]);
+ await rejectsInTx("insert into follows(kind,entity_id) values('driver','max_verstappen')",/duplicate key/);
+ await rejectsInTx("insert into follows(kind,entity_id) values('driver','f2_x')",/não encontrado/);
+ await rejectsInTx("insert into follows(kind,entity_id) values('circuit','oculta')",/não encontrado/);
+ await rejectsInTx("insert into follows(kind,entity_id) values('team','Red Bull')",/não encontrado/);
+ const data=(await db.query('select my_follows_overview() v')).rows[0].v;
+ assert.equal(data.season,2026);assert.equal(data.next_race.id,raceC);
+ const ver=data.drivers.find(d=>d.driver_id==='max_verstappen');assert.equal(ver.active,true);assert.equal(ver.last_race.position,1);assert.equal(ver.last_race.grid,3);assert.equal(ver.standing.position,1);
+ const gro=data.drivers.find(d=>d.driver_id==='grosjean');assert.equal(gro.active,false);assert.equal(gro.last_race.season,2025);
+ assert.equal(data.teams[0].team,'Red Bull');assert.equal(data.teams[0].standing.position,1);assert.deepEqual(data.teams[0].last_race.drivers.map(d=>d.code),['VER']);
+ assert.equal(data.circuits[0].next_race.race_id,raceC);
+ await asUser(2);assert.deepEqual((await db.query('select * from follows')).rows,[]);
+ const other=(await db.query('select my_follows_overview() v')).rows[0].v;assert.deepEqual([other.drivers,other.teams,other.circuits],[[],[],[]]);
+ await rejectsInTx("insert into follows(user_id,kind,entity_id) values($1,'driver','max_verstappen')",[uid(1)],/row-level security/);
+ assert.equal((await db.query("delete from follows where user_id=$1 returning *",[uid(1)])).rows.length,0);
+ await asUser(1);await db.query("delete from follows where kind='driver' and entity_id='max_verstappen'");
+ assert.equal((await db.query('select my_follows_overview() v')).rows[0].v.drivers.length,1);
+ assert.equal((await db.query("select count(*)::int n from drivers where driver_id='max_verstappen'")).rows[0].n,1);
+ await asUser(null);assert.equal((await db.query('select my_follows_overview() v')).rows[0].v,null);
+ await asUser(null,'anon');await rejectsInTx('select my_follows_overview()',/permission denied/);
+});

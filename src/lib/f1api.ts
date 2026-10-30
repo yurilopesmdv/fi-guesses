@@ -84,7 +84,7 @@ export async function fetchDriverStandings(season: number) {
         series: 'f1' as const, season, code: driverCode(s.Driver), driver_id: s.Driver.driverId as string,
         name: `${s.Driver.givenName} ${s.Driver.familyName}`,
         number: s.Driver.permanentNumber ? Number(s.Driver.permanentNumber) : null,
-        team: teamName(team), team_color: teamColor(team),
+        team: teamName(team), team_color: teamColor(team), constructor_id: team ?? null,
       },
       // sem posição ('-') → ordem da lista
       standing: { series: 'f1' as const, season, position: Number(s.position) || i + 1, driver_code: driverCode(s.Driver), team: teamName(team), points: Number(s.points), wins: Number(s.wins) },
@@ -97,21 +97,21 @@ export async function fetchConstructorStandings(season: number) {
   const list = (data.StandingsTable.StandingsLists[0]?.ConstructorStandings ?? []) as any[];
   return list.map((s, i) => ({
     series: 'f1' as const, season, position: Number(s.position) || i + 1,
-    team: teamName(s.Constructor.constructorId)!, team_color: teamColor(s.Constructor.constructorId),
+    team: teamName(s.Constructor.constructorId)!, team_color: teamColor(s.Constructor.constructorId), constructor_id: s.Constructor.constructorId as string,
     points: Number(s.points), wins: Number(s.wins),
   }));
 }
 
 /** Todos os resultados da temporada (paginado). */
 export async function fetchSeasonResults(season: number) {
-  const rows: { series: 'f1'; session: 'race'; season: number; round: number; position: number; driver_code: string; team: string | null; team_color: string; grid: number | null; points: number; status: string; fastest_lap: boolean }[] = [];
+  const rows: { series: 'f1'; session: 'race'; season: number; round: number; position: number; driver_code: string; team: string | null; constructor_id: string | null; team_color: string; grid: number | null; points: number; status: string; fastest_lap: boolean }[] = [];
   for (let offset = 0; ; offset += 100) {
     const data = await get(`${season}/results.json`, offset);
     for (const race of data.RaceTable.Races as any[]) {
       for (const r of race.Results as any[]) {
         rows.push({
           series: 'f1', session: 'race', season, round: Number(race.round), position: Number(r.position), driver_code: driverCode(r.Driver),
-          team: teamName(r.Constructor.constructorId), team_color: teamColor(r.Constructor.constructorId), grid: Number(r.grid) || null,
+          team: teamName(r.Constructor.constructorId), constructor_id: r.Constructor.constructorId ?? null, team_color: teamColor(r.Constructor.constructorId), grid: Number(r.grid) || null,
           points: Number(r.points), status: r.status, fastest_lap: r.FastestLap?.rank === '1',
         });
       }
@@ -151,14 +151,14 @@ export async function fetchSeasonBundle(season: number) {
   ]);
   // tabela de pilotos = lista completa da temporada (há quem corra sem entrar na classificação)
   const fromStandings = new Map(drivers.map((d) => [d.driver.code, d.driver]));
-  const teamFromResults = new Map<string, { team: string | null; color: string }>();
-  for (const r of results) teamFromResults.set(r.driver_code, { team: r.team, color: r.team_color });
+  const teamFromResults = new Map<string, { team: string | null; constructor_id: string | null; color: string }>();
+  for (const r of results) teamFromResults.set(r.driver_code, { team: r.team, constructor_id: r.constructor_id, color: r.team_color });
   const allDrivers = list.map((d: any) => {
     const code = driverCode(d);
     const st = fromStandings.get(code), rs = teamFromResults.get(code);
     return st ?? {
       series: 'f1' as const, season, code, driver_id: d.driverId as string, name: `${d.givenName} ${d.familyName}`,
-      number: d.permanentNumber ? Number(d.permanentNumber) : null, team: rs?.team ?? null, team_color: rs?.color ?? '#888',
+      number: d.permanentNumber ? Number(d.permanentNumber) : null, team: rs?.team ?? null, constructor_id: rs?.constructor_id ?? null, team_color: rs?.color ?? '#888',
     };
   });
   return {

@@ -125,4 +125,20 @@ Escolher o primeiro lote pelos três eixos: retorno a cada GP (perfil/acompanham
 ## Execução incremental
 
 - P01/P02: perfil e indicadores publicados e conferidos; migration 0032 aplicada. Código 2ff5ca8, port SDK 57 76c1219. Testar: Bolões → avatar no canto superior direito → Meu perfil.
-- Próximos: P04/P05/P06, P03, H01; publicar e informar o percurso de cada entrega concluída.
+- P04/P05/P06: acompanhar pilotos, equipes e pistas implementado localmente (migration 0033, 69 testes, typecheck e export web). Aguardando autorização para commit/push/publicação. Testar: página de piloto/equipe/pista → Seguir → Meu perfil → Acompanhando.
+- Próximos: P03, H01; publicar e informar o percurso de cada entrega concluída.
+
+### Plano detalhado do restante (30/10/2026)
+
+Base: `main` em SDK 58. Cada entrega: migration nova (backend antes do cliente) → `repo.ts`/`types.ts` → tela → testes SQL/RLS em `tests/pools.test.mjs` → `npm run typecheck`, `npm test`, `npx expo export --platform web` → commit/push somente com autorização.
+
+| Entrega | Escopo | Backend | Cliente | Aceitação |
+|---|---|---|---|---|
+| 2 — Acompanhar (P04/P05/P06) | Seguir pilotos, equipes e pistas; cartões no perfil | 0033: `constructor_id` em `drivers`, `race_results`, `constructor_standings` (fonte Jolpica + backfill/trigger pela normalização atual); tabela `follows` (dono, tipo, entidade, PK única, RLS só do dono, limite por usuário, validação da entidade); RPC `my_follows_overview()` | Botão Seguir no piloto, equipe e pista; seção “Acompanhando” no perfil com último GP, grid→chegada, campeonato, próxima etapa (só se ativo) | Outro usuário não vê/edita favoritos; anônimo bloqueado; carreira encerrada sem próxima etapa; renomear equipe não quebra identidade |
+| 3 — Seu último GP (P03) | Último GP F1 com resultado: pontos por bolão, mudança de posição, resultados dos acompanhados | RPC `my_last_gp_summary()` com posição antes/depois por bolão, estados aguardando/parcial/apurado | Cartão no topo do perfil e acesso à próxima etapa | Resultado esportivo separado da apuração; bolão sem pergunta no GP não aparece |
+| 4 — Calendário visual (H01 + H02) | Corridas: Lista/Mês; sessões; próxima etapa; atalho para palpitar; exportar `.ics` | Sem migration | Alternância em `(tabs)/races.tsx`; grade mensal em Brasília; ICS com UID estável (web: download; app: compartilhar texto) | Datas históricas sem horário inventado; não cria bolão/pergunta |
+| 5 — Atlas (H03/H04/H18) | Mapa esquemático (equirretangular, SVG/Views existentes) com pinos atuais/históricos; país como portal; vitórias de piloto no mapa | RPC leve de coordenadas + contagens | Pistas: Lista/Mapa; painel inferior ao tocar | Sem dependência nativa nova |
+| 6 — Comparação visual (Fase C) | H05, H06, H07, H09, H13, H15, H20 | RPCs agregadas por piloto/pista/período | Acesso secundário em F1/perfis | Amostras exibidas; paginação no servidor |
+| 7+ — Fases D/E/F | Exploração, P07–P10, enriquecimentos | Conforme seções acima | — | Exigem decisões de produto antes |
+
+Decisão de identidade de equipe (P05): hoje `team` é o nome derivado do `constructorId` por `TEAM_NAMES`. A 0033 persiste o `constructor_id` vindo da fonte e preenche linhas existentes pela inversa determinística dessa tabela; o trigger cobre clientes antigos que ainda não enviam a coluna. Favorito de equipe guarda `constructor_id`, nunca o nome. Fusões/renomeações históricas continuam entidades separadas.

@@ -11,6 +11,7 @@ import { CircuitMap } from '@/components/circuits/CircuitMap';
 import { CircuitSegments } from '@/components/circuits/CircuitSegments';
 import { CircuitBook } from '@/components/circuits/CircuitBook';
 import { CircuitViewer } from '@/components/circuits/CircuitViewer';
+import { FollowButton } from '@/components/FollowButton';
 import { Button, Card, H1, H2, Loading, Muted, P, Pill, Row, Screen } from '@/ui/primitives';
 import { colors, radius, space } from '@/ui/theme';
 
@@ -39,6 +40,7 @@ export default function CircuitScreen(){
       <Muted>{flag(c.country)} {c.locality} · {circuitCountry(c.country)}</Muted>
       <H1>{c.name}</H1>
       <Row style={{flexWrap:'wrap',marginVertical:space(1)}}><Pill color={colors.red}>FÓRMULA 1</Pill>{layout&&<Pill>Traçado · {layout.season}</Pill>}</Row>
+      <FollowButton kind="circuit" entityId={c.id} label={c.name}/>
       {error&&<Card><Muted>{error}</Muted><Button title="Atualizar pista" variant="ghost" onPress={()=>void load()}/></Card>}
       <View style={{flexDirection:'row',flexWrap:'wrap',gap:8,marginBottom:16}}>
         <Metric label="EXTENSÃO" value={layout?circuitLength(layout.length_m):'—'}/><Metric label="CURVAS" value={String(layout?.turns??'—')}/>

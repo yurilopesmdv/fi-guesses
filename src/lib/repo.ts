@@ -1,4 +1,4 @@
-import type {MyProfileOverview,Profile} from './types';
+import type {FollowKind,MyFollowsOverview,MyProfileOverview,Profile} from './types';
 import { supabase } from './supabase';
 import { gridFromResults, resolveGridDrivers } from './raceGrid';
 import { fetchPublishedGrid, fetchRaceQualifying, fetchRaceResult, fetchSeasonBundle } from './f1api';
@@ -21,6 +21,19 @@ export const updateMyProfile = async (patch: { name?: string; avatar?: string },
   if(!uid||(expectedUserId&&uid!==expectedUserId))throw Error('Sua sessão mudou. Abra o perfil novamente.');
   throwIf(await supabase.from('profiles').update(patch).eq('id', uid));
 };
+
+// ---------- acompanhamentos (privados) ----------
+export const getMyFollowsOverview = async () => throwIf(await supabase.rpc('my_follows_overview')) as MyFollowsOverview|null;
+export const isFollowing = async (kind: FollowKind, entityId: string) =>
+  (throwIf(await supabase.from('follows').select('entity_id').eq('kind', kind).eq('entity_id', entityId).limit(1)) as unknown[]).length > 0;
+export const follow = async (kind: FollowKind, entityId: string) =>
+  throwIf(await supabase.from('follows').upsert({ kind, entity_id: entityId }, { onConflict: 'user_id,kind,entity_id', ignoreDuplicates: true }));
+export const unfollow = async (kind: FollowKind, entityId: string) =>
+  throwIf(await supabase.from('follows').delete().eq('kind', kind).eq('entity_id', entityId));
+/** Identidade estável da equipe a partir do nome exibido na rota. */
+export const getTeamConstructorId = async (team: string) =>
+  ((throwIf(await supabase.from('drivers').select('constructor_id').eq('series', 'f1').eq('team', team).not('constructor_id', 'is', null).order('season', { ascending: false }).limit(1)) as { constructor_id: string }[])[0]?.constructor_id
+  ?? (throwIf(await supabase.from('race_results').select('constructor_id').eq('series', 'f1').eq('team', team).not('constructor_id', 'is', null).order('season', { ascending: false }).limit(1)) as { constructor_id: string }[])[0]?.constructor_id) ?? null;
 
 // ---------- bolões ----------
 export const listMyPools = async () =>

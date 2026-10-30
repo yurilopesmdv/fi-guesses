@@ -114,3 +114,5 @@ Para operação, após commit/push: aplicar 0028–0031, publicar sync-news, exe
 ## Entregas incrementais: perfil
 
 A partir da 0032, a suíte tem 67 testes: três cenários novos de perfil privado, métricas/finalização/exclusão e participação por prazo/ingresso/resposta completa. TypeScript, exportação web e SDK 57 permanecem necessários. Percurso: Bolões → avatar → Meu perfil → filtros ano/bolão → editar perfil → análise individual. Conferir conta sem bolões, sessão diferente, erro mantendo cache e bolão selecionado excluído. Cada entrega completa deve ter commit/push, backend antes do cliente, OTA SDK 58/57 e aviso no chat com caminho para testar.
+
+A 0033 acrescenta dois cenários (69 testes): derivação de `constructor_id` (fonte, nome, F2 nulo, troca de equipe) e acompanhamentos privados (duplicata, entidade inválida/não publicada, isolamento entre usuários, anônimo, carreira encerrada). Percurso: piloto/equipe/pista → Seguir → Bolões → avatar → Meu perfil → Acompanhando. Erros esperados dentro da transação de teste usam `rejectsInTx` (savepoint).

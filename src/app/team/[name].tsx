@@ -4,9 +4,10 @@ import { Redirect, Stack, useLocalSearchParams } from 'expo-router';
 import { Image } from 'expo-image';
 import { BarChart, HBars } from '@/components/driver/charts';
 import { TeamSearch } from '@/components/driver/TeamSearch';
+import { FollowButton } from '@/components/FollowButton';
 import { useAuth } from '@/lib/auth';
 import { openDriver } from '@/lib/nav';
-import { getTeamProfile, teamHeadToHead } from '@/lib/repo';
+import { getTeamConstructorId, getTeamProfile, teamHeadToHead } from '@/lib/repo';
 import type { TeamHeadToHead, TeamProfile, TeamSearchRow } from '@/lib/types';
 import { Button, Card, H2, Loading, Muted, P, Pill, Row, Screen } from '@/ui/primitives';
 import { colors, radius, space } from '@/ui/theme';
@@ -23,6 +24,8 @@ export default function TeamScreen() {
   const [search, setSearch] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [season, setSeason] = useState<number | null>(null);
+  const [constructorId, setConstructorId] = useState<string | null>(null);
+  useEffect(() => { let active = true; setConstructorId(null); if (auth.session) getTeamConstructorId(team).then((v) => { if (active) setConstructorId(v); }).catch(() => {}); return () => { active = false; }; }, [team, auth.session]);
 
   useEffect(() => {
     if (!auth.session) return;
@@ -54,6 +57,7 @@ export default function TeamScreen() {
           {career.driver_titles > 0 && <Pill color="#3b2f00">🏆 {career.driver_titles}× pilotos</Pill>}
           {!active && <Pill>encerrada</Pill>}
         </Row>
+        <Row style={{ marginTop: space(1) }}><FollowButton kind="team" entityId={constructorId} label={team} /></Row>
         {p.team.drivers && p.team.drivers.length > 0 && (
           <Row style={{ marginTop: space(1.5), flexWrap: 'wrap' }}>
             {p.team.drivers.map((d) => (
