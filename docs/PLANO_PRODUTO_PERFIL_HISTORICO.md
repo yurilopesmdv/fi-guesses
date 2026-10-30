@@ -125,8 +125,10 @@ Escolher o primeiro lote pelos três eixos: retorno a cada GP (perfil/acompanham
 ## Execução incremental
 
 - P01/P02: perfil e indicadores publicados e conferidos; migration 0032 aplicada. Código 2ff5ca8, port SDK 57 76c1219. Testar: Bolões → avatar no canto superior direito → Meu perfil.
-- P04/P05/P06: acompanhar pilotos, equipes e pistas implementado localmente (migration 0033, 69 testes, typecheck e export web). Aguardando autorização para commit/push/publicação. Testar: página de piloto/equipe/pista → Seguir → Meu perfil → Acompanhando.
-- Próximos: P03, H01; publicar e informar o percurso de cada entrega concluída.
+- P04/P05/P06: publicado (a14e5f6, migration 0033 aplicada; 205 equipes com constructor_id). Testar: página de piloto/equipe/pista → Seguir → Meu perfil → Acompanhando.
+- P03: cartão “Seu último GP” no perfil (migration 0034): pontos no GP, posição antes→depois em cada bolão e estado da apuração. Testar: Meu perfil → topo.
+- H01/H02: Corridas com Lista/Mês e exportação .ics (web; arquivo simples, sem assinatura). Testar: aba Corridas → Mês / 📅 .ics.
+- Próximos: atlas (H03/H04/H18), depois fase C.
 
 ### Plano detalhado do restante (30/10/2026)
 

@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { Platform, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { RaceCalendar } from '@/components/RaceCalendar';
 import { SeriesPicker } from '@/components/SeriesPicker';
+import { buildIcs } from '@/lib/ics';
 import { YearPicker } from '@/components/YearPicker';
 import type { Series } from '@/lib/types';
 import { flag, fmtDate } from '@/lib/format';
@@ -22,6 +24,7 @@ export default function Races() {
   const { races, drivers, loading, importing, refresh } = useYear(year, series);
   const [podiums, setPodiums] = useState<Podium>({});
   const [refreshing, setRefreshing] = useState(false);
+  const [view, setView] = useState<'list' | 'month'>('list');
 
   const loadPodiums = useCallback(async () => {
     const { data } = await supabase.from('race_results').select('round,position,driver_code').eq('series', series).eq('season', year).in('session', ['race', 'feature']).lte('position', 3).order('position');
@@ -44,6 +47,19 @@ export default function Races() {
         <><Loading />{importing && <Muted style={{ textAlign: 'center' }}>Importando temporada {year} da API…</Muted>}</>
       ) : (
         <>
+          <Row style={{ marginBottom: space(1) }}>
+            {(['list', 'month'] as const).map((v) => (
+              <Pressable key={v} accessibilityRole="button" accessibilityState={{ selected: view === v }} onPress={() => setView(v)} style={{ flex: 1, minHeight: 44, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: view === v ? colors.card2 : 'transparent', borderWidth: 1, borderColor: colors.border }}>
+                <Text style={{ color: colors.text, fontWeight: '700' }}>{v === 'list' ? 'Lista' : 'Mês'}</Text>
+              </Pressable>
+            ))}
+            {Platform.OS === 'web' && races.length > 0 && (
+              <Pressable accessibilityRole="button" accessibilityLabel="Exportar para o calendário (.ics)" onPress={() => downloadIcs(races, `${series}-${year}.ics`)} style={{ minHeight: 44, paddingHorizontal: 12, borderRadius: 10, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.border }}>
+                <Text style={{ color: colors.text, fontWeight: '700' }}>📅 .ics</Text>
+              </Pressable>
+            )}
+          </Row>
+          {view === 'month' ? <RaceCalendar races={races} /> : <>
           <Muted style={{ marginBottom: space(1) }}>{races.length} {series === 'f1' ? 'GPs' : 'etapas'} · {Object.keys(podiums).length} disputad{series === 'f1' ? 'os' : 'as'}{year === SEASON ? ' · puxe pra atualizar' : ''}</Muted>
           {races.map((r, i) => {
             const past = new Date(r.date_utc).getTime() < now;
@@ -71,8 +87,17 @@ export default function Races() {
               </Pressable>
             );
           })}
+          </>}
         </>
       )}
     </ScrollView>
   );
+}
+
+/** Exportação simples (web): baixa o arquivo; não acompanha mudanças futuras de horário. */
+function downloadIcs(races: import('@/lib/types').Race[], name: string) {
+  const url = URL.createObjectURL(new Blob([buildIcs(races)], { type: 'text/calendar;charset=utf-8' }));
+  const a = document.createElement('a');
+  a.href = url; a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
