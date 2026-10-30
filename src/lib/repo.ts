@@ -181,6 +181,9 @@ export const getSeasonOverview = async (season: number) => throwIf(await supabas
 export type FirstStarts={starts:number;wins:number;podiums:number;points:number;p1_starts:number;until:number};
 export const getDriverFirstStarts = async (a: string, b: string, n: number) => throwIf(await supabase.rpc('driver_first_starts', { p_a: a, p_b: b, p_n: n })) as Record<string, FirstStarts> | null;
 
+export type OnThisDay={id:string;season:number;round:number;name:string;country:string|null;date_utc:string;dist:number;winner:{driver_id:string;name:string;team:string|null}};
+export const getF1OnThisDay = async (month: number, day: number) => throwIf(await supabase.rpc('f1_on_this_day', { p_month: month, p_day: day })) as OnThisDay[];
+
 // ---------- equipe ----------
 export const getTeamProfile = async (team: string) => throwIf(await supabase.rpc('team_profile', { p_team: team })) as TeamProfile;
 export const searchTeams = async (q: string) => throwIf(await supabase.rpc('team_search', { p_q: q })) as TeamSearchRow[];

@@ -507,3 +507,9 @@ test('primeiras N largadas ignoram desistências antes da largada',async()=>{
  await asUser(1);const v=(await db.query("select driver_first_starts('pc','pd',2) v")).rows[0].v;
  assert.deepEqual([v.pc.starts,v.pc.wins,Number(v.pc.points)],[2,1,43]);assert.deepEqual([v.pd.starts,v.pd.wins],[2,0]);
 });
+test('neste dia encontra GPs passados pela data em Brasília',async()=>{
+ await seedFollowData();await asUser(1);
+ const v=(await db.query('select f1_on_this_day(3,2) v')).rows[0].v;
+ assert.deepEqual(v.map(x=>[x.id,x.dist,x.winner.driver_id]),[[raceA,1,'max_verstappen']]);
+ assert.deepEqual((await db.query('select f1_on_this_day(7,1) v')).rows[0].v,[]);
+});
