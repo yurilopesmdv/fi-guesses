@@ -508,9 +508,11 @@ test('primeiras N largadas ignoram desistências antes da largada',async()=>{
  assert.deepEqual([v.pc.starts,v.pc.wins,Number(v.pc.points)],[2,1,43]);assert.deepEqual([v.pd.starts,v.pd.wins],[2,0]);
 });
 test('neste dia encontra GPs passados pela data em Brasília',async()=>{
- await seedFollowData();await asUser(1);
- const v=(await db.query('select f1_on_this_day(3,2) v')).rows[0].v;
- assert.deepEqual(v.map(x=>[x.id,x.dist,x.winner.driver_id]),[[raceA,1,'max_verstappen']]);
+ await seedFollowData();await asUser(null,'postgres');
+ // Horário explícito em UTC: 02:00Z ainda é o dia anterior em Brasília, independente do fuso da máquina/CI.
+ await db.query("update races set date_utc='2026-03-10T02:00:00Z' where id=$1",[raceA]);await asUser(1);
+ const v=(await db.query('select f1_on_this_day(3,9) v')).rows[0].v;
+ assert.deepEqual(v.map(x=>[x.id,x.dist,x.winner.driver_id]),[[raceA,0,'max_verstappen']]);
  assert.deepEqual((await db.query('select f1_on_this_day(7,1) v')).rows[0].v,[]);
 });
 test('recordes até a temporada ignoram anos posteriores',async()=>{
