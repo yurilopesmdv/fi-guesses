@@ -140,7 +140,8 @@ Escolher o primeiro lote pelos três eixos: retorno a cada GP (perfil/acompanham
 - H12: comparar pilotos → “Primeiras largadas” 25/50/100 (exclui Withdrew/Did not start). Migration 0042.
 - H21: Corridas (ano atual, F1) → “Neste dia na F1”: GPs na mesma data em Brasília (±3 dias) com vencedor. Migration 0043.
 - H19: Explorar a história → “Recordes até {ano}”: top 5 de vitórias, pódios, largadas e P1 no grid até o fim do ano escolhido. Migration 0044.
-- Próximos: H14 rede de companheiros; depois fase E (P07–P10) e F.
+- H14: piloto → “Companheiros de equipe”: cartões roláveis com confronto no mesmo GP/equipe; tocar navega pela rede. Migration 0045.
+- Próximos: fase E (P09 trajetória nos bolões, P08 conquistas, P10 comparação no bolão, P07 notícias para você) e fase F.
 
 ### Plano detalhado do restante (30/10/2026)
 

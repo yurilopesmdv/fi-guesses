@@ -188,6 +188,9 @@ export type RecordKind='wins'|'podiums'|'starts'|'p1';
 export type RecordsUntil=Partial<Record<RecordKind,{driver_id:string;name:string|null;value:number;rank:number}[]>>;
 export const getRecordsUntil = async (season: number) => throwIf(await supabase.rpc('records_until', { p_season: season })) as RecordsUntil | null;
 
+export type Teammate={driver_id:string;name:string|null;headshot_url:string|null;races:number;ahead:number;behind:number;from:number;to:number;teams:string};
+export const getDriverTeammates = async (driverId: string) => throwIf(await supabase.rpc('driver_teammates', { p_driver_id: driverId })) as Teammate[];
+
 // ---------- equipe ----------
 export const getTeamProfile = async (team: string) => throwIf(await supabase.rpc('team_profile', { p_team: team })) as TeamProfile;
 export const searchTeams = async (q: string) => throwIf(await supabase.rpc('team_search', { p_q: q })) as TeamSearchRow[];

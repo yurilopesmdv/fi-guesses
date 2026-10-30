@@ -519,3 +519,10 @@ test('recordes até a temporada ignoram anos posteriores',async()=>{
  assert.deepEqual(v.starts.map(x=>x.driver_id),['grosjean']);assert.equal(v.wins,undefined);
  const w=(await db.query('select records_until(2026) v')).rows[0].v;assert.equal(w.wins[0].driver_id,'max_verstappen');
 });
+test('companheiros contam só GPs na mesma equipe',async()=>{
+ await seedFollowData();await asUser(null,'postgres');
+ await db.query("insert into drivers(series,season,code,name,driver_id,team) values('f1',2026,'TSU','Yuki','tsunoda','Red Bull')");
+ await db.query("insert into race_results(series,session,season,round,position,driver_code,team,grid,points,status) values('f1','race',2026,1,5,'TSU','Red Bull',6,10,'Finished')");
+ await asUser(1);const v=(await db.query("select driver_teammates('max_verstappen') v")).rows[0].v;
+ assert.deepEqual(v.map(x=>[x.driver_id,x.races,x.ahead,x.behind]),[['tsunoda',1,1,0]]);
+});
