@@ -17,7 +17,8 @@ O projeto foi migrado para Expo SDK 58 em 24/10/2026; ambiente em Node 22 e link
 | [Instalação](../INSTALACAO.md) | Acesso para usuários em Android, iPhone e navegador |
 | [Guia de contribuidores/agentes](../CLAUDE.md) | Contexto resumido e cuidados para futuras tarefas |
 | [Plano de Pistas e Notícias](PLANO_PISTAS_NOTICIAS.md) | Pesquisa e implantação de Pistas e Notícias; critérios de curadoria |
-| [Instagram da F1](pesquisas/instagram-f1.md) | Viabilidade de incorporação e coleta pela API oficial |
+| [Instagram da F1 — arquivado](pesquisas/instagram-f1.md) | Pesquisa preservada; integração retirada do pipeline pelo usuário |
+| [Exploração histórica](pesquisas/exploracao-historica.md) | Pesquisa de produto, referências esportivas, dados disponíveis e ideias aditivas |
 | [Evolução do bolão](PLANO_EVOLUCAO_BOLAO.md) | Planejamento autorizado: novas ferramentas opcionais e melhorias de base |
 | [Plano original](../PLANO.md) | Histórico de intenção; não é especificação do estado atual |
 
