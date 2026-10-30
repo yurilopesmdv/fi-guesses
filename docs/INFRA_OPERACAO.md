@@ -193,3 +193,6 @@ Job `content-news-every-ten-minutes`: `*/10 * * * *`; invoca RPC administrativa 
 Migrations novas 0028–0031 precedem o cliente. Configurar apenas o redirect de recuperação com `configure-recovery.mjs --apply`, preservando opções e URLs do Auth existentes. A recuperação usa página HTTPS de produção, atendendo também solicitações feitas no APK/Expo Go. O teste administrativo gera link sem enviar e-mail.
 
 Publicar sync-news para passar a vincular notícias por GP e executar o backfill conservador para itens existentes. As ferramentas de consulta não usam assinatura ao vivo, notificações ou fornecedor de IA. Compatibilidade OTA mantida com as dependências já presentes nos SDKs 57 e 58; nenhum novo módulo nativo. Logs de rascunhos, tokens e links privados de recuperação não devem ser impressos.
+
+
+Envio de recuperação adiado por escolha do usuário em 30/10/2026. Pendência operacional: na conferência do serviço, SMTP próprio não está configurado. O fluxo de callback/troca de senha pode ser validado com link administrativo sem envio, mas a entrega para endereços da família exige provedor SMTP. O padrão do Supabase restringe destinatários à equipe do projeto: https://supabase.com/docs/guides/auth/auth-smtp . Não registrar credenciais em código, app_settings ou documentação. As demais funcionalidades não dependem desse envio.
