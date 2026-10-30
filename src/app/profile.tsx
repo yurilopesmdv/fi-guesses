@@ -9,6 +9,7 @@ import type {MyProfileOverview} from '@/lib/types';
 import {InsightDetails,InsightMetric} from '@/components/insights/InsightUI';
 import {FollowingSection} from '@/components/profile/FollowingSection';
 import {LastGpCard} from '@/components/profile/LastGpCard';
+import {Achievements} from '@/components/profile/Achievements';
 import {Button,Card,H1,H2,Input,Loading,Muted,P,Row,Screen} from '@/ui/primitives';
 import {colors} from '@/ui/theme';
 const avatars=['🏎️','🏁','🔥','🦁','🐆','🦈','🚀','⚡','🍀','👑','🎯','🐢'];
@@ -55,6 +56,7 @@ export default function MyProfile(){
    <Card><H2>Resultados finais</H2><Row style={{alignItems:'stretch'}}><InsightMetric value={wins} label="vitórias em bolões" accent/><InsightMetric value={podiums} label="pódios em bolões"/></Row><Muted style={{fontSize:12,marginTop:10}}>Somente bolões finalizados · empates respeitados</Muted></Card>
    {selected.map(p=><Pressable key={p.id} accessibilityRole="button" accessibilityLabel={`Ver desempenho em ${p.name}`} onPress={()=>router.push(`/pool/${p.id}/analysis?userId=${uid}`)}><Card><Row><View style={{flex:1,gap:4}}><P style={{fontWeight:'800'}}>{p.name}</P><Muted style={{fontSize:12}}>{p.season} · {p.status==='finished'?'Finalizado':'Em andamento'} · {p.members} participantes</Muted></View><View style={{alignItems:'flex-end',gap:4}}><P style={{fontWeight:'800',color:colors.gold}}>{p.rank}º · {p.total} pts</P><Muted style={{fontSize:12}}>Ver desempenho ›</Muted></View></Row></Card></Pressable>)}
   </>}
+  {!!current.pools.length&&<Achievements pools={current.pools}/>}
   <FollowingSection refreshKey={refresh}/>
   <InsightDetails title="Conta"><Muted>Atualizado em {new Date(current.generated_at).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})} · Brasília</Muted><Button title="Atualizar perfil" variant="ghost" onPress={()=>setRefresh(v=>v+1)}/><Button title="Sair da conta" variant="ghost" onPress={()=>void supabase.auth.signOut().then(()=>router.replace('/login'))}/></InsightDetails>
  </Screen>;
