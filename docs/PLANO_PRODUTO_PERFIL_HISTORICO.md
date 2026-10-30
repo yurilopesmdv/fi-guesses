@@ -128,7 +128,8 @@ Escolher o primeiro lote pelos três eixos: retorno a cada GP (perfil/acompanham
 - P04/P05/P06: publicado (a14e5f6, migration 0033 aplicada; 205 equipes com constructor_id). Testar: página de piloto/equipe/pista → Seguir → Meu perfil → Acompanhando.
 - P03: cartão “Seu último GP” no perfil (migration 0034): pontos no GP, posição antes→depois em cada bolão e estado da apuração. Testar: Meu perfil → topo.
 - H01/H02: Corridas com Lista/Mês e exportação .ics (web; arquivo simples, sem assinatura). Testar: aba Corridas → Mês / 📅 .ics.
-- Próximos: atlas (H03/H04/H18), depois fase C.
+- H03/H18: Pistas com Lista/Mapa: mapa esquemático (Natural Earth 110m, domínio público, gerado por scripts/gen-world-mask.mjs), pinos agrupados ≈6°, painel com as pistas; respeita Atuais/Históricas, busca e país; lista equivalente mantida. Sem módulo nativo. Testar: aba Pistas → Mapa.
+- Próximos: H04 (vitórias do piloto no mapa), depois fase C.
 
 ### Plano detalhado do restante (30/10/2026)
 

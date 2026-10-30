@@ -9,6 +9,7 @@ import type { CircuitSummary } from '@/lib/types';
 import { SEASON } from '@/lib/useSeason';
 import { flag } from '@/lib/format';
 import { CircuitImage } from '@/components/circuits/CircuitImage';
+import { WorldMap, type MapPoint } from '@/components/circuits/WorldMap';
 import { Button, Card, H1, Input, Loading, Muted, P, Pill, Row, Screen } from '@/ui/primitives';
 import { colors, radius, space } from '@/ui/theme';
 
@@ -23,6 +24,8 @@ export default function CircuitsScreen() {
   const [loading,setLoading]=useState(true);
   const [refreshing,setRefreshing]=useState(false);
   const [error,setError]=useState('');
+  const [mapMode,setMapMode]=useState(false);
+  const [picked,setPicked]=useState<MapPoint[]>([]);
   const load=useCallback(async()=>{
     try {setError('');const [current,old]=await Promise.all([listCircuits(SEASON),listCircuitArchive(SEASON)]);setRows(current);setHistorical(old);}
     catch {setError('Não foi possível carregar as pistas. Verifique sua conexão e tente novamente.');}
@@ -43,6 +46,9 @@ export default function CircuitsScreen() {
         <H1>{archive?'Pistas históricas':'Pistas da temporada'}</H1>
         <Muted>{visibleRows.length?`${visibleRows.length} pistas · `:''}{archive?`Fora do calendário de ${SEASON}`:`Fórmula 1 · ${SEASON}`}</Muted>
         <Row>{[false,true].map(value=><View key={String(value)} style={{flex:1}}><Button title={value?`Históricas · ${historical.length}`:`Atuais · ${rows.length}`} variant={archive===value?'primary':'ghost'} onPress={()=>{setArchive(value);setCountry(null);setQuery('');}}/></View>)}</Row>
+        <Row>{[false,true].map(value=><Pressable key={`m${value}`} accessibilityRole="button" accessibilityState={{selected:mapMode===value}} onPress={()=>{setMapMode(value);setPicked([]);}} style={{flex:1,minHeight:44,borderRadius:10,alignItems:'center',justifyContent:'center',borderWidth:1,borderColor:colors.border,backgroundColor:mapMode===value?colors.card2:'transparent'}}><Text style={{color:colors.text,fontWeight:'700'}}>{value?'Mapa':'Lista'}</Text></Pressable>)}</Row>
+        {mapMode&&<WorldMap points={filtered.flatMap((row)=>row.circuit.latitude!=null&&row.circuit.longitude!=null?[{id:row.circuit.id,lat:row.circuit.latitude,lon:row.circuit.longitude,label:row.circuit.name}]:[])} onSelect={setPicked}/>}
+        {mapMode&&(picked.length?<Card>{picked.map((p)=>{const row=visibleRows.find((r)=>r.circuit.id===p.id);return <Pressable key={p.id} accessibilityRole="button" accessibilityLabel={`Conhecer ${p.label}`} onPress={()=>router.push(`/circuit/${p.id}`)} style={{minHeight:44,justifyContent:'center'}}><P style={{fontWeight:'700'}}>{row?flag(row.circuit.country):''} {p.label} ›</P>{row&&<Muted style={{fontSize:12}}>{row.circuit.locality} · {row.stats.seasons} temporadas · {row.stats.races} corridas</Muted>}</Pressable>;})}</Card>:<Muted style={{fontSize:12}}>Toque em um pino para ver a pista. Números agrupam pistas próximas. A lista abaixo traz as mesmas pistas.</Muted>)}
         <Input value={query} onChangeText={setQuery} placeholder="Buscar pista, cidade ou país" autoCorrect={false}/>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{gap:8}}>
           {[null,...countries].map((value)=><Pressable key={value??'all'} accessibilityRole="button" accessibilityState={{selected:country===value}} onPress={()=>setCountry(value)} style={{borderRadius:24,minHeight:44,paddingHorizontal:14,justifyContent:'center',backgroundColor:country===value?colors.red:colors.card2,borderWidth:1,borderColor:country===value?colors.red:colors.border}}>
