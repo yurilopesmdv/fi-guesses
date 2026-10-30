@@ -43,6 +43,15 @@ export default function F1() {
         </Row>
       </Card>
       {series === 'f1' && (
+        <Pressable accessibilityRole="button" accessibilityLabel={`Resumo da temporada ${year}`} onPress={() => router.push(`/season/${year}`)}>
+          <Card style={{ padding: space(1.5), flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <Text style={{ fontSize: 22 }}>🏆</Text>
+            <View style={{ flex: 1 }}><P style={{ fontWeight: '800' }}>Temporada {year} em uma tela</P><Muted style={{ fontSize: 12 }}>Campeões, vencedores e etapas no mapa</Muted></View>
+            <Text style={{ color: colors.muted, fontSize: 22 }}>›</Text>
+          </Card>
+        </Pressable>
+      )}
+      {series === 'f1' && (
         <Pressable accessibilityRole="button" accessibilityLabel="Explorar a história da F1" onPress={() => router.push('/explore')}>
           <Card style={{ padding: space(1.5), flexDirection: 'row', alignItems: 'center', gap: 12, borderColor: colors.red }}>
             <Text style={{ fontSize: 22 }}>🔎</Text>

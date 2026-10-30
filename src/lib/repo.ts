@@ -172,6 +172,12 @@ export type FeatKind='win_from_back'|'pole_no_points'|'first_win'|'win_on_debut'
 export type FeatRow={season:number;round:number;race_name:string;date_utc:string;driver_id:string;name:string|null;team:string|null;grid:number|null;position:number;extra:number|null};
 export const getHistoryFeats = async (kind: FeatKind, from: number, to: number) => throwIf(await supabase.rpc('history_feats', { p_kind: kind, p_from: from, p_to: to })) as { total: number; rows: FeatRow[] } | null;
 
+export type SeasonOverview={season:number;finished:boolean;races:number;completed:number;from_p1:number;
+ driver_champion:{driver_id:string;name:string;team:string|null;points:number;wins:number}|null;constructor_champion:{team:string;points:number;wins:number;color:string|null}|null;
+ leader:{driver_id:string;name:string;points:number}|null;winners:{driver_id:string;name:string|null;team_color:string|null;wins:number}[];teams:{team:string;wins:number}[];
+ stops:{race_id:string;round:number;name:string;country:string|null;date_utc:string;circuit_id:string|null;circuit:string|null;lat:number|null;lon:number|null;winner:string|null}[]};
+export const getSeasonOverview = async (season: number) => throwIf(await supabase.rpc('season_overview', { p_season: season })) as SeasonOverview | null;
+
 // ---------- equipe ----------
 export const getTeamProfile = async (team: string) => throwIf(await supabase.rpc('team_profile', { p_team: team })) as TeamProfile;
 export const searchTeams = async (q: string) => throwIf(await supabase.rpc('team_search', { p_q: q })) as TeamSearchRow[];

@@ -24,6 +24,7 @@ export default function RootLayout() {
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="profile" options={{title:'Meu perfil'}} />
           <Stack.Screen name="explore" options={{title:'Explorar a história'}} />
+          <Stack.Screen name="season/[year]" options={{title:'Temporada'}} />
           <Stack.Screen name="recover" options={{title:'Recuperar acesso'}} />
           <Stack.Screen name="login" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

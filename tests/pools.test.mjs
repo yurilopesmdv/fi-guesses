@@ -490,3 +490,11 @@ test('feitos guiados filtram época e calculam primeira vitória por largada',as
  assert.equal((await q('one_two')).total,2);assert.equal((await q('one_two',2032,2040)).total,0);
  assert.equal((await db.query("select history_feats('x') v")).rows[0].v,null);
 });
+test('temporada em uma tela só declara campeão com temporada encerrada',async()=>{
+ await seedFollowData();await asUser(null,'postgres');await db.query("update races set circuit_id='interlagos' where id=$1",[raceA]);
+ await asUser(1);let v=(await db.query('select season_overview(2026) v')).rows[0].v;
+ assert.equal(v.finished,false);assert.equal(v.driver_champion,null);assert.equal(v.leader.driver_id,'max_verstappen');
+ assert.deepEqual(v.winners.map(w=>[w.driver_id,w.wins]),[['max_verstappen',1]]);assert.equal(v.stops.find(s=>s.round===1).circuit_id,'interlagos');assert.equal(v.stops.find(s=>s.round===1).winner,'Max Verstappen');
+ await asUser(null,'postgres');await db.query("update races set date_utc='2026-03-02' where id=$1",[raceC]);await asUser(1);
+ v=(await db.query('select season_overview(2026) v')).rows[0].v;assert.equal(v.finished,true);assert.equal(v.driver_champion.driver_id,'max_verstappen');assert.equal(v.constructor_champion.team,'Red Bull');
+});
