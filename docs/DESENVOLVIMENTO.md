@@ -109,3 +109,8 @@ Além de TypeScript/exportações/UI móvel, validar `node scripts/deploy-functi
 Plano e aceitação em PLANO_EVOLUCAO_BOLAO.md. Suíte com 64 testes: os 48 anteriores, quatro SQL/RLS novos, seis de fila e seis de análises. Conferir concorrência, restauração e expiração da fila, falha de armazenamento com envio online, conta esperada, empates, simulação substituindo somente a parcela do pódio, reconstrução de etapa antiga e perguntas antigas default race.
 
 Para operação, após commit/push: aplicar 0028–0031, publicar sync-news, executar `node scripts/configure-recovery.mjs --apply` e `node --import tsx scripts/backfill-news-circuits.mjs --apply`. O primeiro só acrescenta o callback canônico à lista atual do Auth. O segundo só preenche vínculos nulos de notícias. Não envia e-mails; no teste de recuperação usar link gerado administrativamente para uma conta temporária. Validar web e SDK 57; imagem da retrospectiva é PNG web, texto nativo. Nenhuma funcionalidade excluída foi habilitada.
+
+
+## Entregas incrementais: perfil
+
+A partir da 0032, a suíte tem 67 testes: três cenários novos de perfil privado, métricas/finalização/exclusão e participação por prazo/ingresso/resposta completa. TypeScript, exportação web e SDK 57 permanecem necessários. Percurso: Bolões → avatar → Meu perfil → filtros ano/bolão → editar perfil → análise individual. Conferir conta sem bolões, sessão diferente, erro mantendo cache e bolão selecionado excluído. Cada entrega completa deve ter commit/push, backend antes do cliente, OTA SDK 58/57 e aviso no chat com caminho para testar.

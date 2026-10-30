@@ -124,5 +124,5 @@ Escolher o primeiro lote pelos três eixos: retorno a cada GP (perfil/acompanham
 
 ## Execução incremental
 
-- P01/P02: perfil e indicadores em validação; migration 0032.
+- P01/P02: perfil e indicadores publicados e conferidos; migration 0032 aplicada. Código 2ff5ca8, port SDK 57 76c1219. Testar: Bolões → avatar no canto superior direito → Meu perfil.
 - Próximos: P04/P05/P06, P03, H01; publicar e informar o percurso de cada entrega concluída.
