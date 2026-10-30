@@ -151,6 +151,9 @@ export const searchDrivers = async (q: string) =>
 export const headToHead = async (a: string, b: string) =>
   throwIf(await supabase.rpc('driver_head_to_head', { p_a: a, p_b: b })) as HeadToHead[];
 
+export type DriverCircuitPoint={id:string;name:string;country:string;latitude:number|null;longitude:number|null;wins:number;podiums:number;results:{season:number;round:number;race_name:string;position:number}[]};
+export const getDriverCircuitMap = async (driverId: string) => throwIf(await supabase.rpc('driver_circuit_map', { p_driver_id: driverId })) as DriverCircuitPoint[];
+
 // ---------- equipe ----------
 export const getTeamProfile = async (team: string) => throwIf(await supabase.rpc('team_profile', { p_team: team })) as TeamProfile;
 export const searchTeams = async (q: string) => throwIf(await supabase.rpc('team_search', { p_q: q })) as TeamSearchRow[];

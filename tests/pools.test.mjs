@@ -432,3 +432,10 @@ test('último GP resume pontos e posições somente nos bolões do chamador e se
  await asUser(null);assert.equal((await db.query('select my_last_gp_summary() v')).rows[0].v,null);
  await asUser(null,'anon');await rejectsInTx('select my_last_gp_summary()',/permission denied/);
 });
+test('mapa do piloto agrupa pódios por pista publicada com as provas que sustentam a contagem',async()=>{
+ await seedFollowData();await asUser(null,'postgres');await db.query("update races set circuit_id='interlagos' where id=$1",[raceA]);
+ await asUser(1);const rows=(await db.query("select driver_circuit_map('max_verstappen') v")).rows[0].v;
+ assert.equal(rows.length,1);assert.equal(rows[0].id,'interlagos');assert.equal(rows[0].wins,1);assert.deepEqual(rows[0].results.map(r=>r.season),[2026]);
+ assert.deepEqual((await db.query("select driver_circuit_map('lawson') v")).rows[0].v.map(r=>[r.wins,r.podiums]),[[0,1]]);
+ await asUser(null,'anon');await rejectsInTx("select driver_circuit_map('max_verstappen')",/permission denied/);
+});

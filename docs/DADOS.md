@@ -174,3 +174,5 @@ O cliente filtra agregados por ano/bolão, sem baixar perguntas/palpites. Partic
 `follows(user_id, kind, entity_id)` guarda pilotos (`driver_id`), equipes (`constructor_id`) e pistas publicadas (`circuits.id`). RLS só do dono (ler/inserir/remover), PK impede duplicatas, trigger valida a entidade e limita 60 por usuário. Seguir não altera palpites, visibilidade ou notificações. `my_follows_overview()` (security invoker, sem anônimo) resume último GP, campeonato, próxima etapa (só para ativos no grid atual) e último vencedor por pista.
 
 `my_last_gp_summary()` (0034, security definer, só bolões do chamador com perguntas no GP): último GP F1 com resultado oficial, pontos no GP, posição antes/depois por bolão (empates compartilhados) e estado waiting/partial/settled da apuração.
+
+`driver_circuit_map(p_driver_id)` (0035, invoker, sem anônimo): pódios/vitórias por pista publicada, via `races.circuit_id` com fallback em `circuit_seasons` (100% dos pódios mapeados em 30/10/2026), com as provas de cada contagem.

@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/auth';
 import { Image } from 'expo-image';
 import { BarChart, HBars, ResultStrip } from '@/components/driver/charts';
 import { FollowButton } from '@/components/FollowButton';
+import { DriverWorldMap } from '@/components/driver/DriverWorldMap';
 import { DriverSearch } from '@/components/driver/DriverSearch';
 import { flag } from '@/lib/format';
 import { openTeam } from '@/lib/nav';
@@ -68,6 +69,8 @@ export default function DriverScreen() {
         </Row>
         <Row style={{ marginTop: space(1) }}><FollowButton kind="driver" entityId={id} label={driver.name} /></Row>
       </Card>
+
+      <DriverWorldMap driverId={id} />
 
       {/* Carreira */}
       <H2>🏁 Carreira</H2>
