@@ -29,16 +29,21 @@ export function RaceCalendar({ races }: { races: Race[] }) {
         const [y, mo] = m.split('-').map(Number);
         const first = new Date(Date.UTC(y, mo - 1, 1)).getUTCDay();
         const total = new Date(Date.UTC(y, mo, 0)).getUTCDate();
-        const cells = [...Array(first).fill(null), ...Array.from({ length: total }, (_, i) => i + 1)];
-        const title = new Date(Date.UTC(y, mo - 1, 15)).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+        const all: (number | null)[] = [...Array(first).fill(null), ...Array.from({ length: total }, (_, i) => i + 1)];
+        while (all.length % 7) all.push(null);
+        // Só as semanas com sessões: visão compacta, sem linhas vazias.
+        const dayKey = (d: number) => `${m}-${String(d).padStart(2, '0')}`;
+        const cells = Array.from({ length: all.length / 7 }, (_, w) => all.slice(w * 7, w * 7 + 7)).filter((week) => week.some((d) => d && marks.has(dayKey(d)))).flat();
+        const month = new Date(Date.UTC(y, mo - 1, 15)).toLocaleDateString('pt-BR', { month: 'long', timeZone: 'UTC' });
+        const title = `${month[0].toUpperCase()}${month.slice(1)} ${y}`;
         return (
           <Card key={m}>
-            <H2 style={{ textTransform: 'capitalize' }}>{title}</H2>
+            <H2>{title}</H2>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
               {WEEK.map((w, i) => <Text key={`w${i}`} style={{ width: '14.28%', textAlign: 'center', color: colors.muted, fontSize: 12, marginBottom: 4 }}>{w}</Text>)}
               {cells.map((d, i) => {
                 if (!d) return <View key={`e${i}`} style={{ width: '14.28%', height: 48 }} />;
-                const key = `${m}-${String(d).padStart(2, '0')}`;
+                const key = dayKey(d);
                 const mark = marks.get(key);
                 const content = (
                   <View style={{ height: 44, margin: 2, borderRadius: 10, alignItems: 'center', justifyContent: 'center',
