@@ -470,3 +470,9 @@ test('vencedores em comum entre pistas combinam acervo e resultados importados',
  assert.deepEqual(v.common.map(c=>[c.driver_id,c.a,c.b]),[['max_verstappen',2,1]]);assert.equal(v.only_a,0);assert.equal(v.only_b,1);
  assert.equal((await db.query("select circuit_winners_overlap('interlagos','oculta') v")).rows[0].v,null);
 });
+test('rivalidade por pista conta GPs em comum em equipes diferentes',async()=>{
+ await seedFollowData();await asUser(null,'postgres');await db.query("update races set circuit_id='interlagos' where id=$1",[raceA]);
+ await asUser(1);const v=(await db.query("select driver_rivalry_circuits('max_verstappen','lawson') v")).rows[0].v;
+ assert.equal(v.races,1);assert.equal(v.a,1);assert.deepEqual(v.circuits.map(c=>[c.circuit_id,c.a,c.b]),[['interlagos',1,0]]);
+ assert.equal((await db.query("select driver_rivalry_circuits('lawson','lawson') v")).rows[0].v.races,0);
+});

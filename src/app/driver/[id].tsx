@@ -7,6 +7,7 @@ import { BarChart, HBars, ResultStrip } from '@/components/driver/charts';
 import { FollowButton } from '@/components/FollowButton';
 import { DriverWorldMap } from '@/components/driver/DriverWorldMap';
 import { CareerShape } from '@/components/driver/CareerShape';
+import { RivalryByCircuit } from '@/components/driver/RivalryCircuits';
 import { DriverSearch } from '@/components/driver/DriverSearch';
 import { flag } from '@/lib/format';
 import { openTeam } from '@/lib/nav';
@@ -269,6 +270,7 @@ function Compare({ a, b, h2h, onChange }: { a: DriverProfile; b: DriverProfile; 
           </Row>
         </>
       )}
+      <RivalryByCircuit a={a.driver.driver_id} b={b.driver.driver_id} colorA={colorA} colorB={colorB} />
     </>
   );
 }

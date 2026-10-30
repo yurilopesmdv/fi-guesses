@@ -165,6 +165,9 @@ export const listCircuitNames = async () => throwIf(await supabase.from('circuit
 export type CircuitOverlap={common:{driver_id:string;name:string;a:number;b:number}[];only_a:number;only_b:number};
 export const getCircuitWinnersOverlap = async (a: string, b: string) => throwIf(await supabase.rpc('circuit_winners_overlap', { p_a: a, p_b: b })) as CircuitOverlap | null;
 
+export type RivalryCircuits={races:number;a:number;b:number;circuits:{circuit_id:string;name:string;country:string;races:number;a:number;b:number}[]};
+export const getDriverRivalryCircuits = async (a: string, b: string) => throwIf(await supabase.rpc('driver_rivalry_circuits', { p_a: a, p_b: b })) as RivalryCircuits | null;
+
 // ---------- equipe ----------
 export const getTeamProfile = async (team: string) => throwIf(await supabase.rpc('team_profile', { p_team: team })) as TeamProfile;
 export const searchTeams = async (q: string) => throwIf(await supabase.rpc('team_search', { p_q: q })) as TeamSearchRow[];

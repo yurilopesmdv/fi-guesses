@@ -134,7 +134,8 @@ Escolher o primeiro lote pelos três eixos: retorno a cada GP (perfil/acompanham
 - H15/H11: piloto → “Trajetória”: passagens por equipe (equipe do resultado) em linha do tempo e melhores sequências de vitórias/pódios/pontos em largadas consecutivas. Migration 0037. H09 já coberto pela distribuição de resultados existente.
 - H06: classificação com ganho/perda por piloto (▲/▼), destaques (mais subiu, mais caiu, abandonos) e status em português. Ganho líquido, não ultrapassagens.
 - H17/H20: pista → “Comparar pista”: ficha lado a lado (traçado de referência, GPs, estreia, vencedores diferentes) e pilotos que venceram nas duas. Migration 0038.
-- Próximos: H13 rivalidade por pista, depois fase D (H10 feitos guiados, H12, H14, H19, H21, H22).
+- H13: comparar pilotos → “Em todos os GPs em comum · por pista” (qualquer equipe), mantendo o confronto entre companheiros. Migration 0039.
+- Próximos: fase D (H10 feitos guiados, H12 primeiras N corridas, H14 rede de companheiros, H19 recordes até data, H21 aniversários, H22 atlas de temporadas).
 
 ### Plano detalhado do restante (30/10/2026)
 
