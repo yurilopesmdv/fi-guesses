@@ -476,3 +476,17 @@ test('rivalidade por pista conta GPs em comum em equipes diferentes',async()=>{
  assert.equal(v.races,1);assert.equal(v.a,1);assert.deepEqual(v.circuits.map(c=>[c.circuit_id,c.a,c.b]),[['interlagos',1,0]]);
  assert.equal((await db.query("select driver_rivalry_circuits('lawson','lawson') v")).rows[0].v.races,0);
 });
+test('feitos guiados filtram época e calculam primeira vitória por largada',async()=>{
+ await asUser(null,'postgres');
+ for(let i=1;i<=3;i++)await db.query("insert into races(season,round,name,date_utc) values(2031,$1,$2,$3)",[i,`R${i}`,`2031-0${i}-01`]);
+ await db.query("insert into drivers(series,season,code,name,driver_id,team) values('f1',2031,'AAA','Piloto A','pa','X'),('f1',2031,'BBB','Piloto B','pb','X')");
+ const rows=[[1,1,'AAA',12,25],[1,2,'BBB',1,18],[2,1,'BBB',1,25],[2,2,'AAA',3,18],[3,1,'AAA',2,25],[3,15,'BBB',1,0]];
+ for(const [r,p,c,g,pt] of rows)await db.query("insert into race_results(series,session,season,round,position,driver_code,team,grid,points,status) values('f1','race',2031,$1,$2,$3,'X',$4,$5,'Finished')",[r,p,c,g,pt]);
+ await asUser(1);const q=async(k,a=2031,b=2031)=>(await db.query('select history_feats($1,$2,$3) v',[k,a,b])).rows[0].v;
+ assert.deepEqual((await q('win_from_back')).rows.map(r=>[r.driver_id,r.grid]),[['pa',12]]);
+ assert.deepEqual((await q('pole_no_points')).rows.map(r=>r.round),[3]);
+ assert.deepEqual((await q('first_win')).rows.map(r=>[r.driver_id,r.extra]).sort(),[['pa',1],['pb',2]]);
+ assert.deepEqual((await q('win_on_debut')).rows.map(r=>r.driver_id),['pa']);
+ assert.equal((await q('one_two')).total,2);assert.equal((await q('one_two',2032,2040)).total,0);
+ assert.equal((await db.query("select history_feats('x') v")).rows[0].v,null);
+});

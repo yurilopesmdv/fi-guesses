@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Alert, Pressable, Text, View } from 'react-native';
+import { router } from 'expo-router';
 import { SeriesPicker } from '@/components/SeriesPicker';
 import { YearPicker } from '@/components/YearPicker';
 import { SERIES_LABEL, type Series } from '@/lib/types';
@@ -41,6 +42,15 @@ export default function F1() {
           {year === SEASON && <Button title={busy ? '' : '↻ Atualizar'} variant="ghost" onPress={update} loading={busy} style={{ marginTop: 0, paddingVertical: 10 }} />}
         </Row>
       </Card>
+      {series === 'f1' && (
+        <Pressable accessibilityRole="button" accessibilityLabel="Explorar a história da F1" onPress={() => router.push('/explore')}>
+          <Card style={{ padding: space(1.5), flexDirection: 'row', alignItems: 'center', gap: 12, borderColor: colors.red }}>
+            <Text style={{ fontSize: 22 }}>🔎</Text>
+            <View style={{ flex: 1 }}><P style={{ fontWeight: '800' }}>Explorar a história</P><Muted style={{ fontSize: 12 }}>Viradas, primeiras vitórias, dobradinhas desde 1950</Muted></View>
+            <Text style={{ color: colors.red, fontSize: 22 }}>›</Text>
+          </Card>
+        </Pressable>
+      )}
       <Row style={{ marginBottom: space(1.5) }}>
         {(['drivers', 'teams'] as const).map((t) => (
           <Pressable key={t} onPress={() => setTab(t)} style={{ flex: 1 }}>
