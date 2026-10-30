@@ -1,4 +1,4 @@
-import type {FollowKind,MyFollowsOverview,MyProfileOverview,Profile} from './types';
+import type {FollowKind,MyFollowsOverview,MyLastGpSummary,MyProfileOverview,Profile} from './types';
 import { supabase } from './supabase';
 import { gridFromResults, resolveGridDrivers } from './raceGrid';
 import { fetchPublishedGrid, fetchRaceQualifying, fetchRaceResult, fetchSeasonBundle } from './f1api';
@@ -24,6 +24,7 @@ export const updateMyProfile = async (patch: { name?: string; avatar?: string },
 
 // ---------- acompanhamentos (privados) ----------
 export const getMyFollowsOverview = async () => throwIf(await supabase.rpc('my_follows_overview')) as MyFollowsOverview|null;
+export const getMyLastGpSummary = async () => throwIf(await supabase.rpc('my_last_gp_summary')) as MyLastGpSummary|null;
 export const isFollowing = async (kind: FollowKind, entityId: string) =>
   (throwIf(await supabase.from('follows').select('entity_id').eq('kind', kind).eq('entity_id', entityId).limit(1)) as unknown[]).length > 0;
 export const follow = async (kind: FollowKind, entityId: string) =>

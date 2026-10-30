@@ -173,3 +173,6 @@ export type FollowedCircuit={circuit_id:string;name:string;locality:string;count
  last_winner:{season:number;name:string;date_utc:string;driver_id:string;driver_name:string;team:string|null}|null};
 export type MyFollowsOverview={season:number;next_race:{id:string;name:string;country:string|null;circuit_id:string|null;date_utc:string;round:number;season:number}|null;
  drivers:FollowedDriver[];teams:FollowedTeam[];circuits:FollowedCircuit[];synced_at:string|null;generated_at:string};
+export type LastGpPool={id:string;name:string;points:number;total:number;rank_before:number;rank_after:number;members:number;questions:number;settled:number;status:'waiting'|'partial'|'settled'};
+export type MyLastGpSummary={race:{id:string;name:string;country:string|null;round:number;season:number;date_utc:string}|null;
+ next_race:{id:string;name:string;country:string|null;date_utc:string}|null;pools:LastGpPool[];generated_at:string};

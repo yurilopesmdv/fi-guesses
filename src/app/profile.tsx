@@ -8,6 +8,7 @@ import {supabase} from '@/lib/supabase';
 import type {MyProfileOverview} from '@/lib/types';
 import {InsightDetails,InsightMetric} from '@/components/insights/InsightUI';
 import {FollowingSection} from '@/components/profile/FollowingSection';
+import {LastGpCard} from '@/components/profile/LastGpCard';
 import {Button,Card,H1,H2,Input,Loading,Muted,P,Row,Screen} from '@/ui/primitives';
 import {colors} from '@/ui/theme';
 const avatars=['🏎️','🏁','🔥','🦁','🐆','🦈','🚀','⚡','🍀','👑','🎯','🐢'];
@@ -41,6 +42,7 @@ export default function MyProfile(){
    <InsightDetails title="Sobre o ranking geral"><Muted>Todos os anos e bolões existentes contam, independentemente do filtro abaixo. Empates compartilham posição. Bolões excluídos deixam de contar.</Muted></InsightDetails>
   </Card>
   {editing&&<Card><H2>Editar perfil</H2><Input accessibilityLabel="Nome no perfil" placeholder="Seu nome" value={name} onChangeText={setName}/><Row style={{flexWrap:'wrap'}}>{avatars.map(a=><Pressable key={a} accessibilityRole="button" accessibilityLabel={`Avatar ${a}`} accessibilityState={{selected:avatar===a}} onPress={()=>setAvatar(a)} style={{minWidth:44,minHeight:44,alignItems:'center',justifyContent:'center',borderRadius:10,backgroundColor:avatar===a?colors.red:colors.card2}}><Text style={{fontSize:24}}>{a}</Text></Pressable>)}</Row>{editError&&<P style={{color:colors.gold,marginTop:12}}>{editError}</P>}<Button title="Salvar perfil" loading={busy} onPress={()=>void save()}/><Button title="Cancelar edição" disabled={busy} variant="ghost" onPress={()=>setEditing(false)}/></Card>}
+  <LastGpCard refreshKey={refresh}/>
   {error&&<Card><Muted style={{color:colors.gold}}>{error} Exibindo a última atualização.</Muted><Button title="Tentar novamente" variant="ghost" onPress={()=>setRefresh(v=>v+1)}/></Card>}
   <H2>Seus bolões</H2>
   {!!current.pools.length&&<View style={{marginBottom:16,gap:8}}>

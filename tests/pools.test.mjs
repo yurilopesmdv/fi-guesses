@@ -420,3 +420,15 @@ test('acompanhamentos são privados, únicos, validados e resumem último GP, ca
  await asUser(null);assert.equal((await db.query('select my_follows_overview() v')).rows[0].v,null);
  await asUser(null,'anon');await rejectsInTx('select my_follows_overview()',/permission denied/);
 });
+test('último GP resume pontos e posições somente nos bolões do chamador e separa apuração pendente',async()=>{
+ await asUser(null,'postgres');await db.query(`insert into race_results(series,session,season,round,position,driver_code,team) values('f1','race',2026,1,1,'VER','Red Bull')`);
+ await asUser(1);let v=(await db.query('select my_last_gp_summary() v')).rows[0].v;
+ assert.equal(v.race.id,raceA);assert.equal(v.next_race.id,raceC);assert.deepEqual(v.pools.map(p=>p.id),[poolA]);
+ const a=v.pools[0];assert.equal(a.rank_before,1);assert.equal(a.rank_after,1);assert.equal(a.members,2);assert.equal(a.status,'settled');assert(a.points>0);
+ await asUser(2);v=(await db.query('select my_last_gp_summary() v')).rows[0].v;assert.equal(v.pools[0].rank_after,2);assert.equal(v.pools[0].rank_before,1);
+ await asUser(1);await db.query("insert into questions(pool_id,race_id,kind,prompt) values($1,$2,'driver','Extra')",[poolA,raceA]);
+ assert.equal((await db.query('select my_last_gp_summary() v')).rows[0].v.pools[0].status,'partial');
+ await asUser(5);assert.deepEqual((await db.query('select my_last_gp_summary() v')).rows[0].v.pools,[]);
+ await asUser(null);assert.equal((await db.query('select my_last_gp_summary() v')).rows[0].v,null);
+ await asUser(null,'anon');await rejectsInTx('select my_last_gp_summary()',/permission denied/);
+});
