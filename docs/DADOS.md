@@ -160,3 +160,9 @@ As migrations 0025/0026/0027 acrescentam conteúdo: `content_sources` (URLs púb
 0029 acrescenta `pool_analysis`, security invoker com verificação explícita de membro, retornando perguntas/palpites/resultados/corridas do bolão em JSON. Evita truncamento por paginação REST nas análises. 0030 acrescenta `driver_race_context`: identidade por driver_id, categoria F1, corrida principal e data anterior ao GP/ao instante atual. Últimas cinco provas da temporada e até 20 resultados importados no circuito; amostras parciais ficam explícitas. RPCs novos sem acesso anônimo.
 
 0031 move a auditoria para AFTER INSERT/UPDATE e separa o ajuste de set_at. Evita eventos duplicados em upserts e não registra correção quando a resposta não mudou.
+
+## Visão privada do perfil (0032)
+
+`my_profile_overview()` não recebe usuário: resolve exclusivamente `auth.uid()`, sem execução anônima. Retorna perfil próprio, posição/total gerais e métricas agregadas dos bolões em que é membro. O security definer permite ordenar contra todos os participantes de cada bolão sem abrir perguntas/participações de outros bolões. `pool_lifecycles` define finalização; a pontuação usa `score_answer` e `pool_standings`, preservando ranking e exclusão.
+
+O cliente filtra agregados por ano/bolão, sem baixar perguntas/palpites. Participação conta respostas completas em perguntas encerradas, criadas antes do fechamento e com ingresso do usuário a tempo; resultados parciais de pódio contribuem somente com os slots apurados para o denominador e não concedem pódio exato. A consulta não altera tabelas ou pontuação.

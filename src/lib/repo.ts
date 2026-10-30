@@ -1,3 +1,4 @@
+import type {MyProfileOverview,Profile} from './types';
 import { supabase } from './supabase';
 import { gridFromResults, resolveGridDrivers } from './raceGrid';
 import { fetchPublishedGrid, fetchRaceQualifying, fetchRaceResult, fetchSeasonBundle } from './f1api';
@@ -12,10 +13,12 @@ const throwIf = <T>(r: { data: T; error: { message: string } | null }) => {
 export const getMyProfile = async () => {
   const uid = (await supabase.auth.getUser()).data.user?.id;
   if (!uid) return null;
-  return throwIf(await supabase.from('profiles').select('*').eq('id', uid).single());
+  return throwIf(await supabase.from('profiles').select('*').eq('id', uid).single()) as Profile;
 };
-export const updateMyProfile = async (patch: { name?: string; avatar?: string }) => {
-  const uid = (await supabase.auth.getUser()).data.user!.id;
+export const getMyProfileOverview = async () => throwIf(await supabase.rpc('my_profile_overview')) as MyProfileOverview|null;
+export const updateMyProfile = async (patch: { name?: string; avatar?: string }, expectedUserId?:string) => {
+  const uid = (await supabase.auth.getUser()).data.user?.id;
+  if(!uid||(expectedUserId&&uid!==expectedUserId))throw Error('Sua sessão mudou. Abra o perfil novamente.');
   throwIf(await supabase.from('profiles').update(patch).eq('id', uid));
 };
 

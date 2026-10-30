@@ -342,3 +342,30 @@ test('histórico de apuração usa autor real, não aceita escrita do membro e r
 });
 test('análise do bolão não abre dados para não membros ou anônimos',async()=>{await asUser(1);assert((await db.query('select pool_analysis($1) as data',[poolA])).rows[0].data.questions.length>0);await asUser(5);assert.equal((await db.query('select pool_analysis($1) as data',[poolA])).rows[0].data,null);await asUser(null,'anon');await assert.rejects(db.query('select pool_analysis($1)',[poolA]),/permission denied/);});
 test('upsert de resultado gera um único evento real e salvar sem mudança não duplica auditoria',async()=>{await asUser(1);const q=(await db.query("insert into questions(pool_id,race_id,kind,prompt) values($1,$2,'driver','Audit upsert') returning id",[poolA,raceA])).rows[0];for(const code of ['VER','NOR','NOR'])await db.query('insert into results(question_id,answer) values($1,$2) on conflict(question_id) do update set answer=excluded.answer',[q.id,{driver:code}]);const rows=(await db.query('select * from result_history where question_id=$1',[q.id])).rows;assert.equal(rows.length,2);assert.equal(rows.filter(r=>r.previous_answer===null).length,1);assert(rows.some(r=>r.previous_answer?.driver==='VER'&&r.answer.driver==='NOR'));});
+
+test('perfil privado agrega somente os próprios bolões, preserva ranking global e filtros disponíveis',async()=>{
+ await asUser(1);const data=(await db.query('select my_profile_overview() as value')).rows[0].value;
+ assert.equal(data.profile.id,uid(1));assert.equal(data.global.total,12);assert.equal(data.global.rank,1);
+ assert.deepEqual(data.pools.map(p=>p.id).sort(),[poolA,poolB].sort());assert.equal(data.pools.reduce((n,p)=>n+p.earned_points,0),12);
+ assert.equal(data.pools.reduce((n,p)=>n+p.max_points,0),18);assert.equal(data.pools.reduce((n,p)=>n+p.exact_podiums,0),1);
+ await asUser(5);const empty=(await db.query('select my_profile_overview() as value')).rows[0].value;assert.equal(empty.profile.id,uid(5));assert.deepEqual(empty.pools,[]);assert.equal(empty.global,null);
+ await asUser(null);assert.equal((await db.query('select my_profile_overview() as value')).rows[0].value,null);
+ await asUser(null,'anon');await assert.rejects(db.query('select my_profile_overview()'),/permission denied/);
+});
+test('perfil só concede vitórias após finalizar, compartilha empates e remove bolões excluídos',async()=>{
+ await asUser(null,'postgres');await db.query("update results set answer=$1 where question_id in(select id from questions where pool_id=$2)",[swapped,poolA]);
+ await asUser(1);let data=(await db.query('select my_profile_overview() as value')).rows[0].value;assert.equal(data.pools.find(p=>p.id===poolA).rank,2);
+ await asUser(null,'postgres');await db.query("update predictions set answer=$1 where question_id in(select id from questions where pool_id=$2)",[podium,poolA]);await db.query("update results set answer=$1 where question_id in(select id from questions where pool_id=$2)",[podium,poolA]);
+ await asUser(1);data=(await db.query('select my_profile_overview() as value')).rows[0].value;assert.equal(data.pools.find(p=>p.id===poolA).rank,1);assert.equal(data.pools.find(p=>p.id===poolA).status,'finished');
+ await asUser(4);data=(await db.query('select my_profile_overview() as value')).rows[0].value;assert.equal(data.pools[0].rank,1);assert.equal(data.pools[0].status,'ongoing');
+ await asUser(1);await db.query('delete from pools where id=$1',[poolA]);data=(await db.query('select my_profile_overview() as value')).rows[0].value;assert.deepEqual(data.pools.map(p=>p.id),[poolB]);assert.equal(data.global.total,3);
+});
+test('participação considera prazo da sessão, ingresso e resposta completa; apuração parcial não vira pódio exato',async()=>{
+ await asUser(null,'postgres');await db.query("update pool_members set joined_at='2020-01-01' where pool_id=$1 and user_id=$2",[poolC,uid(4)]);await db.query("update races set quali_utc=now()-interval '1 hour' where id=$1",[raceC]);
+ const q=(await db.query("insert into questions(pool_id,race_id,kind,prompt,session,created_at) values($1,$2,'driver','Qualy','qualifying',now()-interval '2 hours') returning id",[poolC,raceC])).rows[0];
+ await db.query('insert into predictions(question_id,user_id,answer) values($1,$2,$3)',[q.id,uid(4),{driver:'VER'}]);
+ await db.query("update results set answer=$1 where question_id in(select id from questions where pool_id=$2)",[{p1:'VER'},poolA]);
+ await asUser(4);let entry=(await db.query('select my_profile_overview() as value')).rows[0].value.pools[0];assert.equal(entry.eligible_questions,1);assert.equal(entry.answered_questions,1);assert.equal(entry.status,'ongoing');
+ await asUser(null,'postgres');await db.query('update predictions set answer=$1 where question_id=$2',[{},q.id]);await asUser(4);entry=(await db.query('select my_profile_overview() as value')).rows[0].value.pools[0];assert.equal(entry.answered_questions,0);
+ await asUser(1);entry=(await db.query('select my_profile_overview() as value')).rows[0].value.pools.find(p=>p.id===poolA);assert.equal(entry.max_points,3);assert.equal(entry.exact_podiums,0);assert.equal(entry.status,'ongoing');
+});

@@ -1,6 +1,6 @@
 # Perfil, acompanhamento e exploração histórica — plano para decisão
 
-Data: 30/10/2026. **Status: planejamento, sem início de implementação.** Reúne a pesquisa histórica, as ideias adicionais do perfil e as dependências para escolher as próximas entregas. Não é uma autorização para construir todos os módulos de uma vez.
+Data: 30/10/2026. **Status: execução incremental autorizada em 30/10/2026.** Reúne a pesquisa histórica, as ideias adicionais do perfil e as dependências para escolher as próximas entregas. Publicar cada entrega completa separadamente e informar o caminho de teste no chat. Primeiro lote: perfil/indicadores → acompanhamento → resumo do GP → calendário visual; manter as exclusões e as fases posteriores rastreáveis.
 
 A pesquisa-base, auditoria do acervo, 26 propostas e fontes estão em [Exploração histórica](pesquisas/exploracao-historica.md). Instagram foi retirado do pipeline. Permanecem fora: alertas que afetam palpites, diário do palpite e desafio de corrida histórica. Qualy/sprint continuam perguntas opcionais; não criar regras de pontuação ou modos obrigatórios novos.
 
@@ -120,3 +120,9 @@ Recomendação para a primeira seleção: **perfil + indicadores essenciais + ac
 ## Critérios para a decisão de produto
 
 Escolher o primeiro lote pelos três eixos: retorno a cada GP (perfil/acompanhamento/calendário), utilidade para analisar palpites (matrizes/grid/rivalidades) e descoberta de história (mapa/feitos/linha temporal). Cada módulo pode ser entregue separadamente e continua opcional para quem só quer entrar no bolão e palpitar.
+
+
+## Execução incremental
+
+- P01/P02: perfil e indicadores em validação; migration 0032.
+- Próximos: P04/P05/P06, P03, H01; publicar e informar o percurso de cada entrega concluída.

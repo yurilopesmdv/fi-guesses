@@ -84,7 +84,7 @@ export default function Home() {
     >
       <Stack.Screen options={{
         headerRight: () => (
-          <Pressable onPress={() => setPanel(panel === 'profile' ? 'none' : 'profile')} hitSlop={10}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Abrir meu perfil" onPress={() => router.push('/profile')} hitSlop={10} style={{minWidth:44,minHeight:44,alignItems:'center',justifyContent:'center'}}>
             <Text style={{ fontSize: 26 }}>{me?.avatar ?? '🏎️'}</Text>
           </Pressable>
         ),
@@ -93,6 +93,7 @@ export default function Home() {
       {panel === 'profile' && me && (
         <Card>
           <H2>Seu perfil</H2>
+          <Button title="Ver meu perfil e desempenho" onPress={()=>{setPanel('none');router.push('/profile');}} />
           <Input value={me.name} onChangeText={(t) => setMe({ ...me, name: t })} placeholder="Nome" />
           <Row style={{ flexWrap: 'wrap' }}>
             {AVATARS.map((a) => (
@@ -107,6 +108,7 @@ export default function Home() {
         </Card>
       )}
 
+      <Pressable accessibilityRole="button" onPress={()=>setPanel(panel==='profile'?'none':'profile')} style={{minHeight:44,justifyContent:'center',alignSelf:'flex-end'}}><Text style={{color:colors.muted,fontSize:13}}>Editar nome e avatar</Text></Pressable>
       <Row style={{ marginBottom: space(1) }}>
         <Button title="+ Criar bolão" style={{ flex: 1 }} onPress={openCreate} />
         <Button title="Tenho um código" variant="ghost" style={{ flex: 1 }} onPress={() => setPanel(panel === 'join' ? 'none' : 'join')} />
