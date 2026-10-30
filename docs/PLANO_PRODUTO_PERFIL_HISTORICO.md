@@ -143,7 +143,8 @@ Escolher o primeiro lote pelos três eixos: retorno a cada GP (perfil/acompanham
 - H14: piloto → “Companheiros de equipe”: cartões roláveis com confronto no mesmo GP/equipe; tocar navega pela rede. Migration 0045.
 - P08: Meu perfil → “Conquistas”: campeão e pódio (só finalizados, empates contam), pódio exato, presença completa e veterano; informativas, sem pontos. Sem migration.
 - P09: Meu perfil → “Sua trajetória”: por temporada, número de bolões, melhor posição, títulos e aproveitamento apurado. Sem migration.
-- Próximos: P10 comparação no bolão, P07 notícias para você, fase F.
+- P10: análise do bolão → “Comparar com”: membro do mesmo bolão, só perguntas apuradas respondidas pelos dois (pontos, etapas, pódios exatos) e amostra exibida. Sem migration; usa a autorização existente de pool_analysis.
+- Próximos: P07 notícias para você, fase F (H23 idade/nacionalidade, H24 corridas apertadas).
 
 ### Plano detalhado do restante (30/10/2026)
 
