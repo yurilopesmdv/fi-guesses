@@ -40,6 +40,9 @@ TypeScript, suíte atual + cenários novos, exportação web, navegador móvel 3
 - [x] Contexto: central e comparação ao escolher.
 - [x] Disputa: simulação, termômetro, raio-X, perfil e retrospectiva.
 - [x] Pistas e perguntas opcionais por sessão.
-- [ ] Validação integrada e publicação.
+- [x] Validação integrada e publicação.
 
-Implementação inicial: marcadores conferidos em Interlagos; seleção de trechos nos seis books aprovados. Curadoria fotográfica permanece progressiva, sem restaurar a seleção rejeitada. Cartão exportado em PNG na web e texto no app para manter compatibilidade sem novo binário. Validação/publicação ainda precisam ser concluídas antes de marcar a última etapa.
+Implementação inicial: marcadores conferidos em Interlagos; seleção de trechos nos seis books aprovados. Curadoria fotográfica permanece progressiva, sem restaurar a seleção rejeitada. Cartão exportado em PNG na web e texto no app para manter compatibilidade sem novo binário. Validação e publicação concluídas; evidências em VALIDACAO_PRODUCAO.md.
+
+
+Envio de recuperação adiado por escolha do usuário em 30/10/2026. Pendência operacional: na conferência do serviço, SMTP próprio não está configurado. O fluxo de callback/troca de senha pode ser validado com link administrativo sem envio, mas a entrega para endereços da família exige provedor SMTP. O padrão do Supabase restringe destinatários à equipe do projeto: https://supabase.com/docs/guides/auth/auth-smtp . Não registrar credenciais em código, app_settings ou documentação. As demais funcionalidades não dependem desse envio.
