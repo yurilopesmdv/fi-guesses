@@ -42,11 +42,14 @@ test('race-detail valida GP e só busca voltas uma vez', async () => {
   assert.equal(calls, 1);
 });
 
-test('stints bloqueados contam tentativa sem derrubar a resposta', async () => {
-  const db = fakeDb();
-  assert.equal(await ensureStints(db, async () => { throw new Error('OpenF1 indisponível (401)'); }, 2025, 5, '2025-05-04T20:00:00Z'), 'blocked');
+test('bloqueio da OpenF1 não gasta tentativa e respeita uma consulta por hora', async () => {
+  const db = fakeDb(); const t0 = Date.parse('2025-05-05T00:00:00Z');
+  assert.equal(await ensureStints(db, async () => { throw new Error('OpenF1 indisponível (401)'); }, 2025, 5, '', t0), 'blocked');
+  assert.equal(db.t.race_stints_meta[0].attempts, 0);
+  assert.equal(await ensureStints(db, async () => { throw new Error('x'); }, 2025, 5, '', t0 + 60000), 'waiting');
+  assert.equal(await ensureStints(db, async () => [], 2025, 5, '', t0 + 3700000), 'none');
   assert.equal(db.t.race_stints_meta[0].attempts, 1);
-  assert.equal(await ensureStints(db, async () => [{ driver_code: 'VER', stint: 1, compound: 'MEDIUM', lap_start: 1, lap_end: 30 }], 2025, 5, ''), 'stored');
-  assert.equal(await ensureStints(db, async () => { throw new Error('x'); }, 2025, 5, ''), 'cached');
+  assert.equal(await ensureStints(db, async () => [{ driver_code: 'VER', stint: 1, compound: 'MEDIUM', lap_start: 1, lap_end: 30 }], 2025, 5, '', t0 + 7400000), 'stored');
+  assert.equal(await ensureStints(db, async () => { throw new Error('x'); }, 2025, 5, '', t0 + 9e9), 'cached');
   assert.equal(await ensureStints(db, async () => [], 2019, 5, ''), 'unsupported');
 });

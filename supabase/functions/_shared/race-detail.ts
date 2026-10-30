@@ -17,20 +17,20 @@ export async function ensureLaps(db: Db, load: Loaders['laps'], season: number, 
   return 'stored';
 }
 
-/** Até 10 tentativas: a OpenF1 bloqueia acesso sem assinatura durante sessões ao vivo. */
-export async function ensureStints(db: Db, load: Loaders['stints'], season: number, round: number, dateUtc: string) {
+/** Até 10 respostas vazias. Bloqueio da OpenF1 (sessão ao vivo) não conta tentativa; no máximo uma consulta por hora por GP. */
+export async function ensureStints(db: Db, load: Loaders['stints'], season: number, round: number, dateUtc: string, now = Date.now()) {
   if (season < 2023) return 'unsupported';
-  const meta = (await db.from('race_stints_meta').select('status,attempts').eq('season', season).eq('round', round).maybeSingle()).data;
+  const meta = (await db.from('race_stints_meta').select('status,attempts,checked_at').eq('season', season).eq('round', round).maybeSingle()).data;
   if (meta?.status === 'ok') return 'cached';
   if ((meta?.attempts ?? 0) >= 10) return 'none';
-  const mark = (status: 'ok' | 'none') => db.from('race_stints_meta').upsert({ season, round, status, attempts: (meta?.attempts ?? 0) + 1, checked_at: new Date().toISOString() }, { onConflict: 'season,round' });
-  try {
-    const rows = await load(dateUtc, season);
-    if (!rows.length) { await mark('none'); return 'none'; }
-    must(await db.from('race_stints').upsert(rows.map((r) => ({ season, round, ...r })), { onConflict: 'season,round,driver_code,stint' }));
-    await mark('ok');
-    return 'stored';
-  } catch { await mark('none'); return 'blocked'; }
+  if (meta?.checked_at && now - Date.parse(meta.checked_at) < 3600000) return 'waiting';
+  const mark = (attempts: number, status: 'ok' | 'none') => db.from('race_stints_meta').upsert({ season, round, status, attempts, checked_at: new Date(now).toISOString() }, { onConflict: 'season,round' });
+  let rows;
+  try { rows = await load(dateUtc, season); } catch { await mark(meta?.attempts ?? 0, 'none'); return 'blocked'; }
+  if (!rows.length) { await mark((meta?.attempts ?? 0) + 1, 'none'); return 'none'; }
+  must(await db.from('race_stints').upsert(rows.map((r) => ({ season, round, ...r })), { onConflict: 'season,round,driver_code,stint' }));
+  await mark(meta?.attempts ?? 0, 'ok');
+  return 'stored';
 }
 
 const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type', 'Access-Control-Allow-Methods': 'POST, OPTIONS' };
