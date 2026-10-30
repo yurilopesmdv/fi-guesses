@@ -104,7 +104,7 @@ export async function fetchConstructorStandings(season: number) {
 
 /** Todos os resultados da temporada (paginado). */
 export async function fetchSeasonResults(season: number) {
-  const rows: { series: 'f1'; session: 'race'; season: number; round: number; position: number; driver_code: string; team: string | null; constructor_id: string | null; team_color: string; grid: number | null; points: number; status: string; fastest_lap: boolean }[] = [];
+  const rows: { series: 'f1'; session: 'race'; season: number; round: number; position: number; driver_code: string; team: string | null; constructor_id: string | null; team_color: string; grid: number | null; points: number; status: string; fastest_lap: boolean; time_ms: number | null }[] = [];
   for (let offset = 0; ; offset += 100) {
     const data = await get(`${season}/results.json`, offset);
     for (const race of data.RaceTable.Races as any[]) {
@@ -112,7 +112,7 @@ export async function fetchSeasonResults(season: number) {
         rows.push({
           series: 'f1', session: 'race', season, round: Number(race.round), position: Number(r.position), driver_code: driverCode(r.Driver),
           team: teamName(r.Constructor.constructorId), constructor_id: r.Constructor.constructorId ?? null, team_color: teamColor(r.Constructor.constructorId), grid: Number(r.grid) || null,
-          points: Number(r.points), status: r.status, fastest_lap: r.FastestLap?.rank === '1',
+          points: Number(r.points), status: r.status, fastest_lap: r.FastestLap?.rank === '1', time_ms: Number(r.Time?.millis) || null,
         });
       }
     }

@@ -17,8 +17,11 @@ export function RaceClassification({ race, drivers, results }: { race: Race; dri
   const up = moves.reduce<typeof moves[number] | null>((b, x) => (x.d > (b?.d ?? 0) ? x : b), null);
   const down = moves.reduce<typeof moves[number] | null>((b, x) => (x.d < (b?.d ?? 0) ? x : b), null);
   const out = rows.filter((r) => !classified(r.status)).length;
+  const p1 = rows.find((r) => r.position === 1)?.time_ms, p2 = rows.find((r) => r.position === 2)?.time_ms;
+  const margin = p1 && p2 && p2 >= p1 ? ((p2 - p1) / 1000).toFixed(3).replace('.', ',') : null;
   return <Card>
     <H2>🏁 {race.series === 'f1' ? 'Resultado final da corrida' : 'Feature Race · resultado'}</H2>
+    {margin && <Muted style={{ marginTop: 2 }}>Vitória por {margin} s sobre o 2º colocado</Muted>}
     {!rows.length && <Muted>{results === null ? 'Carregando resultado…' : 'Resultado final ainda não disponível. As posições de largada aparecem na seção Grid de largada.'}</Muted>}
     {rows.length > 0 && (up || down || out > 0) && (
       <Row style={{ marginTop: 10, gap: 8 }}>

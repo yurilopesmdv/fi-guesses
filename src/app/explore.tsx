@@ -19,6 +19,7 @@ const FEATS: { kind: FeatKind; title: string; icon: React.ComponentProps<typeof 
   { kind: 'one_two', title: 'Dobradinhas', icon: 'people-outline', hint: '1º e 2º da mesma equipe.' },
   { kind: 'youngest_winner', title: 'Vencedores mais jovens', icon: 'happy-outline', hint: 'Idade no dia da vitória.' },
   { kind: 'oldest_winner', title: 'Vencedores mais velhos', icon: 'time-outline', hint: 'Idade no dia da vitória.' },
+  { kind: 'closest_finish', title: 'Chegadas mais apertadas', icon: 'stopwatch-outline', hint: 'Menor diferença entre 1º e 2º com tempo oficial na mesma volta.' },
 ];
 const ERAS = [{ label: 'Todas', from: 1950, to: 2100 }, { label: '2014+', from: 2014, to: 2100 }, { label: '2000–13', from: 2000, to: 2013 }, { label: '1980–99', from: 1980, to: 1999 }, { label: '1950–79', from: 1950, to: 1979 }];
 
@@ -61,8 +62,8 @@ export default function Explore() {
               <Card style={{ paddingVertical: 12 }}>
                 <Row style={{ gap: 12 }}>
                   <View style={{ width: 52, alignItems: 'center' }}>
-                    <Text style={{ color: colors.gold, fontSize: 18, fontWeight: '800', fontVariant: ['tabular-nums'] }}>{kind === 'youngest_winner' || kind === 'oldest_winner' ? `${ageFromDays(r.extra ?? 0).y}a` : kind === 'longest_wait' || kind === 'first_win' ? `${r.extra}ª` : kind === 'win_from_back' ? `P${r.grid}` : r.season}</Text>
-                    <Text style={{ color: colors.muted, fontSize: 10 }}>{kind === 'youngest_winner' || kind === 'oldest_winner' ? `${ageFromDays(r.extra ?? 0).d} dias` : kind === 'longest_wait' || kind === 'first_win' ? 'largada' : kind === 'win_from_back' ? 'largada' : `R${r.round}`}</Text>
+                    <Text style={{ color: colors.gold, fontSize: 18, fontWeight: '800', fontVariant: ['tabular-nums'] }}>{kind === 'closest_finish' ? `${((r.extra ?? 0) / 1000).toFixed(3).replace('.', ',')}s` : kind === 'youngest_winner' || kind === 'oldest_winner' ? `${ageFromDays(r.extra ?? 0).y}a` : kind === 'longest_wait' || kind === 'first_win' ? `${r.extra}ª` : kind === 'win_from_back' ? `P${r.grid}` : r.season}</Text>
+                    <Text style={{ color: colors.muted, fontSize: 10 }}>{kind === 'closest_finish' ? 'margem' : kind === 'youngest_winner' || kind === 'oldest_winner' ? `${ageFromDays(r.extra ?? 0).d} dias` : kind === 'longest_wait' || kind === 'first_win' ? 'largada' : kind === 'win_from_back' ? 'largada' : `R${r.round}`}</Text>
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={{ color: colors.text, fontWeight: '800' }}>{r.name ?? r.driver_id}</Text>

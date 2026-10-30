@@ -93,7 +93,7 @@ export type GlobalStanding = {
 
 export type DriverStanding = { series: Series; season: number; position: number; driver_code: string; team: string | null; points: number; wins: number };
 export type ConstructorStanding = { series: Series; season: number; position: number; team: string; team_color: string | null; points: number; wins: number };
-export type RaceResult = { series: Series; session: 'race' | 'sprint' | 'feature'; season: number; round: number; position: number; driver_code: string; team: string | null; grid: number | null; points: number; status: string; fastest_lap: boolean };
+export type RaceResult = { series: Series; session: 'race' | 'sprint' | 'feature'; season: number; round: number; position: number; driver_code: string; team: string | null; grid: number | null; points: number; status: string; fastest_lap: boolean; time_ms?: number | null };
 
 export type PoolSummary = { pool_id: string; members: number; next_race_name: string | null; next_race_date: string | null; my_total: number; my_rank: number };
 

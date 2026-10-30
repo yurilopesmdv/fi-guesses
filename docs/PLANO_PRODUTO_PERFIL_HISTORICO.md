@@ -146,7 +146,8 @@ Escolher o primeiro lote pelos três eixos: retorno a cada GP (perfil/acompanham
 - P10: análise do bolão → “Comparar com”: membro do mesmo bolão, só perguntas apuradas respondidas pelos dois (pontos, etapas, pódios exatos) e amostra exibida. Sem migration; usa a autorização existente de pool_analysis.
 - P07: Notícias → filtro “Para você”: pistas seguidas (vínculo) e menções por palavra inteira ao sobrenome do piloto/nome da equipe seguidos. Migration 0046. Feed geral inalterado.
 - H23: driver_bio (nascimento/nacionalidade Jolpica; carga por scripts/sync-driver-bio.mjs e manutenção na sync-series). Piloto → nacionalidade e idade na estreia/1ª e última vitória; Explorar → vencedores mais jovens/velhos. Migration 0047.
-- Próximos: H24 corridas apertadas (exige tempos/gaps e carga histórica maior).
+- H24: race_results.time_ms (millis Jolpica; carga scripts/sync-race-times.mjs, manutenção pela sync). Explorar → “Chegadas mais apertadas” (só 1º e 2º com tempo na mesma volta); classificação mostra “Vitória por X s”. Migration 0048.
+- Pendentes do plano: H25 posições volta a volta e H26 estratégias de pneus (prova técnica de volume/cobertura).
 
 ### Plano detalhado do restante (30/10/2026)
 

@@ -546,3 +546,11 @@ test('bio do piloto: leitura autenticada, sem escrita do cliente, idades nos fei
  assert.equal((await db.query("select history_feats('win_from_back',2026,2026) v")).rows[0].v.total,0);
  await asUser(null,'anon');assert.equal((await db.query('select * from driver_bio').catch(()=>({rows:[]}))).rows.length,0);
 });
+test('chegadas apertadas exigem tempo do 1º e do 2º',async()=>{
+ await seedFollowData();await asUser(null,'postgres');
+ await db.query("update race_results set time_ms=4692600 where season=2026 and round=1 and position=1");
+ await asUser(1);assert.equal((await db.query("select history_feats('closest_finish',2026,2026) v")).rows[0].v.total,0);
+ await asUser(null,'postgres');await db.query("update race_results set time_ms=4692610 where season=2026 and round=1 and position=2");
+ await asUser(1);const v=(await db.query("select history_feats('closest_finish',2026,2026) v")).rows[0].v;
+ assert.deepEqual(v.rows.map(r=>[r.driver_id,r.extra]),[['max_verstappen',10]]);
+});
