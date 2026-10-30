@@ -153,3 +153,11 @@ export type CircuitProfile = Omit<CircuitSummary, 'cover' | 'map'> & { media: Ci
 
 export type ContentPost = { id: string; kind: 'news' | 'curiosity'; title: string; summary: string; url: string; source_name: string; author: string | null; circuit_id: string | null; published_at: string };
 export type ContentSourceStatus = { id: string; name: string; checked_at: string | null; succeeded_at: string | null; last_error: string | null };
+
+export type ProfilePoolSummary = {
+ id:string;name:string;season:number;created_at:string;status:'ongoing'|'finished';total:number;rank:number;members:number;
+ scored_questions:number;max_points:number;earned_points:number;exact_podiums:number;eligible_questions:number;answered_questions:number;
+};
+export type MyProfileOverview = {
+ profile:Profile;global:{rank:number;total:number;pools_played:number}|null;pools:ProfilePoolSummary[];generated_at:string;
+};
