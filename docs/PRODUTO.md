@@ -117,3 +117,11 @@ Pistas oferece seleção de trechos aprovados junto do mapa; Interlagos tem marc
 
 
 Envio de recuperação adiado por escolha do usuário em 30/10/2026. Pendência operacional: na conferência do serviço, SMTP próprio não está configurado. O fluxo de callback/troca de senha pode ser validado com link administrativo sem envio, mas a entrega para endereços da família exige provedor SMTP. O padrão do Supabase restringe destinatários à equipe do projeto: https://supabase.com/docs/guides/auth/auth-smtp . Não registrar credenciais em código, app_settings ou documentação. As demais funcionalidades não dependem desse envio.
+
+## Revisão de hierarquia visual — 30/10/2026
+
+A preparação do palpite mostra situação do grid e próxima sessão; prazos por pergunta, notícias e explicações ficam em expansão. O formulário de pódio precede a programação completa. Na área do organizador, a distinção entre palpite e apuração permanece identificada, com explicação adicional recolhível.
+
+Ferramentas usam atalhos de ícone/título, seleção destacada e painéis por ação. Regras da simulação, metodologia de votos/retrospectiva e valores anteriores da auditoria ficam acessíveis por expansão. Raio-X e perfil destacam números em cartões, pontos por piloto em linhas e estatísticas secundárias agrupadas. Comparação mantém nomes, grid, resultados recentes e histórico detalhado; resultados aparecem primeiro em posições compactas.
+
+Notícias conserva manchete completa e mostra resumo em duas linhas com expansão/recolhimento. Fonte e data permanecem junto ao artigo; autor aparece no resumo expandido. Paginação, filtros e acesso à origem/pista foram preservados; atualização das fontes fica no rodapé expansível. Erros e atrasos continuam visíveis. Todas as ações secundárias têm área mínima de 44 pontos e controles expansíveis anunciam estado e nome acessível. Nenhuma regra, pergunta ou cálculo foi removido. Viabilidade do Instagram registrada em [pesquisa própria](pesquisas/instagram-f1.md); coleta ainda não ativada.

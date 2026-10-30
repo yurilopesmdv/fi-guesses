@@ -1,3 +1,4 @@
+import { InsightDetails } from '@/components/insights/InsightUI';
 import { RacePreparation } from '@/components/insights/RacePreparation';
 import { answerLabel } from './QuestionField';
 import { RaceTools } from '@/components/insights/RaceTools';
@@ -88,9 +89,8 @@ export function RaceView({ race }: { race: Race }) {
           {open ? <Pill color={colors.green}>fecha em {fmtCountdown(lockAt - now)}</Pill>
             : hasResults ? <Pill color={colors.red}>apurada</Pill> : <Pill>fechada</Pill>}
         </Row>
-        {open && <Muted style={{ marginTop: 6 }}>{drafts.length?'Rascunho pendente de confirmação · ':outbox.confirmed.some(id=>questionIds.includes(id))?'Palpite confirmado pelo servidor ✓ · ':''}Você pode alterar seus palpites até o horário de fechamento.</Muted>}
-        {isOwner && <P style={{ fontWeight: '700', marginTop: space(1) }}>{open ? '✍️ Modo participante · seu palpite' : '👀 Modo participante · consulta dos palpites'}</P>}
-        {isOwner && <Muted>Esta tela é para os seus palpites. Para informar os resultados finais, abra a apuração abaixo.</Muted>}
+        {open && <Muted style={{marginTop:8,color:drafts.length?colors.gold:outbox.confirmed.some(id=>questionIds.includes(id))?colors.green:colors.muted}}>{drafts.length?'Envio pendente':outbox.confirmed.some(id=>questionIds.includes(id))?'Palpite confirmado pelo servidor ✓':'Altere seu palpite até o fechamento'}</Muted>}
+        {isOwner && <InsightDetails title="Você está na área de palpites"><P>{open ? 'Modo participante · seu palpite' : 'Modo participante · consulta dos palpites'}</P><Muted>Esta tela é para os seus palpites. Para informar os resultados finais, abra a apuração abaixo.</Muted></InsightDetails>}
       </Card>
 
       {(drafts.length>0||outbox.error)&&<Card><H2>Envio dos palpites</H2>{outbox.error&&<Muted>{outbox.error}</Muted>}{drafts.map(d=><Muted key={d.questionId}>{questions.find(q=>q.id===d.questionId)?.prompt}: {d.error??'Guardado neste aparelho. Aguardando confirmação.'}</Muted>)}{drafts.some(d=>d.status!=='expired')&&<Button title="Tentar enviar agora" variant="ghost" onPress={()=>void outbox.retry(questionIds).catch(e=>Alert.alert('Envio pendente',e.message))}/ >}{drafts.some(d=>d.status==='expired')&&<Button title="Descartar rascunhos vencidos" variant="ghost" onPress={()=>void outbox.discardExpired(questionIds).catch(()=>Alert.alert('Armazenamento indisponível','Não foi possível atualizar os rascunhos neste aparelho.'))}/>}</Card>}
@@ -100,7 +100,7 @@ export function RaceView({ race }: { race: Race }) {
             <Row style={{ justifyContent: 'space-between' }}>
               <View style={{ flex: 1 }}>
                 <P style={{ fontWeight: '800' }}>⚙️ Abrir apuração oficial</P>
-                <Muted>{open ? 'Área do organizador: gerenciar perguntas e informar resultados finais.' : hasResults ? 'Área do organizador: revisar os resultados finais.' : 'Área do organizador: informar os resultados finais.'}</Muted>
+                <Muted>{open ? 'Perguntas e resultados · organizador' : hasResults ? 'Revisar resultados · organizador' : 'Informar resultados · organizador'}</Muted>
               </View>
               <Text style={{ color: colors.red, fontSize: 24 }}>›</Text>
             </Row>
@@ -113,10 +113,9 @@ export function RaceView({ race }: { race: Race }) {
 
       {open ? (
         <>
-          <Schedule race={race} support={support} />
           {podiumQ && (
             <Card>
-              <H2>🏆 Seu palpite de pódio <Muted>3 pts exato · 1 pt piloto certo</Muted></H2>
+              <H2>🏆 Seu palpite de pódio</H2><Muted style={{fontSize:12,marginBottom:8}}>3 pts na posição · 1 pt no pódio</Muted>
               <Podium value={mine(podiumQ.id) ?? {}} startingGrid={startingGrid} drivers={drivers} race={race} onChange={(v) => onAnswer(podiumQ, v)} />
             </Card>
           )}
@@ -124,10 +123,11 @@ export function RaceView({ race }: { race: Race }) {
           {extras.map((q) => (
             <Card key={q.id}>
               <H2>{q.prompt} <Muted>{q.points} pts{q.near_points ? ` · ±1: ${q.near_points}` : ''}</Muted></H2>
-              <Muted>{sessionLabel(q.session)}{q.session&&q.session!=='race'?' · fechamento próprio desta sessão':''}</Muted>
+              <Muted>{sessionLabel(q.session)}</Muted>
               {(questionDeadline(q,race,pool.lock_minutes_before)??0)>now?<QuestionField q={q} value={mine(q.id)} race={race} startingGrid={startingGrid} drivers={drivers} onChange={(a) => onAnswer(q, a)} />:<P>Palpites encerrados · Sua resposta confirmada: {answerLabel(q,outbox.acceptedAnswers[q.id]??predictions.find(p=>p.question_id===q.id&&p.user_id===uid)?.answer,drivers)}</P>}
             </Card>
           ))}
+          <Schedule race={race} support={support} />
           <PicksBoard questions={questions} predictions={confirmedPredictions} results={results} members={members} drivers={drivers} uid={uid} />
           <Card>
             <H2>Quem já palpitou</H2>

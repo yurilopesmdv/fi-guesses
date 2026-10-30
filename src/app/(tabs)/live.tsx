@@ -8,6 +8,7 @@ import { getContentSources, listContentPosts } from '@/lib/repo';
 import type { ContentPost, ContentSourceStatus } from '@/lib/types';
 import { fmtDate } from '@/lib/format';
 import { Button, Card, H1, H2, Loading, Muted, P, Pill, Row } from '@/ui/primitives';
+import { InsightDetails } from '@/components/insights/InsightUI';
 import { colors, space } from '@/ui/theme';
 
 type Filter = ContentPost['kind'] | null;
@@ -47,20 +48,26 @@ export default function NewsScreen() {
     refreshControl={<RefreshControl refreshing={refreshing} tintColor={colors.red} onRefresh={()=>{setRefreshing(true);void load();}}/>}
     ListHeaderComponent={<View style={{gap:12,marginBottom:16}}>
       <Muted style={{color:colors.red,fontWeight:'800',letterSpacing:2}}>DENTRO DA FÓRMULA 1</Muted><H1>Notícias e histórias</H1>
-      <Muted>As últimas da F1 em português, com resumo e acesso à fonte.</Muted>
       <Row>{filters.map(option=><Pressable key={option.label} accessibilityRole="button" accessibilityState={{selected:filter===option.value}} onPress={()=>select(option.value)} style={{flex:1,minHeight:44,borderRadius:24,alignItems:'center',justifyContent:'center',backgroundColor:filter===option.value?colors.red:colors.card,borderWidth:1,borderColor:filter===option.value?colors.red:colors.border}}><Text style={{color:colors.text,fontWeight:'700'}}>{option.label}</Text></Pressable>)}</Row>
-      {latestCheck&&<Muted style={{fontSize:12}}>Fontes verificadas em {fmtDate(latestCheck)} · Brasília</Muted>}
-      {(offline||stale)&&<Muted style={{color:colors.gold}}>Há fontes sem atualização recente. As últimas publicações disponíveis foram mantidas.</Muted>}
+      {(offline||stale)&&<Muted style={{color:colors.gold,fontSize:12}}>Algumas fontes estão atrasadas. Exibindo as últimas publicações.</Muted>}
       {!!error&&<Card><Muted>{error}</Muted><Button title="Tentar novamente" onPress={()=>{setRefreshing(true);void load();}}/></Card>}
       {!!linkError&&<Card><Muted>{linkError}</Muted></Card>}
     </View>}
     ListEmptyComponent={loading?<Loading/>:!error?<Card><H2>{filter==='curiosity'?'As histórias estão chegando':'Nenhuma publicação disponível ainda'}</H2><Muted>Volte em breve ou puxe para atualizar.</Muted></Card>:undefined}
-    renderItem={({item,index})=><Card style={index===0?{borderColor:colors.red}:undefined}>
-      <Row style={{justifyContent:'space-between',marginBottom:12}}><Pill color={item.kind==='curiosity'?colors.card2:colors.red}>{item.kind==='curiosity'?'CURIOSIDADE':index===0?'EM DESTAQUE':'FÓRMULA 1'}</Pill><Muted style={{fontSize:12}}>{fmtDate(item.published_at)}</Muted></Row>
-      <Pressable accessibilityRole="link" accessibilityLabel={`Ler na fonte: ${item.title}`} onPress={()=>void open(item)}><Text style={{fontSize:index===0?25:21,fontWeight:'800',lineHeight:index===0?31:27,color:colors.text}}>{item.title}</Text></Pressable>
-      {!!item.summary&&<P style={{marginTop:12,lineHeight:23}}>{item.summary}</P>}
-      <Muted style={{marginTop:14,fontSize:12}}>{item.source_name}{item.author?` · ${item.author}`:''}{item.kind==='news'?' · Resumo da fonte':''}</Muted>
-      {item.kind==='curiosity'&&item.circuit_id?<Button title="Conhecer esta pista" variant="ghost" onPress={()=>router.push(`/circuit/${item.circuit_id}`)}/>:<Pressable accessibilityRole="link" onPress={()=>void open(item)}><Text style={{color:colors.red,fontWeight:'800',paddingVertical:16}}>Ler na fonte ↗</Text></Pressable>}
-    </Card>}
-    ListFooterComponent={hasMore&&!loading?<Button title="Mais publicações" variant="ghost" loading={more} onPress={()=>void next()}/>:undefined}/>;
+    renderItem={({item,index})=><NewsPostCard item={item} featured={index===0} onOpen={()=>void open(item)}/>}
+    ListFooterComponent={<View>{hasMore&&!loading&&<Button title="Mais publicações" variant="ghost" loading={more} onPress={()=>void next()}/>}<InsightDetails title="Fontes e atualização"><Muted style={{fontSize:12}}>Notícias em português, com resumos e links para as fontes.</Muted>{latestCheck&&<Muted style={{fontSize:12}}>Fontes verificadas em {fmtDate(latestCheck)} · Brasília</Muted>}{sources.map(source=><Muted key={source.id} style={{fontSize:12}}>{source.name}</Muted>)}</InsightDetails></View>}/>;
+}
+
+function NewsPostCard({item,featured,onOpen}:{item:ContentPost;featured:boolean;onOpen:()=>void}){
+ const [expanded,setExpanded]=useState(false);
+ return <Card style={featured?{borderTopWidth:3,borderTopColor:colors.red}:undefined}>
+ <Row style={{justifyContent:'space-between',alignItems:'flex-start',marginBottom:10,flexWrap:'wrap'}}><Muted style={{fontSize:12,fontWeight:'700'}}>{item.source_name}</Muted><Muted style={{fontSize:11}}>{fmtDate(item.published_at)}</Muted></Row>
+ {(featured||item.kind==='curiosity')&&<Text style={{color:item.kind==='curiosity'?colors.gold:colors.red,fontSize:10,fontWeight:'800',letterSpacing:1.5,marginBottom:8}}>{item.kind==='curiosity'?'CURIOSIDADE':'EM DESTAQUE'}</Text>}
+ <Pressable accessibilityRole="link" accessibilityLabel={`Ler na fonte: ${item.title}`} onPress={onOpen}><Text style={{fontSize:featured?24:19,fontWeight:'800',lineHeight:featured?30:26,color:colors.text}}>{item.title}</Text></Pressable>
+ {!!item.summary&&<Text numberOfLines={expanded?undefined:2} style={{color:colors.muted,fontSize:14,lineHeight:21,marginTop:10}}>{item.summary}</Text>}
+ {expanded&&<Muted style={{fontSize:12,marginTop:10}}>{item.author?`${item.author} · `:''}{item.kind==='news'?'Resumo da fonte':'Acervo de circuitos'}</Muted>}
+ <Row style={{justifyContent:'space-between',marginTop:8,flexWrap:'wrap'}}>
+ {!!item.summary&&<Pressable accessibilityRole="button" accessibilityState={{expanded}} accessibilityLabel={`${expanded?'Recolher':'Expandir'} resumo: ${item.title}`} onPress={()=>setExpanded(v=>!v)} style={{minHeight:44,justifyContent:'center',paddingRight:12}}><Text style={{color:colors.muted,fontWeight:'600',fontSize:13}}>{expanded?'Menos resumo −':'Mais resumo +'}</Text></Pressable>}
+ <Pressable accessibilityRole="link" onPress={item.kind==='curiosity'&&item.circuit_id?()=>router.push(`/circuit/${item.circuit_id}`):onOpen} style={{minHeight:44,justifyContent:'center'}}><Text style={{color:colors.red,fontWeight:'700',fontSize:14}}>{item.kind==='curiosity'&&item.circuit_id?'Conhecer esta pista':'Ler na fonte ↗'}</Text></Pressable>
+ </Row></Card>;
 }
