@@ -513,3 +513,9 @@ test('neste dia encontra GPs passados pela data em Brasília',async()=>{
  assert.deepEqual(v.map(x=>[x.id,x.dist,x.winner.driver_id]),[[raceA,1,'max_verstappen']]);
  assert.deepEqual((await db.query('select f1_on_this_day(7,1) v')).rows[0].v,[]);
 });
+test('recordes até a temporada ignoram anos posteriores',async()=>{
+ await seedFollowData();await asUser(1);
+ const v=(await db.query('select records_until(2025) v')).rows[0].v;
+ assert.deepEqual(v.starts.map(x=>x.driver_id),['grosjean']);assert.equal(v.wins,undefined);
+ const w=(await db.query('select records_until(2026) v')).rows[0].v;assert.equal(w.wins[0].driver_id,'max_verstappen');
+});

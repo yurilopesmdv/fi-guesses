@@ -139,7 +139,8 @@ Escolher o primeiro lote pelos três eixos: retorno a cada GP (perfil/acompanham
 - H22/H08: F1 → “Temporada {ano} em uma tela”: campeões (só com temporada encerrada) ou líder, vencedores, % de vitórias de P1 e etapas no mapa; navegação entre anos. Migration 0041.
 - H12: comparar pilotos → “Primeiras largadas” 25/50/100 (exclui Withdrew/Did not start). Migration 0042.
 - H21: Corridas (ano atual, F1) → “Neste dia na F1”: GPs na mesma data em Brasília (±3 dias) com vencedor. Migration 0043.
-- Próximos: H19 recordes até data, H14 rede de companheiros; depois fase E (P07–P10) e F.
+- H19: Explorar a história → “Recordes até {ano}”: top 5 de vitórias, pódios, largadas e P1 no grid até o fim do ano escolhido. Migration 0044.
+- Próximos: H14 rede de companheiros; depois fase E (P07–P10) e F.
 
 ### Plano detalhado do restante (30/10/2026)
 

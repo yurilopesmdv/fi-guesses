@@ -3,6 +3,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { Redirect, router } from 'expo-router';
 import type { Ionicons } from '@expo/vector-icons';
 import { InsightAction } from '@/components/insights/InsightUI';
+import { RecordsUntil } from '@/components/RecordsUntil';
 import { useAuth } from '@/lib/auth';
 import { getHistoryFeats, type FeatKind, type FeatRow } from '@/lib/repo';
 import { Button, Card, H1, Loading, Muted, Row, Screen } from '@/ui/primitives';
@@ -70,6 +71,7 @@ export default function Explore() {
             </Pressable>
           ))}
         </View>}
+      <RecordsUntil />
     </Screen>
   );
 }
