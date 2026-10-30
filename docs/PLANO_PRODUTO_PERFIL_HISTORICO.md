@@ -137,7 +137,8 @@ Escolher o primeiro lote pelos três eixos: retorno a cada GP (perfil/acompanham
 - H13: comparar pilotos → “Em todos os GPs em comum · por pista” (qualquer equipe), mantendo o confronto entre companheiros. Migration 0039.
 - H10: F1 → “Explorar a história”: seis perguntas guiadas (vitórias de P10+, P1 sem pontos, primeiras vitórias, maior espera, vitória na estreia, dobradinhas) com filtro de época; até 100 linhas do servidor. Migration 0040.
 - H22/H08: F1 → “Temporada {ano} em uma tela”: campeões (só com temporada encerrada) ou líder, vencedores, % de vitórias de P1 e etapas no mapa; navegação entre anos. Migration 0041.
-- Próximos: H12 primeiras N corridas, H19 recordes até data, H14 rede de companheiros, H21 aniversários.
+- H12: comparar pilotos → “Primeiras largadas” 25/50/100 (exclui Withdrew/Did not start). Migration 0042.
+- Próximos: H21 aniversários no calendário, H19 recordes até data, H14 rede de companheiros.
 
 ### Plano detalhado do restante (30/10/2026)
 

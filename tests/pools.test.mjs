@@ -498,3 +498,12 @@ test('temporada em uma tela só declara campeão com temporada encerrada',async(
  await asUser(null,'postgres');await db.query("update races set date_utc='2026-03-02' where id=$1",[raceC]);await asUser(1);
  v=(await db.query('select season_overview(2026) v')).rows[0].v;assert.equal(v.finished,true);assert.equal(v.driver_champion.driver_id,'max_verstappen');assert.equal(v.constructor_champion.team,'Red Bull');
 });
+test('primeiras N largadas ignoram desistências antes da largada',async()=>{
+ await asUser(null,'postgres');
+ for(let i=1;i<=3;i++)await db.query("insert into races(season,round,name,date_utc) values(2032,$1,$2,$3)",[i,`R${i}`,`2032-0${i}-01`]);
+ await db.query("insert into drivers(series,season,code,name,driver_id,team) values('f1',2032,'CCC','C','pc','X'),('f1',2032,'DDD','D','pd','Y')");
+ for(const [r,p,c,st,pt] of [[1,1,'CCC','Withdrew',0],[2,1,'CCC','Finished',25],[3,2,'CCC','Finished',18],[1,2,'DDD','Finished',18],[2,2,'DDD','Finished',18],[3,1,'DDD','Finished',25]])
+  await db.query("insert into race_results(series,session,season,round,position,driver_code,team,grid,points,status) values('f1','race',2032,$1,$2,$3,'X',1,$4,$5)",[r,p,c,pt,st]);
+ await asUser(1);const v=(await db.query("select driver_first_starts('pc','pd',2) v")).rows[0].v;
+ assert.deepEqual([v.pc.starts,v.pc.wins,Number(v.pc.points)],[2,1,43]);assert.deepEqual([v.pd.starts,v.pd.wins],[2,0]);
+});
