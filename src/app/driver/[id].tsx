@@ -10,6 +10,7 @@ import { CareerShape } from '@/components/driver/CareerShape';
 import { RivalryByCircuit } from '@/components/driver/RivalryCircuits';
 import { FirstStartsCompare } from '@/components/driver/FirstStarts';
 import { Teammates } from '@/components/driver/Teammates';
+import { DriverAge } from '@/components/driver/DriverAge';
 import { DriverSearch } from '@/components/driver/DriverSearch';
 import { flag } from '@/lib/format';
 import { openTeam } from '@/lib/nav';
@@ -71,6 +72,7 @@ export default function DriverScreen() {
           {career.titles > 0 && <Pill color="#3b2f00">🏆 {career.titles}× campeão mundial</Pill>}
           {p.teams && <Muted>{p.teams}</Muted>}
         </Row>
+        <DriverAge driverId={id} active={career.last_season >= new Date().getFullYear()} />
         <Row style={{ marginTop: space(1) }}><FollowButton kind="driver" entityId={id} label={driver.name} /></Row>
       </Card>
 

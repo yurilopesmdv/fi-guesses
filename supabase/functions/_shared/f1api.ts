@@ -167,6 +167,8 @@ export async function fetchSeasonBundle(season: number) {
     driver_standings: drivers.map((d) => d.standing),
     constructor_standings: constructors,
     race_results: results.map(({ team_color: _c, ...r }) => r),
+    // Enriquecimento H23: gravado só pelo backend (tabela driver_bio).
+    bios: list.map((d: any) => ({ driver_id: d.driverId as string, date_of_birth: (d.dateOfBirth as string | undefined) ?? null, nationality: (d.nationality as string | undefined) ?? null })),
     last_round_with_results: results.reduce((m, r) => Math.max(m, r.round), 0),
   };
 }

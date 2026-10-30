@@ -18,6 +18,7 @@ async function syncOne(series: 'f1' | 'f2' | 'f3', season: number) {
   const b = series === 'f1' ? await fetchSeasonBundle(season) : await fetchF2F3Bundle(series, season);
   await up('races', b.races, 'series,season,round');
   await up('drivers', b.drivers, 'series,season,code');
+  if ('bios' in b) await up('driver_bio', b.bios.map((x) => ({ ...x, updated_at: new Date().toISOString() })), 'driver_id');
   await up('driver_standings', b.driver_standings, 'series,season,driver_code');
   await up('constructor_standings', b.constructor_standings, 'series,season,team');
   await up('race_results', b.race_results, 'series,season,round,session,position,driver_code');

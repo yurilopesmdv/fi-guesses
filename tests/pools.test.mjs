@@ -536,3 +536,13 @@ test('notícias para você usam pista seguida e menções a piloto/equipe seguid
  assert.deepEqual((await db.query('select id from my_news(0)')).rows.map(r=>r.id),['n1','n2']);
  await asUser(2);assert.deepEqual((await db.query('select id from my_news(0)')).rows,[]);
 });
+test('bio do piloto: leitura autenticada, sem escrita do cliente, idades nos feitos',async()=>{
+ await seedFollowData();await asUser(null,'postgres');
+ await db.query("insert into driver_bio(driver_id,date_of_birth,nationality) values('max_verstappen','1997-09-30','Dutch'),('lawson','2002-02-11','New Zealander')");
+ await asUser(1);await rejectsInTx("insert into driver_bio(driver_id) values('x')",/permission denied|row-level security/);
+ const m=(await db.query("select driver_age_milestones('max_verstappen') v")).rows[0].v;assert.equal(m.nationality,'Dutch');assert(m.first_win);
+ const y=(await db.query("select history_feats('youngest_winner',2026,2026) v")).rows[0].v;
+ assert.deepEqual(y.rows.map(r=>r.driver_id),['max_verstappen']);assert(y.rows[0].extra>10000);
+ assert.equal((await db.query("select history_feats('win_from_back',2026,2026) v")).rows[0].v.total,0);
+ await asUser(null,'anon');assert.equal((await db.query('select * from driver_bio').catch(()=>({rows:[]}))).rows.length,0);
+});

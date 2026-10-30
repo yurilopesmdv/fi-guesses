@@ -168,7 +168,7 @@ export const getCircuitWinnersOverlap = async (a: string, b: string) => throwIf(
 export type RivalryCircuits={races:number;a:number;b:number;circuits:{circuit_id:string;name:string;country:string;races:number;a:number;b:number}[]};
 export const getDriverRivalryCircuits = async (a: string, b: string) => throwIf(await supabase.rpc('driver_rivalry_circuits', { p_a: a, p_b: b })) as RivalryCircuits | null;
 
-export type FeatKind='win_from_back'|'pole_no_points'|'first_win'|'win_on_debut'|'longest_wait'|'one_two';
+export type FeatKind='win_from_back'|'pole_no_points'|'first_win'|'win_on_debut'|'longest_wait'|'one_two'|'youngest_winner'|'oldest_winner';
 export type FeatRow={season:number;round:number;race_name:string;date_utc:string;driver_id:string;name:string|null;team:string|null;grid:number|null;position:number;extra:number|null};
 export const getHistoryFeats = async (kind: FeatKind, from: number, to: number) => throwIf(await supabase.rpc('history_feats', { p_kind: kind, p_from: from, p_to: to })) as { total: number; rows: FeatRow[] } | null;
 
@@ -190,6 +190,9 @@ export const getRecordsUntil = async (season: number) => throwIf(await supabase.
 
 export type Teammate={driver_id:string;name:string|null;headshot_url:string|null;races:number;ahead:number;behind:number;from:number;to:number;teams:string};
 export const getDriverTeammates = async (driverId: string) => throwIf(await supabase.rpc('driver_teammates', { p_driver_id: driverId })) as Teammate[];
+
+export type DriverAges={date_of_birth:string|null;nationality:string|null;debut:string|null;first_win:string|null;last_win:string|null;last_race:string|null};
+export const getDriverAges = async (driverId: string) => throwIf(await supabase.rpc('driver_age_milestones', { p_driver_id: driverId })) as DriverAges | null;
 
 // ---------- equipe ----------
 export const getTeamProfile = async (team: string) => throwIf(await supabase.rpc('team_profile', { p_team: team })) as TeamProfile;
