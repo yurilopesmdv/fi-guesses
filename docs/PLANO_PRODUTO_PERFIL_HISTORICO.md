@@ -144,7 +144,8 @@ Escolher o primeiro lote pelos três eixos: retorno a cada GP (perfil/acompanham
 - P08: Meu perfil → “Conquistas”: campeão e pódio (só finalizados, empates contam), pódio exato, presença completa e veterano; informativas, sem pontos. Sem migration.
 - P09: Meu perfil → “Sua trajetória”: por temporada, número de bolões, melhor posição, títulos e aproveitamento apurado. Sem migration.
 - P10: análise do bolão → “Comparar com”: membro do mesmo bolão, só perguntas apuradas respondidas pelos dois (pontos, etapas, pódios exatos) e amostra exibida. Sem migration; usa a autorização existente de pool_analysis.
-- Próximos: P07 notícias para você, fase F (H23 idade/nacionalidade, H24 corridas apertadas).
+- P07: Notícias → filtro “Para você”: pistas seguidas (vínculo) e menções por palavra inteira ao sobrenome do piloto/nome da equipe seguidos. Migration 0046. Feed geral inalterado.
+- Próximos: fase F (H24 corridas apertadas, H23 idade/nacionalidade).
 
 ### Plano detalhado do restante (30/10/2026)
 

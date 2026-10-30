@@ -526,3 +526,11 @@ test('companheiros contam só GPs na mesma equipe',async()=>{
  await asUser(1);const v=(await db.query("select driver_teammates('max_verstappen') v")).rows[0].v;
  assert.deepEqual(v.map(x=>[x.driver_id,x.races,x.ahead,x.behind]),[['tsunoda',1,1,0]]);
 });
+test('notícias para você usam pista seguida e menções a piloto/equipe seguidos',async()=>{
+ await seedFollowData();await asUser(null,'postgres');
+ await db.query("insert into content_posts(id,kind,title,summary,url,source_name,published,published_at,circuit_id) values ('n1','news','Verstappen vence','x','https://e.test/1','S',true,now()-interval '1 hour',null),('n2','news','Clima em SP','y','https://e.test/2','S',true,now()-interval '2 hours','interlagos'),('n3','news','Ferrari testa','z','https://e.test/3','S',true,now()-interval '3 hours',null),('n4','news','Maxverstappenfan','z','https://e.test/4','S',true,now()-interval '4 hours',null)");
+ await asUser(1);assert.deepEqual((await db.query('select id from my_news(0)')).rows,[]);
+ await db.query("insert into follows(kind,entity_id) values('driver','max_verstappen'),('circuit','interlagos')");
+ assert.deepEqual((await db.query('select id from my_news(0)')).rows.map(r=>r.id),['n1','n2']);
+ await asUser(2);assert.deepEqual((await db.query('select id from my_news(0)')).rows,[]);
+});

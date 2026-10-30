@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { FlatList, Linking, Platform, Pressable, RefreshControl, Text, View } from 'react-native';
+import { FlatList, Linking, Platform, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { Redirect, router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
@@ -11,8 +11,8 @@ import { Button, Card, H1, H2, Loading, Muted, P, Pill, Row } from '@/ui/primiti
 import { InsightDetails } from '@/components/insights/InsightUI';
 import { colors, space } from '@/ui/theme';
 
-type Filter = ContentPost['kind'] | null;
-const filters: {label:string;value:Filter}[] = [{label:'Todas',value:null},{label:'Notícias',value:'news'},{label:'Curiosidades',value:'curiosity'}];
+type Filter = ContentPost['kind'] | 'mine' | null;
+const filters: {label:string;value:Filter}[] = [{label:'Todas',value:null},{label:'Notícias',value:'news'},{label:'Curiosidades',value:'curiosity'},{label:'Para você',value:'mine'}];
 export default function NewsScreen() {
   const auth=useAuth(),insets=useSafeAreaInsets();
   const [filter,setFilter]=useState<Filter>(null),[posts,setPosts]=useState<ContentPost[]>([]),[sources,setSources]=useState<ContentSourceStatus[]>([]);
@@ -48,12 +48,12 @@ export default function NewsScreen() {
     refreshControl={<RefreshControl refreshing={refreshing} tintColor={colors.red} onRefresh={()=>{setRefreshing(true);void load();}}/>}
     ListHeaderComponent={<View style={{gap:12,marginBottom:16}}>
       <Muted style={{color:colors.red,fontWeight:'800',letterSpacing:2}}>DENTRO DA FÓRMULA 1</Muted><H1>Notícias e histórias</H1>
-      <Row>{filters.map(option=><Pressable key={option.label} accessibilityRole="button" accessibilityState={{selected:filter===option.value}} onPress={()=>select(option.value)} style={{flex:1,minHeight:44,borderRadius:24,alignItems:'center',justifyContent:'center',backgroundColor:filter===option.value?colors.red:colors.card,borderWidth:1,borderColor:filter===option.value?colors.red:colors.border}}><Text style={{color:colors.text,fontWeight:'700'}}>{option.label}</Text></Pressable>)}</Row>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{gap:8}}>{filters.map(option=><Pressable key={option.label} accessibilityRole="button" accessibilityState={{selected:filter===option.value}} onPress={()=>select(option.value)} style={{paddingHorizontal:16,minHeight:44,borderRadius:24,alignItems:'center',justifyContent:'center',backgroundColor:filter===option.value?colors.red:colors.card,borderWidth:1,borderColor:filter===option.value?colors.red:colors.border}}><Text style={{color:colors.text,fontWeight:'700',fontSize:14}}>{option.label}</Text></Pressable>)}</ScrollView>
       {(offline||stale)&&<Muted style={{color:colors.gold,fontSize:12}}>Algumas fontes estão atrasadas. Exibindo as últimas publicações.</Muted>}
       {!!error&&<Card><Muted>{error}</Muted><Button title="Tentar novamente" onPress={()=>{setRefreshing(true);void load();}}/></Card>}
       {!!linkError&&<Card><Muted>{linkError}</Muted></Card>}
     </View>}
-    ListEmptyComponent={loading?<Loading/>:!error?<Card><H2>{filter==='curiosity'?'As histórias estão chegando':'Nenhuma publicação disponível ainda'}</H2><Muted>Volte em breve ou puxe para atualizar.</Muted></Card>:undefined}
+    ListEmptyComponent={loading?<Loading/>:!error?<Card><H2>{filter==='mine'?'Nada do que você segue por aqui':filter==='curiosity'?'As histórias estão chegando':'Nenhuma publicação disponível ainda'}</H2><Muted>{filter==='mine'?'Siga pilotos, equipes ou pistas nas páginas deles. Este filtro junta notícias da pista seguida e menções pelo nome.':'Volte em breve ou puxe para atualizar.'}</Muted></Card>:undefined}
     renderItem={({item,index})=><NewsPostCard item={item} featured={index===0} onOpen={()=>void open(item)}/>}
     ListFooterComponent={<View>{hasMore&&!loading&&<Button title="Mais publicações" variant="ghost" loading={more} onPress={()=>void next()}/>}<InsightDetails title="Fontes e atualização"><Muted style={{fontSize:12}}>Notícias em português, com resumos e links para as fontes.</Muted>{latestCheck&&<Muted style={{fontSize:12}}>Fontes verificadas em {fmtDate(latestCheck)} · Brasília</Muted>}{sources.map(source=><Muted key={source.id} style={{fontSize:12}}>{source.name}</Muted>)}</InsightDetails></View>}/>;
 }
