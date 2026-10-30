@@ -116,7 +116,7 @@ export default function Admin() {
             <Pressable key={p.prompt} onPress={() => create(p.prompt, p.kind, p.points,0,'race')}><Pill>+ {p.prompt}</Pill></Pressable>
           ))}
         </Row>
-        <Muted>Opcional: perguntas por sessão. Nada é adicionado sem você escolher.</Muted>
+        <Muted>Perguntas por sessão · opcionais</Muted>
         <Row style={{flexWrap:'wrap',marginVertical:12}}>{race.quali_utc&&!extras.some(q=>q.session==='qualifying'&&q.prompt==='Quem vence a classificação?')&&<Pressable onPress={()=>create('Quem vence a classificação?','driver',2,0,'qualifying')}><Pill>+ Vencedor da classificação</Pill></Pressable>}{race.has_sprint&&race.sprint_utc&&!extras.some(q=>q.session==='sprint'&&q.prompt==='Quem vence a sprint?')&&<Pressable onPress={()=>create('Quem vence a sprint?','driver',2,0,'sprint')}><Pill>+ Vencedor da sprint</Pill></Pressable>}</Row>
         <Input placeholder='Pergunta (ex: "Em que lugar chega o Russell?")' value={prompt} onChangeText={setPrompt} />
         <Row style={{ flexWrap: 'wrap', marginBottom: space(1) }}>
@@ -124,7 +124,7 @@ export default function Admin() {
             <Pressable key={k} onPress={() => setKind(k)}><Pill color={kind === k ? colors.red : colors.card2}>{KIND_LABEL[k]}</Pill></Pressable>
           ))}
         </Row>
-        <Muted>Sessão desta pergunta (corrida por padrão)</Muted><Row style={{flexWrap:'wrap',marginVertical:12}}>{(['race','qualifying','sprint'] as const).filter(v=>v==='race'||v==='qualifying'&&race.quali_utc||v==='sprint'&&race.has_sprint&&race.sprint_utc).map(v=><Pressable key={v} onPress={()=>setSession(v)}><Pill color={session===v?colors.red:colors.card2}>{sessionLabel(v)}</Pill></Pressable>)}</Row>
+        <Muted>Sessão · padrão: Corrida</Muted><Row style={{flexWrap:'wrap',marginVertical:12}}>{(['race','qualifying','sprint'] as const).filter(v=>v==='race'||v==='qualifying'&&race.quali_utc||v==='sprint'&&race.has_sprint&&race.sprint_utc).map(v=><Pressable key={v} onPress={()=>setSession(v)}><Pill color={session===v?colors.red:colors.card2}>{sessionLabel(v)}</Pill></Pressable>)}</Row>
         <Muted>{(()=>{const d=questionDeadline({session},race,pool.lock_minutes_before);return d?`Fecha em ${fmtDate(new Date(d).toISOString())}`:'Sem horário disponível';})()}</Muted>
         <Row>
           <View style={{ flex: 1 }}><Muted>Pontos</Muted><Input value={points} onChangeText={setPoints} keyboardType="number-pad" /></View>

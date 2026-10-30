@@ -163,3 +163,12 @@ Nenhuma dependência nativa nova: OTA pelos projetos/canal já distribuídos, se
 
 
 Regressão final no domínio publicado: Notícias com manchete real, paginação e curiosidades, acesso à pista, Atuais 23 → Históricas 55 → Caesars Palace → Atuais → Interlagos. Book de seis trechos com foto Curva do Sol carregada, mapa oficial carregado, zoom e créditos. Sem erros JavaScript nem consultas ao monitor OpenF1. Conta temporária removida. O teste passou a selecionar a primeira curiosidade porque a coleta diária já havia acrescentado uma segunda publicação.
+
+
+## Revisão de UI/UX — 30/10/2026
+
+Revisão de apresentação, sem migration ou alteração de pontuação: ações compactas com ícones, métricas em destaque, regras em expansões acessíveis, comparação integrada aos cartões de piloto e formulário de pódio antes da programação. Notícias conserva a manchete integral e permite expandir/recolher o resumo; autor e atualização das fontes continuam acessíveis. Nenhuma ferramenta foi removida.
+
+64 testes passaram; TypeScript e exportação web aprovados. Navegador móvel com fixtures (390×844 e 360×800): abertura/recolhimento de preparação e metodologias, comparação de dois pilotos sem selecionar acidentalmente o palpite, salvamento confirmado, simulador sem escrita adicional, termômetro, perguntas opcionais, Raio-X/retrospectiva/PNG, perfil e expansão das estatísticas, resumo de notícia e fontes, recuperação e ausência de overflow horizontal. Sem erros JavaScript. Capturas foram inspecionadas, incluindo notícias, ferramentas, comparação e perfil. Sem teste físico em aparelho.
+
+Pesquisa oficial sobre Instagram em [instagram-f1.md](pesquisas/instagram-f1.md): oEmbed de URL pública é viável; descoberta automática exige Business Discovery, conta profissional/token/permissões. Não foi ativado coletor nem adicionada dependência nativa para embeds. O RSS atual segue funcionando.

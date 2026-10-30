@@ -1,3 +1,4 @@
+import {Ionicons} from '@expo/vector-icons';
 import { DriverContext } from './insights/DriverContext';
 import { useMemo, useState } from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -36,7 +37,7 @@ export function DriverPicker({ visible, drivers, title = 'Escolha o piloto', onS
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View style={[s.wrap, { paddingTop: insets.top + space(1), paddingBottom: insets.bottom }]}>
         <Text style={s.title}>{title}</Text>
-        {startingGrid && <Muted>Ordenados pela largada. Escolha quem você acha que vai chegar na posição do palpite.</Muted>}
+        {startingGrid && <Muted>Ordem de largada · toque para escolher.</Muted>}
         <Input placeholder="Buscar: nome, número, equipe…" value={q} onChangeText={setQ} autoFocus autoCorrect={false} />
         {race&&codes.length>0&&<DriverContext drivers={drivers} codes={codes} race={race} grid={startingGrid} onClose={()=>setCodes([])}/>}
         <FlatList
@@ -44,7 +45,8 @@ export function DriverPicker({ visible, drivers, title = 'Escolha o piloto', onS
           keyExtractor={(d) => d.code}
           keyboardShouldPersistTaps="handled"
           ListEmptyComponent={<Muted style={{ textAlign: 'center', marginTop: space(3) }}>Nenhum piloto encontrado</Muted>}
-          renderItem={({ item }) => <View><DriverRow d={item} startingGrid={startingGrid} onPress={() => { onSelect(item.code); setQ(''); onClose(); }}/>{race&&<Pressable accessibilityRole="button" accessibilityLabel={`Analisar ${item.name}`} onPress={()=>setCodes(prev=>prev.includes(item.code)?prev.filter(c=>c!==item.code):[...prev.slice(-1),item.code])}><Text style={{color:colors.red,fontWeight:'700',padding:10}}>{codes.includes(item.code)?'✓ Em comparação':'Analisar antes de escolher'}</Text></Pressable>}</View>}
+          renderItem={({ item }) => <DriverRow d={item} startingGrid={startingGrid} onPress={() => { onSelect(item.code); setQ(''); onClose(); }} compared={codes.includes(item.code)} onCompare={race?()=>setCodes(prev=>prev.includes(item.code)?prev.filter(c=>c!==item.code):[...prev.slice(-1),item.code]):undefined}/>}
+
         />
         <Button title="Fechar" variant="ghost" onPress={onClose} />
       </View>
@@ -52,9 +54,9 @@ export function DriverPicker({ visible, drivers, title = 'Escolha o piloto', onS
   );
 }
 
-export function DriverRow({ d, onPress, info = true, startingGrid }: { d: Driver; onPress?: () => void; info?: boolean; startingGrid?: StartingGrid | null }) {
+export function DriverRow({ d, onPress, info = true, startingGrid,compared,onCompare }: { d: Driver; onPress?: () => void; info?: boolean; startingGrid?: StartingGrid | null;compared?:boolean;onCompare?:()=>void }) {
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [s.row, pressed && { opacity: 0.7 }]}>
+    <View style={s.row}><Pressable onPress={onPress} style={({pressed})=>[{flex:1,flexDirection:'row',alignItems:'center',gap:8,minWidth:0},pressed&&{opacity:.7}]}>
       <View style={[s.stripe, { backgroundColor: d.team_color ?? colors.muted }]} />
       <Text style={s.num}>{d.number ?? '–'}</Text>
       <View style={{ flex: 1 }}>
@@ -63,19 +65,21 @@ export function DriverRow({ d, onPress, info = true, startingGrid }: { d: Driver
         {startingPositionLabel(startingGrid, d.code) && <Text style={{ color: colors.green, fontWeight: '700' }}>{startingPositionLabel(startingGrid, d.code)}</Text>}
       </View>
       <Text style={s.code}>{d.code}</Text>
+      </Pressable>
       {info && canOpenDriver(d) && (
         <Pressable hitSlop={10} onPress={() => openDriver(d)} style={s.info}><Text style={{ color: colors.text, fontWeight: '900', fontSize: 12 }}>i</Text></Pressable>
       )}
-    </Pressable>
+      {onCompare&&<Pressable accessibilityRole="button" accessibilityLabel={`Analisar ${d.name}`} accessibilityState={{selected:!!compared}} onPress={onCompare} style={{minHeight:44,minWidth:54,alignItems:'center',justifyContent:'center',gap:3}}><Ionicons accessible={false} name={compared?'checkmark-circle':'git-compare-outline'} size={19} color={compared?colors.green:colors.muted}/><Text style={{color:compared?colors.green:colors.muted,fontSize:10,fontWeight:'700'}}>{compared?'Comparando':'Comparar'}</Text></Pressable>}
+    </View>
   );
 }
 
 const s = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.bg, paddingHorizontal: space(2) },
   title: { color: colors.text, fontSize: 20, fontWeight: '800', marginBottom: space(1.5) },
-  row: { flexDirection: 'row', alignItems: 'center', gap: space(1.5), backgroundColor: colors.card, borderRadius: radius, padding: space(1.5), marginBottom: space(1) },
+  row: { flexDirection: 'row', alignItems: 'center', gap:8, backgroundColor: colors.card, borderRadius: radius, padding: space(1.5), marginBottom: space(1) },
   stripe: { width: 5, alignSelf: 'stretch', borderRadius: 3 },
-  num: { color: colors.muted, fontWeight: '800', width: 28, textAlign: 'center' },
+  num: { color: colors.muted, fontWeight: '800', width:22, textAlign: 'center' },
   name: { color: colors.text, fontSize: 16, fontWeight: '600' },
   code: { color: colors.muted, fontWeight: '700' },
   info: { width: 24, height: 24, borderRadius: 12, borderWidth: 1, borderColor: colors.muted, alignItems: 'center', justifyContent: 'center' },
