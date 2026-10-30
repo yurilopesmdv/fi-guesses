@@ -1,10 +1,10 @@
 import { useCallback, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
-import { flag, fmtDate } from '@/lib/format';
+import { flag, fmtDay } from '@/lib/format';
 import { getMyLastGpSummary } from '@/lib/repo';
 import type { LastGpPool, MyLastGpSummary } from '@/lib/types';
-import { Button, Card, H2, Muted, P, Row } from '@/ui/primitives';
+import { Card, H2, Muted, P, Row } from '@/ui/primitives';
 import { colors } from '@/ui/theme';
 
 const STATUS: Record<LastGpPool['status'], string> = { waiting: 'aguardando apuração', partial: 'apuração parcial', settled: 'apurado' };
@@ -35,7 +35,7 @@ export function LastGpCard({ refreshKey }: { refreshKey: number }) {
           <Row>
             <View style={{ flex: 1 }}>
               <P style={{ fontWeight: '700' }}>{p.name}</P>
-              <Muted style={{ fontSize: 12 }}>{STATUS[p.status]}{p.status === 'partial' ? ` · ${p.settled}/${p.questions} perguntas` : ''}</Muted>
+              <Text style={{ fontSize: 12, color: p.status === 'settled' ? colors.green : colors.gold }}>{STATUS[p.status]}{p.status === 'partial' ? ` · ${p.settled}/${p.questions} perguntas` : ''}</Text>
             </View>
             <View style={{ alignItems: 'flex-end' }}>
               <Text style={{ color: colors.gold, fontWeight: '800' }}>+{p.points} pts</Text>
@@ -44,7 +44,13 @@ export function LastGpCard({ refreshKey }: { refreshKey: number }) {
           </Row>
         </Pressable>
       )) : <Muted>Você não tinha palpites neste GP em nenhum bolão.</Muted>}
-      {next ? <Button title={`Próxima: ${next.name} · ${fmtDate(next.date_utc)}`} variant="ghost" onPress={() => router.push(`/race/${next.id}`)} /> : null}
+      {next ? (
+        <Pressable accessibilityRole="button" accessibilityLabel={`Próxima etapa: ${next.name}`} onPress={() => router.push(`/race/${next.id}`)}
+          style={{ minHeight: 44, marginTop: 6, borderRadius: 12, backgroundColor: colors.card2, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <View style={{ flex: 1 }}><Muted style={{ fontSize: 11 }}>PRÓXIMA ETAPA</Muted><P style={{ fontWeight: '700' }} >{flag(next.country)} {next.name}</P></View>
+          <Text style={{ color: colors.muted, fontSize: 12 }}>{fmtDay(next.date_utc)} ›</Text>
+        </Pressable>
+      ) : null}
     </Card>
   );
 }
