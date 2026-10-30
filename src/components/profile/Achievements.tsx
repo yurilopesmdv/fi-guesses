@@ -16,7 +16,7 @@ export function Achievements({ pools }: { pools: ProfilePoolSummary[] }) {
     { icon: '🏆', title: 'Campeão de bolão', on: titles > 0, detail: titles ? `${titles}×` : 'vença um bolão finalizado' },
     { icon: '🥉', title: 'Pódio em bolão', on: podiums > 0, detail: podiums ? `${podiums}×` : 'termine no top 3' },
     { icon: '🎯', title: 'Pódio exato', on: exact > 0, detail: exact ? `${exact}×` : 'acerte P1, P2 e P3' },
-    { icon: '✅', title: 'Presença completa', on: full > 0, detail: full ? `${full} bolão${full > 1 ? 'ões' : ''}` : 'responda todas as perguntas' },
+    { icon: '✅', title: 'Presença completa', on: full > 0, detail: full ? `${full} ${full > 1 ? 'bolões' : 'bolão'}` : 'responda todas as perguntas' },
     { icon: '📅', title: 'Veterano', on: seasons >= 2, detail: seasons >= 2 ? `${seasons} temporadas` : 'jogue em 2 temporadas' },
   ];
   return (

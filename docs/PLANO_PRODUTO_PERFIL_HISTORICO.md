@@ -142,7 +142,8 @@ Escolher o primeiro lote pelos três eixos: retorno a cada GP (perfil/acompanham
 - H19: Explorar a história → “Recordes até {ano}”: top 5 de vitórias, pódios, largadas e P1 no grid até o fim do ano escolhido. Migration 0044.
 - H14: piloto → “Companheiros de equipe”: cartões roláveis com confronto no mesmo GP/equipe; tocar navega pela rede. Migration 0045.
 - P08: Meu perfil → “Conquistas”: campeão e pódio (só finalizados, empates contam), pódio exato, presença completa e veterano; informativas, sem pontos. Sem migration.
-- Próximos: P09 trajetória nos bolões, P10 comparação no bolão, P07 notícias para você, fase F.
+- P09: Meu perfil → “Sua trajetória”: por temporada, número de bolões, melhor posição, títulos e aproveitamento apurado. Sem migration.
+- Próximos: P10 comparação no bolão, P07 notícias para você, fase F.
 
 ### Plano detalhado do restante (30/10/2026)
 
