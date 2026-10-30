@@ -439,3 +439,14 @@ test('mapa do piloto agrupa pódios por pista publicada com as provas que susten
  assert.deepEqual((await db.query("select driver_circuit_map('lawson') v")).rows[0].v.map(r=>[r.wins,r.podiums]),[[0,1]]);
  await asUser(null,'anon');await rejectsInTx("select driver_circuit_map('max_verstappen')",/permission denied/);
 });
+test('raio-x da pista usa só provas anteriores ao GP e o grid da temporada',async()=>{
+ await seedFollowData();await asUser(null,'postgres');
+ await db.query("update races set circuit_id='interlagos' where id in ($1,$2,$3)",[raceA,raceB,raceC]);
+ await db.query(`insert into drivers(series,season,code,name,driver_id,team) values('f1',2025,'VER','Max Verstappen','max_verstappen','Red Bull')`);
+ await db.query(`insert into race_results(series,session,season,round,position,driver_code,team,grid,points,status) values('f1','race',2025,1,1,'VER','Red Bull',12,25,'Finished')`);
+ await asUser(1);const v=(await db.query('select circuit_race_insight($1) v',[raceA])).rows[0].v;
+ assert.equal(v.circuit_id,'interlagos');assert.equal(v.editions,1);assert.equal(v.from_outside10,1);assert.equal(v.deepest_win.grid,12);
+ const ver=v.drivers.find(d=>d.driver_id==='max_verstappen');assert.equal(ver.starts,1);assert.equal(ver.wins,1);assert.equal(v.drivers.find(d=>d.driver_id==='lawson').starts,0);
+ const later=(await db.query('select circuit_race_insight($1) v',[raceC])).rows[0].v;assert.equal(later.editions,2);
+ await asUser(null,'anon');await rejectsInTx('select circuit_race_insight($1)',[raceA],/permission denied/);
+});

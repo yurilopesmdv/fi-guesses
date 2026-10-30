@@ -176,3 +176,5 @@ O cliente filtra agregados por ano/bolão, sem baixar perguntas/palpites. Partic
 `my_last_gp_summary()` (0034, security definer, só bolões do chamador com perguntas no GP): último GP F1 com resultado oficial, pontos no GP, posição antes/depois por bolão (empates compartilhados) e estado waiting/partial/settled da apuração.
 
 `driver_circuit_map(p_driver_id)` (0035, invoker, sem anônimo): pódios/vitórias por pista publicada, via `races.circuit_id` com fallback em `circuit_seasons` (100% dos pódios mapeados em 30/10/2026), com as provas de cada contagem.
+
+`circuit_race_insight(p_race)` (0036, invoker, sem anônimo): para o circuito do GP, usando só provas anteriores à data, conversão de vitórias por posição de largada e retrospecto (largadas, vitórias, pódios, melhor, mediana, última) de cada piloto da temporada.

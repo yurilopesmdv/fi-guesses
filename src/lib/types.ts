@@ -176,3 +176,6 @@ export type MyFollowsOverview={season:number;next_race:{id:string;name:string;co
 export type LastGpPool={id:string;name:string;points:number;total:number;rank_before:number;rank_after:number;members:number;questions:number;settled:number;status:'waiting'|'partial'|'settled'};
 export type MyLastGpSummary={race:{id:string;name:string;country:string|null;round:number;season:number;date_utc:string}|null;
  next_race:{id:string;name:string;country:string|null;date_utc:string}|null;pools:LastGpPool[];generated_at:string};
+export type CircuitInsightDriver={driver_id:string;name:string;code:string;team_color:string|null;starts:number;wins:number;podiums:number;best:number|null;median:number|null;last:{season:number;position:number;classified:boolean}|null};
+export type CircuitRaceInsight={circuit_id:string;editions:number;first_season:number|null;from_p1:number;from_top3:number;from_outside10:number;
+ deepest_win:{grid:number;season:number;driver_id:string}|null;recent:{editions:number;from_p1:number};avg_gain:number|null;drivers:CircuitInsightDriver[]};
