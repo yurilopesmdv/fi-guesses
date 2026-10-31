@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RaceCalendar } from '@/components/RaceCalendar';
 import { OnThisDay } from '@/components/OnThisDay';
+import { WeekendHeader } from '@/components/WeekendHeader';
 import { SeriesPicker } from '@/components/SeriesPicker';
 import { buildIcs } from '@/lib/ics';
 import { YearPicker } from '@/components/YearPicker';
@@ -48,7 +49,11 @@ export default function Races() {
         <><Loading />{importing && <Muted style={{ textAlign: 'center' }}>Importando temporada {year} da API…</Muted>}</>
       ) : (
         <>
-          {series === 'f1' && year === SEASON && <OnThisDay />}
+          {year === SEASON && nextIdx >= 0 && (
+            <Pressable accessibilityRole="button" accessibilityLabel={`Abrir ${races[nextIdx].name}`} onPress={() => router.push(`/race/${races[nextIdx].id}`)}>
+              <WeekendHeader race={races[nextIdx]} status={<Text style={{ color: colors.red, fontWeight: '800', letterSpacing: 1.5, fontSize: 12 }}>PRÓXIMO {series === 'f1' ? 'GP' : 'ETAPA'}</Text>} />
+            </Pressable>
+          )}
           <Row style={{ marginBottom: space(1) }}>
             {(['list', 'month'] as const).map((v) => (
               <Pressable key={v} accessibilityRole="button" accessibilityState={{ selected: view === v }} onPress={() => setView(v)} style={{ flex: 1, minHeight: 44, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: view === v ? colors.card2 : 'transparent', borderWidth: 1, borderColor: colors.border }}>
@@ -89,6 +94,7 @@ export default function Races() {
               </Pressable>
             );
           })}
+          {series === 'f1' && year === SEASON && <OnThisDay />}
           </>}
         </>
       )}

@@ -8,18 +8,19 @@ import { usePool } from '@/lib/usePool';
 import { Card, Loading, Muted, P, Pill, Row, Screen } from '@/ui/primitives';
 import { colors } from '@/ui/theme';
 
-export default function Races() {
+/** Etapas do bolão com seus pontos; usada como seção do Ranking. */
+export function PoolRaceList() {
   const { pool, races, isOpen } = usePool();
   const uid = useUserId();
   const [scores, setScores] = useState<{ race_id: string; user_id: string; points: number }[]>([]);
   useFocusEffect(useCallback(() => { if (pool) listRaceScores(pool.id).then(setScores); }, [pool]));
 
-  if (!pool) return <Screen scroll={false}><Loading /></Screen>;
+  if (!pool) return <Loading />;
   const scored = new Set(scores.map((s) => s.race_id));
   const myPts = (rid: string) => scores.find((s) => s.race_id === rid && s.user_id === uid)?.points;
 
   return (
-    <Screen>
+    <>
       {races.map((r) => {
         const open = isOpen(r); const done = scored.has(r.id);
         return (
@@ -38,6 +39,10 @@ export default function Races() {
           </Pressable>
         );
       })}
-    </Screen>
+    </>
   );
+}
+
+export default function Races() {
+  return <Screen><PoolRaceList /></Screen>;
 }

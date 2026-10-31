@@ -15,6 +15,7 @@ import { Schedule } from './Schedule';
 import { StartingGrid } from './StartingGrid';
 import { RaceClassification } from './RaceClassification';
 import { PoolStatus } from './PoolStatus';
+import { WeekendHeader } from './WeekendHeader';
 import { poolStatusDescription } from '@/lib/poolStatus';
 import { QuestionField } from './QuestionField';
 import { useUserId } from '@/lib/auth';
@@ -25,7 +26,8 @@ import { usePool } from '@/lib/usePool';
 import { Button, Card, H2, Loading, Muted, P, Pill, Row, Screen } from '@/ui/primitives';
 import { colors, space } from '@/ui/theme';
 
-export function RaceView({ race }: { race: Race }) {
+/** Palpite: o que fazer agora. GP: entender e analisar o fim de semana. Mesmos dados, responsabilidades separadas. */
+export function RaceView({ race, mode = 'palpite' }: { race: Race; mode?: 'palpite' | 'gp' }) {
   const { pool, drivers, lifecycle } = usePool();
   const uid = useUserId();
   const [questions, setQuestions] = useState<Question[] | null>(null);
@@ -85,33 +87,34 @@ export function RaceView({ race }: { race: Race }) {
   const extras = questions.filter((q) => q.kind !== 'podium');
   const hasResults = results.length > 0;
 
+  const finished = official.some((r) => r.session === 'race');
+  if (mode === 'gp') return (
+    <Screen>
+      <WeekendHeader race={race} />
+      <Schedule race={race} support={support} />
+      <RacePreparation race={race} questions={questions} minutes={pool.lock_minutes_before} grid={startingGrid}/>
+      <StartingGrid race={race} drivers={drivers} results={official} onGridChange={setStartingGrid} />
+      <RaceClassification race={race} drivers={drivers} results={official} />
+      <RaceStory race={race} drivers={drivers} results={official} />
+      <RaceTools poolId={pool.id} race={race} questions={questions} predictions={confirmedPredictions} results={results} members={members} drivers={drivers} uid={uid} grid={startingGrid} official={official}/>
+      <CircuitInsight race={race} />
+    </Screen>
+  );
+
   return (
     <Screen>
-      <Card>
-        <Row style={{ marginBottom: space(1), flexWrap: 'wrap' }}>
-          <PoolStatus state={lifecycle} />
-          <Muted>{poolStatusDescription(lifecycle)}</Muted>
-        </Row>
-        <Row style={{ justifyContent: 'space-between' }}>
-          <View style={{ flex: 1 }}>
-            <Text style={s.title}>{flag(race.country)} {race.name}</Text>
-            <Muted>{race.circuit} · Largada {fmtDate(race.date_utc)}</Muted>
-            <CircuitLink race={race} />
-          </View>
-          {open ? <Pill color={colors.green}>fecha em {fmtCountdown(lockAt - now)}</Pill>
-            : hasResults ? <Pill color={colors.red}>apurada</Pill> : <Pill>fechada</Pill>}
-        </Row>
-        {open && <Muted style={{marginTop:8,color:drafts.length?colors.gold:outbox.confirmed.some(id=>questionIds.includes(id))?colors.green:colors.muted}}>{drafts.length?'Envio pendente':outbox.confirmed.some(id=>questionIds.includes(id))?'Palpite confirmado pelo servidor ✓':'Altere seu palpite até o fechamento'}</Muted>}
-        {isOwner && <InsightDetails title="Você está na área de palpites"><P>{open ? 'Modo participante · seu palpite' : 'Modo participante · consulta dos palpites'}</P><Muted>Esta tela é para os seus palpites. Para informar os resultados finais, abra a apuração abaixo.</Muted></InsightDetails>}
-      </Card>
+      <WeekendHeader race={race} lockAt={hasResults ? undefined : lockAt}
+        status={<Row style={{ flexWrap: 'wrap' }}><PoolStatus state={lifecycle} /><Muted>{poolStatusDescription(lifecycle)}</Muted>{!open && hasResults ? <Pill color={colors.red}>apurada</Pill> : null}</Row>}>
+        {open && <Muted style={{color:drafts.length?colors.gold:outbox.confirmed.some(id=>questionIds.includes(id))?colors.green:colors.muted}}>{drafts.length?'Enviando seu palpite…':outbox.confirmed.some(id=>questionIds.includes(id))?'Palpite confirmado pelo servidor ✓':'Altere seu palpite até o fechamento'}</Muted>}
+      </WeekendHeader>
 
       {isOwner && (
         <Pressable onPress={() => router.push(`/pool/${pool.id}/admin/${race.id}`)}>
           <Card style={{ borderColor: colors.red, backgroundColor: '#1f1216' }}>
             <Row style={{ justifyContent: 'space-between' }}>
               <View style={{ flex: 1 }}>
-                <P style={{ fontWeight: '800' }}>⚙️ Abrir apuração oficial</P>
-                <Muted>{open ? 'Perguntas e resultados · organizador' : hasResults ? 'Revisar resultados · organizador' : 'Informar resultados · organizador'}</Muted>
+                <P style={{ fontWeight: '800' }}>⚙️ Apuração · organizador</P>
+                <Muted>{open ? 'Perguntas e resultados' : hasResults ? 'Revisar resultados' : 'Informar resultados'}</Muted>
               </View>
               <Text style={{ color: colors.red, fontSize: 24 }}>›</Text>
             </Row>
@@ -119,8 +122,9 @@ export function RaceView({ race }: { race: Race }) {
         </Pressable>
       )}
 
-      <RacePreparation race={race} questions={questions} minutes={pool.lock_minutes_before} grid={startingGrid}/>
-      <StartingGrid race={race} drivers={drivers} results={official} compact={open} onGridChange={setStartingGrid} />
+      {/* Contexto do momento: resultado após a corrida; grid/qualy (top 10) depois da classificação; nada antes. */}
+      {finished ? <RaceClassification race={race} drivers={drivers} results={official} limit={10} />
+        : <StartingGrid race={race} drivers={drivers} results={official} compact onGridChange={setStartingGrid} />}
 
       {open ? (
         <>
@@ -140,8 +144,6 @@ export function RaceView({ race }: { race: Race }) {
             </Card>
           ))}
           {(stuck.length>0||outbox.error)&&<Card style={{borderColor:colors.gold}}><H2>Envio dos palpites</H2>{outbox.error&&<Muted>{outbox.error}</Muted>}{stuck.map(d=><Muted key={d.questionId}>{questions.find(q=>q.id===d.questionId)?.prompt}: {d.error??'Guardado neste aparelho. Aguardando conexão para enviar.'}</Muted>)}{stuck.some(d=>d.status!=='expired')&&<Button title="Tentar enviar agora" variant="ghost" onPress={()=>void outbox.retry(questionIds).catch(e=>Alert.alert('Envio pendente',e.message))}/>}{stuck.some(d=>d.status==='expired')&&<Button title="Descartar rascunhos vencidos" variant="ghost" onPress={()=>void outbox.discardExpired(questionIds).catch(()=>Alert.alert('Armazenamento indisponível','Não foi possível atualizar os rascunhos neste aparelho.'))}/>}</Card>}
-          <Schedule race={race} support={support} />
-          <PicksBoard questions={questions} predictions={confirmedPredictions} results={results} members={members} drivers={drivers} uid={uid} />
           <Card>
             <H2>Quem já palpitou</H2>
             <Row style={{ flexWrap: 'wrap' }}>
@@ -152,15 +154,18 @@ export function RaceView({ race }: { race: Race }) {
               ))}
             </Row>
           </Card>
+          <PicksBoard questions={questions} predictions={confirmedPredictions} results={results} members={members} drivers={drivers} uid={uid} />
         </>
       ) : (
         <PicksBoard questions={questions} predictions={confirmedPredictions} results={results} members={members} drivers={drivers} uid={uid} />
       )}
-      <RaceTools poolId={pool.id} race={race} questions={questions} predictions={confirmedPredictions} results={results} members={members} drivers={drivers} uid={uid} grid={startingGrid} official={official}/>
-      <RaceClassification race={race} drivers={drivers} results={official} />
-      <RaceStory race={race} drivers={drivers} results={official} />
-      <CircuitInsight race={race} />
-
+      <Pressable accessibilityRole="button" accessibilityLabel="Abrir detalhes do GP" onPress={() => router.push(`/pool/${pool.id}/gp?raceId=${race.id}`)}>
+        <Card style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <Text style={{ fontSize: 22 }}>📊</Text>
+          <View style={{ flex: 1 }}><P style={{ fontWeight: '800' }}>Detalhes do GP</P><Muted style={{ fontSize: 12 }}>Grid completo, programação F2/F3, raio-X da pista, volta a volta e ferramentas</Muted></View>
+          <Text style={{ color: colors.muted, fontSize: 22 }}>›</Text>
+        </Card>
+      </Pressable>
     </Screen>
   );
 }

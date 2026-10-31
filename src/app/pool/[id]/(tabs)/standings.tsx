@@ -6,7 +6,8 @@ import { useUserId } from '@/lib/auth';
 import { listRaceScores, listStandings } from '@/lib/repo';
 import type { Standing } from '@/lib/types';
 import { usePool } from '@/lib/usePool';
-import { Button, Card, Loading, Muted, P, Row, Screen } from '@/ui/primitives';
+import { Button, Card, H2, Loading, Muted, P, Row, Screen } from '@/ui/primitives';
+import { PoolRaceList } from './races';
 import { colors, space } from '@/ui/theme';
 
 const MEDAL = ['🥇', '🥈', '🥉'];
@@ -53,6 +54,7 @@ export default function Standings() {
         </Card></Pressable>
       ))}
       <Button title="Compartilhar ranking" variant="ghost" onPress={share} />
+      {!pool.race_id && <><H2 style={{ marginTop: space(2) }}>Seus pontos por etapa</H2><PoolRaceList /></>}
     </Screen>
   );
 }

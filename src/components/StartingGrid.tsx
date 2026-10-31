@@ -48,6 +48,9 @@ export function StartingGrid({ race, drivers, results, compact = false, onGridCh
 
   if (race.series !== 'f1') return null;
   const beforeQualifying = race.quali_utc && Date.now() < Date.parse(race.quali_utc);
+  // Na entrada do bolão só aparece quando já há grid ou qualy; antes disso não ocupa espaço.
+  if (compact && !grid && !qualifying) return null;
+  const top = compact ? 10 : 5;
   return <>
     <Card>
       <H2>🚦 Grid de largada</H2>
@@ -56,17 +59,17 @@ export function StartingGrid({ race, drivers, results, compact = false, onGridCh
       {!loading && !grid && <Muted>{error || (beforeQualifying ? 'Aguardando a classificação e a publicação do grid.' : 'Grid de largada ainda não publicado ou indisponível para esta corrida.')}</Muted>}
       {grid && <>
         <Row style={{ marginTop: 12 }}><Muted style={{ width: 60 }}>Largada</Muted><Muted>Piloto / equipe</Muted></Row>
-        {(compact && !expanded ? grid.rows.slice(0, 5) : grid.rows).map((row) => <GridDriver key={row.driver_id ?? row.driver_code} row={row} />)}
-        {compact && grid.rows.length > 5 && <Button title={expanded ? 'Recolher grid' : `Ver grid completo (${grid.rows.length} pilotos)`} variant="ghost" onPress={() => setExpanded((value) => !value)} />}
+        {(compact && !expanded ? grid.rows.slice(0, top) : grid.rows).map((row) => <GridDriver key={row.driver_id ?? row.driver_code} row={row} />)}
+        {compact && grid.rows.length > top && <Button title={expanded ? 'Recolher grid' : `Ver grid completo (${grid.rows.length} pilotos)`} variant="ghost" onPress={() => setExpanded((value) => !value)} />}
       </>}
       {error && grid && <Muted>{error} As últimas posições carregadas foram mantidas.</Muted>}
-      {!loading && <Button title="Atualizar grid de largada" variant="ghost" onPress={() => setRevision((r) => r + 1)} />}
+      {!loading && !compact && <Button title="Atualizar grid de largada" variant="ghost" onPress={() => setRevision((r) => r + 1)} />}
     </Card>
     {!grid && qualifying && <Card>
       <H2>⏱️ Resultado da qualy</H2>
       <Muted>Referência enquanto o grid não é publicado. Punições e largadas dos boxes podem mudar a ordem de largada.</Muted>
-      {(expanded ? qualifying.rows : qualifying.rows.slice(0, 5)).map((row) => <GridDriver key={row.driver_id ?? row.driver_code} row={row} qualifying />)}
-      {qualifying.rows.length > 5 && <Button title={expanded ? 'Recolher qualy' : `Ver qualy completa (${qualifying.rows.length} pilotos)`} variant="ghost" onPress={() => setExpanded((value) => !value)} />}
+      {(expanded ? qualifying.rows : qualifying.rows.slice(0, top)).map((row) => <GridDriver key={row.driver_id ?? row.driver_code} row={row} qualifying />)}
+      {qualifying.rows.length > top && <Button title={expanded ? 'Recolher qualy' : `Ver qualy completa (${qualifying.rows.length} pilotos)`} variant="ghost" onPress={() => setExpanded((value) => !value)} />}
     </Card>}
   </>;
 }

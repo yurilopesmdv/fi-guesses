@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { openDriver } from '@/lib/nav';
 import type { Driver, Race, RaceResult } from '@/lib/types';
@@ -10,7 +11,8 @@ const STATUS_PT: Record<string, string> = { Retired: 'Abandono', Disqualified: '
 const delta = (r: RaceResult) => (r.grid && r.grid > 0 && classified(r.status) ? r.grid - r.position : null);
 
 /** A chegada tem sua própria seção; nunca recebe dados da qualy ou do grid. */
-export function RaceClassification({ race, drivers, results }: { race: Race; drivers: Driver[]; results: RaceResult[] | null }) {
+export function RaceClassification({ race, drivers, results, limit }: { race: Race; drivers: Driver[]; results: RaceResult[] | null; limit?: number }) {
+  const [all, setAll] = useState(false);
   const rows = results?.filter((r) => r.session === (race.series === 'f1' ? 'race' : 'feature')) ?? [];
   const name = (code: string) => drivers.find((d) => d.code === code)?.name.split(' ').pop() ?? code;
   const moves = rows.map((r) => ({ r, d: delta(r) })).filter((x): x is { r: RaceResult; d: number } => x.d !== null);
@@ -31,7 +33,7 @@ export function RaceClassification({ race, drivers, results }: { race: Race; dri
       </Row>
     )}
     {rows.length > 0 && <Row style={{ marginTop: 10 }}><Muted style={{ width: 66 }}>Chegada</Muted><Muted>Piloto · largada</Muted></Row>}
-    {rows.map((r) => {
+    {(limit && !all ? rows.slice(0, limit) : rows).map((r) => {
       const d = drivers.find((driver) => driver.code === r.driver_code);
       return <Pressable key={`${r.session}-${r.driver_code}`} onPress={() => openDriver(d)}>
         <Row style={{ marginTop: 10 }}>
@@ -48,6 +50,7 @@ export function RaceClassification({ race, drivers, results }: { race: Race; dri
         </Row>
       </Pressable>;
     })}
+    {!!limit && rows.length > limit && <Pressable accessibilityRole="button" onPress={() => setAll(!all)} style={{ minHeight: 44, justifyContent: 'center', marginTop: 6 }}><Text style={{ color: colors.red, fontWeight: '700' }}>{all ? 'Mostrar top 10' : `Ver todos (${rows.length})`}</Text></Pressable>}
   </Card>;
 }
 

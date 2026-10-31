@@ -22,8 +22,10 @@ export default function PoolTabs() {
       sceneStyle: { backgroundColor: colors.bg },
     }}>
       <Tabs.Screen name="index" options={{ title: 'Palpite', tabBarIcon: icon('flag') }} />
+      <Tabs.Screen name="gp" options={{ title: 'GP', tabBarIcon: icon('stats-chart') }} />
       <Tabs.Screen name="standings" options={{ title: 'Ranking', tabBarIcon: icon('trophy') }} />
-      <Tabs.Screen name="races" options={{ title: 'Pontos', tabBarIcon: icon('list'), href: pool?.race_id ? null : undefined }} />
+      {/* Pontos por etapa agora é seção do Ranking. */}
+      <Tabs.Screen name="races" options={{ title: 'Pontos', href: null }} />
       <Tabs.Screen name="members" options={{ title: 'Galera', tabBarIcon: icon('people') }} />
     </Tabs>
   );

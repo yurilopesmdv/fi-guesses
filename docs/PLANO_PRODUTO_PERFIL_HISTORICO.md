@@ -163,3 +163,10 @@ Base: `main` em SDK 58. Cada entrega: migration nova (backend antes do cliente) 
 | 7+ — Fases D/E/F | Exploração, P07–P10, enriquecimentos | Conforme seções acima | — | Exigem decisões de produto antes |
 
 Decisão de identidade de equipe (P05): hoje `team` é o nome derivado do `constructorId` por `TEAM_NAMES`. A 0033 persiste o `constructor_id` vindo da fonte e preenche linhas existentes pela inversa determinística dessa tabela; o trigger cobre clientes antigos que ainda não enviam a coluna. Favorito de equipe guarda `constructor_id`, nunca o nome. Fusões/renomeações históricas continuam entidades separadas.
+
+## Simplificação da jornada (31/10/2026, feedback de usuários)
+
+Princípio: dado frequente no topo, sem procurar em abas; consolidar em vez de criar telas.
+- Palpites: status discreto e de altura fixa por pergunta; o cartão de envio só aparece com falha/sem conexão e abaixo das perguntas; “quem já palpitou” atualiza localmente (sem recarregar a classificação).
+- Cabeçalho do fim de semana (`WeekendHeader`): próxima sessão + contagem regressiva e faixa com todas as sessões em horário de Brasília; usado no bolão, no topo de Corridas e na página da corrida.
+- Bolão em 4 abas por responsabilidade: Palpite (agora: cabeçalho, resultado ou grid/qualy top 10 conforme o momento, palpites, quem já palpitou), GP (programação F2/F3, preparação, grid/resultado completos, volta a volta, ferramentas, raio-X), Ranking (classificação + pontos por etapa), Galera.
