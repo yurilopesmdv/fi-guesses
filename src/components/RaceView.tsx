@@ -40,6 +40,8 @@ export function RaceView({ race }: { race: Race }) {
   const outbox=usePredictionOutbox();
   const questionIds=questions?.map(q=>q.id)??[];
   const drafts=outbox.rows.filter(r=>questionIds.includes(r.questionId));
+  // Envio normal leva ~1 s: só avisa quando falhou, venceu ou ficou preso (sem conexão).
+  const stuck=drafts.filter(d=>d.status!=='pending'||now-Number(d.version.split('-')[0])>8000);
 
   const lockAt = lockTime(race.date_utc, pool?.lock_minutes_before ?? 0);
   const open = now < lockAt;
@@ -60,13 +62,21 @@ export function RaceView({ race }: { race: Race }) {
   useFocusEffect(load);
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 30000); return () => clearInterval(t); }, []);
 
-  useEffect(()=>{let active=true;if(pool&&questions?.some(q=>Object.hasOwn(outbox.acceptedAnswers,q.id)))void listStandings(pool.id).then(rows=>{if(active)setMembers(rows);}).catch(()=>{});return()=>{active=false;};},[pool?.id,outbox.acceptedAnswers,questions]);
+  // Palpite confirmado só altera "quem já palpitou": atualiza localmente, sem recarregar a tela.
+  const acceptedHere=questions?.some(q=>Object.hasOwn(outbox.acceptedAnswers,q.id))??false;
+  useEffect(()=>{if(acceptedHere&&uid)setParticipation(p=>p[uid]?p:{...p,[uid]:true});},[acceptedHere,uid]);
 
   const onAnswer = (q: Question, answer: Answer) => {
     void outbox.enqueue(q.id,answer,new Date(questionDeadline(q,race,pool?.lock_minutes_before??0)??lockAt).toISOString()).catch(e=>Alert.alert('Rascunho pendente',e.message));
   };
 
   if (!pool || questions === null) return <Screen scroll={false}><Loading /></Screen>;
+  /** Status de altura fixa: nunca empurra o resto da tela. */
+  const saveState = (id: string) => {
+    const d = outbox.get(id), ok = !d && (outbox.confirmed.includes(id) || predictions.some((p) => p.question_id === id && p.user_id === uid));
+    const label = d ? (d.status === 'pending' ? 'Salvando…' : d.status === 'expired' ? 'Prazo encerrado' : 'Não enviado') : ok ? '✓ Salvo' : ' ';
+    return <Text style={{ height: 18, marginTop: 6, fontSize: 12, color: !d ? colors.green : d.status === 'pending' ? colors.muted : colors.gold }}>{label}</Text>;
+  };
 
   const confirmedPredictions=[...predictions.filter(p=>!(p.user_id===uid&&outbox.acceptedAnswers[p.question_id])),...Object.entries(outbox.acceptedAnswers).filter(([id])=>questionIds.includes(id)).map(([id,answer])=>({id:'accepted-'+id,question_id:id,user_id:uid,answer}))];
 
@@ -95,7 +105,6 @@ export function RaceView({ race }: { race: Race }) {
         {isOwner && <InsightDetails title="Você está na área de palpites"><P>{open ? 'Modo participante · seu palpite' : 'Modo participante · consulta dos palpites'}</P><Muted>Esta tela é para os seus palpites. Para informar os resultados finais, abra a apuração abaixo.</Muted></InsightDetails>}
       </Card>
 
-      {(drafts.length>0||outbox.error)&&<Card><H2>Envio dos palpites</H2>{outbox.error&&<Muted>{outbox.error}</Muted>}{drafts.map(d=><Muted key={d.questionId}>{questions.find(q=>q.id===d.questionId)?.prompt}: {d.error??'Guardado neste aparelho. Aguardando confirmação.'}</Muted>)}{drafts.some(d=>d.status!=='expired')&&<Button title="Tentar enviar agora" variant="ghost" onPress={()=>void outbox.retry(questionIds).catch(e=>Alert.alert('Envio pendente',e.message))}/ >}{drafts.some(d=>d.status==='expired')&&<Button title="Descartar rascunhos vencidos" variant="ghost" onPress={()=>void outbox.discardExpired(questionIds).catch(()=>Alert.alert('Armazenamento indisponível','Não foi possível atualizar os rascunhos neste aparelho.'))}/>}</Card>}
       {isOwner && (
         <Pressable onPress={() => router.push(`/pool/${pool.id}/admin/${race.id}`)}>
           <Card style={{ borderColor: colors.red, backgroundColor: '#1f1216' }}>
@@ -119,6 +128,7 @@ export function RaceView({ race }: { race: Race }) {
             <Card>
               <H2>🏆 Seu palpite de pódio</H2><Muted style={{fontSize:12,marginBottom:8}}>3 pts na posição · 1 pt no pódio</Muted>
               <Podium value={mine(podiumQ.id) ?? {}} startingGrid={startingGrid} drivers={drivers} race={race} onChange={(v) => onAnswer(podiumQ, v)} />
+              {saveState(podiumQ.id)}
             </Card>
           )}
           {extras.length > 0 && <H2 style={{ marginTop: space(0.5) }}>❓ Perguntas extras</H2>}
@@ -126,9 +136,10 @@ export function RaceView({ race }: { race: Race }) {
             <Card key={q.id}>
               <H2>{q.prompt} <Muted>{q.points} pts{q.near_points ? ` · ±1: ${q.near_points}` : ''}</Muted></H2>
               <Muted>{sessionLabel(q.session)}</Muted>
-              {(questionDeadline(q,race,pool.lock_minutes_before)??0)>now?<QuestionField q={q} value={mine(q.id)} race={race} startingGrid={startingGrid} drivers={drivers} onChange={(a) => onAnswer(q, a)} />:<P>Palpites encerrados · Sua resposta confirmada: {answerLabel(q,outbox.acceptedAnswers[q.id]??predictions.find(p=>p.question_id===q.id&&p.user_id===uid)?.answer,drivers)}</P>}
+              {(questionDeadline(q,race,pool.lock_minutes_before)??0)>now?<><QuestionField q={q} value={mine(q.id)} race={race} startingGrid={startingGrid} drivers={drivers} onChange={(a) => onAnswer(q, a)} />{saveState(q.id)}</>:<P>Palpites encerrados · Sua resposta confirmada: {answerLabel(q,outbox.acceptedAnswers[q.id]??predictions.find(p=>p.question_id===q.id&&p.user_id===uid)?.answer,drivers)}</P>}
             </Card>
           ))}
+          {(stuck.length>0||outbox.error)&&<Card style={{borderColor:colors.gold}}><H2>Envio dos palpites</H2>{outbox.error&&<Muted>{outbox.error}</Muted>}{stuck.map(d=><Muted key={d.questionId}>{questions.find(q=>q.id===d.questionId)?.prompt}: {d.error??'Guardado neste aparelho. Aguardando conexão para enviar.'}</Muted>)}{stuck.some(d=>d.status!=='expired')&&<Button title="Tentar enviar agora" variant="ghost" onPress={()=>void outbox.retry(questionIds).catch(e=>Alert.alert('Envio pendente',e.message))}/>}{stuck.some(d=>d.status==='expired')&&<Button title="Descartar rascunhos vencidos" variant="ghost" onPress={()=>void outbox.discardExpired(questionIds).catch(()=>Alert.alert('Armazenamento indisponível','Não foi possível atualizar os rascunhos neste aparelho.'))}/>}</Card>}
           <Schedule race={race} support={support} />
           <PicksBoard questions={questions} predictions={confirmedPredictions} results={results} members={members} drivers={drivers} uid={uid} />
           <Card>
